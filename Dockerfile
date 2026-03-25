@@ -7,6 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     APP_DATA_DIR=/home/username/app/project-vol \
     GRADIO_TEMP_DIR=/tmp/gradio
 
+LABEL org.opencontainers.image.title="AI Driven Spatial Pathologist" \
+      org.opencontainers.image.description="SciLifeLab Serve deployment wrapper for HistoSeg" \
+      org.opencontainers.image.source="https://github.com/hutaobo/AI-Driven-Spatial-Pathologist"
+
 WORKDIR /home/username/app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
