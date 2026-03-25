@@ -5,11 +5,9 @@ import os
 import shutil
 import time
 import traceback
-import zipfile
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
 
 
 def bootstrap_runtime_env() -> None:
@@ -44,7 +42,6 @@ try:
         _normalize_cluster_label,
         _validate_label_scheme,
         align_clusters_with_cells,
-        compute_segmentation_confidence_score_from_merged,
         extract_contour_paths,
         filter_loops_by_cell_count,
         generate_synthetic_bg_in_bbox,
@@ -52,6 +49,11 @@ try:
         make_mesh_from_xy,
         sample_background_from_other_cells_plus_synth,
         tissue_mask_from_xy,
+    )
+    from histoseg.sfplot.Searcher_Findee_Score import (
+        compute_cophenetic_from_distance_matrix,
+        compute_searcher_findee_distance_matrix_from_df,
+        plot_cophenetic_heatmap,
     )
 
     HISTOSEG_IMPORT_ERROR = None
@@ -61,7 +63,6 @@ except Exception as exc:  # pragma: no cover - startup fallback only
     _normalize_cluster_label = None  # type: ignore[assignment]
     _validate_label_scheme = None  # type: ignore[assignment]
     align_clusters_with_cells = None  # type: ignore[assignment]
-    compute_segmentation_confidence_score_from_merged = None  # type: ignore[assignment]
     extract_contour_paths = None  # type: ignore[assignment]
     filter_loops_by_cell_count = None  # type: ignore[assignment]
     generate_synthetic_bg_in_bbox = None  # type: ignore[assignment]
@@ -69,15 +70,23 @@ except Exception as exc:  # pragma: no cover - startup fallback only
     make_mesh_from_xy = None  # type: ignore[assignment]
     sample_background_from_other_cells_plus_synth = None  # type: ignore[assignment]
     tissue_mask_from_xy = None  # type: ignore[assignment]
+    compute_cophenetic_from_distance_matrix = None  # type: ignore[assignment]
+    compute_searcher_findee_distance_matrix_from_df = None  # type: ignore[assignment]
+    plot_cophenetic_heatmap = None  # type: ignore[assignment]
     HISTOSEG_IMPORT_ERROR = str(exc)
 
 
 APP_NAME = "AI Driven Spatial Pathologist"
 APP_DESCRIPTION = (
-    "Upload a Xenium bundle or the required HistoSeg input files, "
-    "run Pattern1 isoline analysis, and download the generated contours."
+    "Upload cell coordinates and cluster assignments, run target-cluster contour analysis, "
+    "and download the contour preview plus the cophenetic heatmap."
 )
 DEFAULT_PATTERN1 = "10,23,19,27,14,20,25,26"
+LABEL_SCHEME_OPTIONS = {
+    "Selected clusters score high (recommended)": "p1_is_one",
+    "Selected clusters score low (invert scoring)": "p1_is_zero",
+}
+DEFAULT_LABEL_SCHEME = "Selected clusters score high (recommended)"
 PREFERRED_WORK_DIR = Path(os.environ.get("APP_DATA_DIR", "./project-vol")).resolve()
 FALLBACK_WORK_DIR = Path("/tmp/project-vol")
 
@@ -121,6 +130,19 @@ def log_event(message: str) -> None:
     print(f"[{stamp}] {message}", flush=True)
 
 
+def to_internal_label_scheme(label_scheme: str) -> str:
+    if label_scheme in LABEL_SCHEME_OPTIONS:
+        return LABEL_SCHEME_OPTIONS[label_scheme]
+    return _validate_label_scheme(label_scheme)
+
+
+def describe_label_scheme(label_scheme: str) -> str:
+    internal = to_internal_label_scheme(label_scheme)
+    if internal == "p1_is_one":
+        return "Selected clusters score high"
+    return "Selected clusters score low (inverted)"
+
+
 def parse_pattern1_clusters(raw: str) -> list[int | str]:
     values: list[int | str] = []
     for item in raw.split(","):
@@ -132,7 +154,7 @@ def parse_pattern1_clusters(raw: str) -> list[int | str]:
         else:
             values.append(token)
     if not values:
-        raise ValueError("Pattern1 clusters cannot be empty.")
+        raise ValueError("Clusters to outline cannot be empty.")
     return values
 
 
@@ -232,41 +254,8 @@ def stage_uploaded_file(uploaded: object | None, target_dir: Path, explicit_name
     return destination
 
 
-def extract_zip_bundle(bundle_zip: object | None, target_dir: Path) -> Path | None:
-    if bundle_zip is None:
-        return None
-    archive_path = stage_uploaded_file(bundle_zip, target_dir)
-    assert archive_path is not None
-    extract_dir = target_dir / "bundle"
-    extract_dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(archive_path, "r") as zf:
-        zf.extractall(extract_dir)
-    return extract_dir
-
-
-def _pick_first(paths: Iterable[Path]) -> Path | None:
-    for candidate in paths:
-        return candidate
-    return None
-
-
-def find_bundle_file(bundle_dir: Path, exact_relative_path: str, filename: str) -> Path | None:
-    exact_path = bundle_dir / exact_relative_path
-    if exact_path.exists():
-        return exact_path
-
-    lowercase_filename = filename.lower()
-    matches = (
-        path
-        for path in bundle_dir.rglob("*")
-        if path.is_file() and path.name.lower() == lowercase_filename
-    )
-    return _pick_first(matches)
-
-
 def resolve_inputs(
     *,
-    bundle_dir: Path | None,
     cells_upload: object | None,
     clusters_upload: object | None,
     tissue_upload: object | None,
@@ -276,25 +265,10 @@ def resolve_inputs(
     clusters_path = stage_uploaded_file(clusters_upload, target_dir)
     tissue_path = stage_uploaded_file(tissue_upload, target_dir)
 
-    if bundle_dir is not None:
-        if cells_path is None:
-            cells_path = find_bundle_file(bundle_dir, "cells.parquet", "cells.parquet")
-        if clusters_path is None:
-            clusters_path = find_bundle_file(
-                bundle_dir,
-                "analysis/clustering/gene_expression_graphclust/clusters.csv",
-                "clusters.csv",
-            )
-        if tissue_path is None:
-            tissue_path = find_bundle_file(bundle_dir, "tissue_boundary.csv", "tissue_boundary.csv")
-
     if cells_path is None:
-        raise ValueError("Missing cells.parquet. Upload it directly or include it in the Xenium zip.")
+        raise ValueError("Missing cells.parquet. Please upload the cell coordinate file.")
     if clusters_path is None:
-        raise ValueError(
-            "Missing clusters.csv. Upload it directly or include "
-            "analysis/clustering/gene_expression_graphclust/clusters.csv in the zip."
-        )
+        raise ValueError("Missing clusters.csv. Please upload the cluster assignment file.")
 
     return cells_path, clusters_path, tissue_path
 
@@ -369,6 +343,79 @@ def zip_outputs(output_dir: Path) -> tuple[Path | None, str | None]:
         raise
 
 
+def compute_cophenetic_outputs(
+    *,
+    merged_df: object,
+    pattern1_clusters: list[int | str],
+    x_col: str,
+    y_col: str,
+    output_dir: Path,
+    linkage_method: str,
+    show_corr: bool,
+) -> tuple[float, dict[str, object], Path]:
+    distance_matrix = compute_searcher_findee_distance_matrix_from_df(
+        merged_df,
+        x_col=x_col,
+        y_col=y_col,
+        z_col=None,
+        celltype_col="cluster",
+    )
+    if getattr(distance_matrix, "shape", (0, 0))[0] < 2 or getattr(distance_matrix, "shape", (0, 0))[1] < 2:
+        raise ValueError("Need at least two cluster groups to build the cophenetic heatmap.")
+
+    row_coph, _col_coph = compute_cophenetic_from_distance_matrix(
+        distance_matrix,
+        method=linkage_method,
+        show_corr=show_corr,
+    )
+
+    labels = [_normalize_cluster_label(label) for label in row_coph.index]
+    row_coph = row_coph.copy()
+    row_coph.index = labels
+    row_coph.columns = labels
+
+    selected_clusters: list[str] = []
+    for item in pattern1_clusters:
+        normalized = _normalize_cluster_label(item)
+        if normalized and normalized in row_coph.index and normalized not in selected_clusters:
+            selected_clusters.append(normalized)
+
+    if not selected_clusters:
+        raise ValueError("None of the selected clusters are present in the cophenetic matrix.")
+
+    other_clusters = [label for label in row_coph.index if label not in set(selected_clusters)]
+    if not other_clusters:
+        raise ValueError("Need both selected and non-selected clusters to compute the cophenetic score.")
+
+    blue_band_matrix = row_coph.loc[selected_clusters, other_clusters]
+    band = blue_band_matrix.to_numpy().ravel()
+    band = band[~np.isnan(band)]
+    if band.size == 0:
+        raise ValueError("The cophenetic comparison block has no finite values.")
+
+    stats: dict[str, object] = {
+        "n_pairs": int(band.size),
+        "min": float(np.min(band)),
+        "p05": float(np.quantile(band, 0.05)),
+        "median": float(np.median(band)),
+        "mean": float(np.mean(band)),
+        "p95": float(np.quantile(band, 0.95)),
+        "max": float(np.max(band)),
+    }
+
+    heatmap_image = plot_cophenetic_heatmap(
+        row_coph,
+        matrix_name="row_coph",
+        sample="selected clusters",
+        return_image=True,
+        dpi=300,
+    )
+    heatmap_path = output_dir / "cophenetic_heatmap_row_coph.png"
+    heatmap_image.save(heatmap_path)
+
+    return float(stats["mean"]), stats, heatmap_path
+
+
 def format_summary(result: object, *, used_tissue_boundary: bool, work_dir: Path) -> dict[str, object]:
     payload = {
         "work_dir": str(work_dir),
@@ -379,7 +426,8 @@ def format_summary(result: object, *, used_tissue_boundary: bool, work_dir: Path
         "n_target_cells": result.n_target_cells,
         "n_bg0_points": result.n_bg0_points,
         "n_contours": len(result.contours),
-        "label_scheme": result.label_scheme,
+        "label_scheme": describe_label_scheme(result.label_scheme),
+        "label_scheme_internal": to_internal_label_scheme(result.label_scheme),
         "used_tissue_boundary": used_tissue_boundary,
     }
     if result.segmentation_confidence_score is not None:
@@ -396,15 +444,15 @@ def emit_status(
     lines: list[str],
     summary: dict[str, object],
     preview_path: str | None = None,
+    cophenetic_heatmap_path: str | None = None,
     output_files: list[str] | None = None,
-) -> tuple[str, str | None, dict[str, object], list[str]]:
+) -> tuple[str, str | None, str | None, dict[str, object], list[str]]:
     status_lines = [f"Phase: {phase}", f"Run directory: {run_dir}"]
     status_lines.extend(lines)
-    return "\n".join(status_lines), preview_path, summary, output_files or []
+    return "\n".join(status_lines), preview_path, cophenetic_heatmap_path, summary, output_files or []
 
 
 def run_analysis(
-    bundle_zip: object | None,
     cells_parquet: object | None,
     clusters_csv: object | None,
     tissue_boundary_csv: object | None,
@@ -446,9 +494,7 @@ def run_analysis(
             summary=summary,
         )
 
-        bundle_dir = extract_zip_bundle(bundle_zip, upload_dir)
         cells_path, clusters_path, tissue_path = resolve_inputs(
-            bundle_dir=bundle_dir,
             cells_upload=cells_parquet,
             clusters_upload=clusters_csv,
             tissue_upload=tissue_boundary_csv,
@@ -456,6 +502,7 @@ def run_analysis(
         )
 
         parsed_clusters = parse_pattern1_clusters(pattern1_clusters)
+        internal_label_scheme = to_internal_label_scheme(label_scheme)
         estimated_cells_rows = safe_count_parquet_rows(cells_path)
         estimated_cluster_rows = safe_count_csv_rows(clusters_path)
         estimated_rows = max(x for x in [estimated_cells_rows, estimated_cluster_rows] if x is not None) if any(
@@ -483,6 +530,9 @@ def run_analysis(
                 "effective_syn_bg_density": profile.syn_bg_density,
                 "effective_bg_max_points": profile.bg_max_points,
                 "used_tissue_boundary": tissue_path is not None,
+                "selected_clusters": [str(item) for item in parsed_clusters],
+                "label_scheme": describe_label_scheme(internal_label_scheme),
+                "label_scheme_internal": internal_label_scheme,
             }
         )
 
@@ -491,6 +541,8 @@ def run_analysis(
             f"Estimated clusters.csv rows: {estimated_cluster_rows if estimated_cluster_rows is not None else 'unknown'}",
             f"Dataset scale profile: {profile.scale_label}",
             f"Effective grid_n: {profile.grid_n}",
+            f"Clusters to outline: {', '.join(str(item) for item in parsed_clusters)}",
+            f"Scoring direction: {describe_label_scheme(internal_label_scheme)}",
         ]
         if not effective_use_synth_bg:
             preflight_lines.append("Synthetic background is disabled for this run.")
@@ -518,7 +570,7 @@ def run_analysis(
             knn_k=int(knn_k),
             smooth_sigma=float(smooth_sigma),
             min_cells_inside=int(min_cells_inside),
-            label_scheme=label_scheme,
+            label_scheme=internal_label_scheme,
             use_synth_bg=effective_use_synth_bg,
             compute_confidence_score=bool(compute_confidence_score),
             bbox_expand_um=float(bbox_expand_um),
@@ -550,12 +602,12 @@ def run_analysis(
         p1 = set(_normalize_cluster_label(x) for x in cfg.pattern1_clusters)
         p1 = {x for x in p1 if x != ""}
         if len(p1) == 0:
-            raise ValueError("pattern1_clusters is empty after normalization.")
+            raise ValueError("The selected clusters could not be matched after normalization.")
 
         merged["_is_p1"] = merged["cluster"].isin(p1)
         p1_df = merged.loc[merged["_is_p1"], [id_col_used, x_col, y_col]].copy()
         if len(p1_df) < 10:
-            raise RuntimeError(f"pattern1 cells too few after merge: {len(p1_df)}")
+            raise RuntimeError(f"Too few cells were found in the selected clusters after merging: {len(p1_df)}")
 
         target_ids = set(p1_df[id_col_used].astype(str))
         target_xy = p1_df[[x_col, y_col]].to_numpy(float)
@@ -576,7 +628,7 @@ def run_analysis(
             run_dir=run_dir,
             lines=[
                 f"Merged rows: {len(merged)}",
-                f"Pattern1 target cells: {len(target_xy)}",
+                f"Selected-cluster cells: {len(target_xy)}",
                 "Sampling real-cell background and optional synthetic background.",
             ],
             summary=summary,
@@ -681,36 +733,43 @@ def run_analysis(
 
         conf_score: float | None = None
         conf_stats: dict[str, object] | None = None
+        cophenetic_heatmap_path: Path | None = None
+        cophenetic_note: str | None = None
         if cfg.compute_confidence_score:
-            progress(0.86, desc="Computing confidence score")
-            log_event("Computing segmentation confidence score")
+            progress(0.86, desc="Computing cophenetic heatmap")
+            log_event("Computing cophenetic heatmap and confidence score")
             yield emit_status(
-                phase="confidence-score",
+                phase="cophenetic-analysis",
                 run_dir=run_dir,
-                lines=["Computing segmentation confidence score."],
+                lines=["Computing the cophenetic heatmap and summary confidence score."],
                 summary=summary,
             )
-            conf_res = compute_segmentation_confidence_score_from_merged(
-                merged,
-                pattern1_clusters=cfg.pattern1_clusters,
-                x_col=x_col,
-                y_col=y_col,
-                celltype_col="cluster",
-                z_col=None,
-                linkage_method=cfg.confidence_linkage_method,
-                show_corr=cfg.confidence_show_corr,
-                return_blue_band_matrix=False,
-            )
-            conf_score = conf_res.score_mean
-            conf_stats = dict(conf_res.stats)
+            try:
+                conf_score, conf_stats, cophenetic_heatmap_path = compute_cophenetic_outputs(
+                    merged_df=merged,
+                    pattern1_clusters=list(cfg.pattern1_clusters),
+                    x_col=x_col,
+                    y_col=y_col,
+                    output_dir=output_dir,
+                    linkage_method=cfg.confidence_linkage_method,
+                    show_corr=cfg.confidence_show_corr,
+                )
+            except Exception as exc:
+                cophenetic_note = f"Skipped cophenetic heatmap: {exc}"
+                log_event(cophenetic_note)
+                summary["cophenetic_note"] = cophenetic_note
 
         progress(0.93, desc="Saving outputs")
         log_event(f"Saving outputs | contours={len(verts_list)}")
         yield emit_status(
             phase="saving-outputs",
             run_dir=run_dir,
-            lines=[f"Contours extracted: {len(verts_list)}", "Writing preview image and downloadable outputs."],
+            lines=[
+                f"Contours extracted: {len(verts_list)}",
+                "Writing the contour preview, cophenetic heatmap, and downloadable outputs.",
+            ],
             summary=summary,
+            cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
         )
 
         params_path: Path | None = None
@@ -723,9 +782,11 @@ def run_analysis(
                 n_target_cells=int(len(target_xy)),
                 n_bg0=int(len(bg0_xy)),
                 n_contours=int(len(verts_list)),
-                label_scheme=_validate_label_scheme(cfg.label_scheme),
+                label_scheme=describe_label_scheme(cfg.label_scheme),
+                label_scheme_internal=_validate_label_scheme(cfg.label_scheme),
                 segmentation_confidence_score=conf_score,
                 segmentation_confidence_stats=conf_stats,
+                cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
             )
         )
         if cfg.save_params_json:
@@ -740,17 +801,17 @@ def run_analysis(
         preview_path: Path | None = None
         if cfg.save_preview_png:
             plt.figure(figsize=(10, 10))
-            plt.scatter(bg0_xy[:, 0], bg0_xy[:, 1], s=1, alpha=0.05, label="bg0 (other cells + synth)")
-            plt.scatter(target_xy[:, 0], target_xy[:, 1], s=3, alpha=0.85, label="pattern1 cells")
+            plt.scatter(bg0_xy[:, 0], bg0_xy[:, 1], s=1, alpha=0.05, label="background points")
+            plt.scatter(target_xy[:, 0], target_xy[:, 1], s=3, alpha=0.85, label="selected-cluster cells")
             for vertices in verts_list:
                 plt.plot(vertices[:, 0], vertices[:, 1], linewidth=2)
             plt.gca().set_aspect("equal")
             title = (
-                f"Pattern1 segmentation | isoline={cfg.isoline_level:g} | "
-                f"contours={len(verts_list)} | label_scheme={_validate_label_scheme(cfg.label_scheme)}"
+                f"Target-cluster contours | isoline={cfg.isoline_level:g} | "
+                f"contours={len(verts_list)} | scoring={describe_label_scheme(cfg.label_scheme)}"
             )
             if conf_score is not None:
-                title += f" | confidence(mean)={conf_score:.4f}"
+                title += f" | cophenetic confidence={conf_score:.4f}"
             plt.title(title)
             plt.legend(frameon=False)
             plt.tight_layout()
@@ -779,6 +840,8 @@ def run_analysis(
             output_files.append(str(archive_path))
         if preview_path is not None:
             output_files.append(str(preview_path))
+        if cophenetic_heatmap_path is not None:
+            output_files.append(str(cophenetic_heatmap_path))
         if params_path is not None:
             output_files.append(str(params_path))
         output_files.extend(str(path) for path in sorted(output_dir.glob("pattern1_isoline_*.npy")))
@@ -786,6 +849,10 @@ def run_analysis(
         summary.update(format_summary(result, used_tissue_boundary=tissue_path is not None, work_dir=run_dir))
         summary["effective_runtime_seconds"] = round(time.perf_counter() - start_time, 2)
         summary["profile_notes"] = list(profile.notes)
+        summary["cophenetic_heatmap_generated"] = cophenetic_heatmap_path is not None
+        summary["cophenetic_heatmap_path"] = (
+            str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None
+        )
 
         log_event(
             f"Run finished successfully | contours={len(result.contours)} | "
@@ -799,9 +866,14 @@ def run_analysis(
                 f"{APP_NAME} finished successfully.",
                 f"Contours generated: {len(result.contours)}",
                 f"Elapsed time: {summary['effective_runtime_seconds']} seconds",
-            ] + list(profile.notes) + ([archive_note] if archive_note else []),
+            ]
+            + ([f"Cophenetic confidence score: {conf_score:.4f}"] if conf_score is not None else [])
+            + ([cophenetic_note] if cophenetic_note else [])
+            + list(profile.notes)
+            + ([archive_note] if archive_note else []),
             summary=summary,
             preview_path=str(preview_path) if preview_path is not None else None,
+            cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
             output_files=output_files,
         )
     except Exception as exc:
@@ -853,8 +925,8 @@ with gr.Blocks(
         <div class="hero">
           <h1>AI Driven Spatial Pathologist</h1>
           <p>
-            A SciLifeLab Serve-ready wrapper around HistoSeg for Xenium-driven Pattern1 isoline analysis.
-            Upload a Xenium zip bundle or the required files directly, tune the parameters, and download the contours.
+            A SciLifeLab Serve-ready wrapper around HistoSeg for target-cluster contour analysis.
+            Upload the required analysis files, tune the parameters, and download the contour preview plus the cophenetic heatmap.
           </p>
         </div>
         """
@@ -865,67 +937,65 @@ with gr.Blocks(
         <div class="callout">
         Required analysis inputs: <code>cells.parquet</code> and <code>clusters.csv</code>.
         Recommended: <code>tissue_boundary.csv</code> so synthetic background can be used.
-        A zipped Xenium output folder works if it contains those files, especially
-        <code>analysis/clustering/gene_expression_graphclust/clusters.csv</code>.
+        Pick the cluster IDs you want to outline as the target region, then run the app to generate contours and the cophenetic heatmap.
         </div>
         """
     )
 
     with gr.Row():
         with gr.Column(scale=1):
-            bundle_zip = gr.File(
-                label="Xenium zip bundle",
-                file_types=[".zip"],
-                type="filepath",
-            )
             cells_parquet = gr.File(
-                label="cells.parquet",
+                label="Cell coordinates (cells.parquet)",
                 file_types=[".parquet"],
                 type="filepath",
             )
             clusters_csv = gr.File(
-                label="clusters.csv",
+                label="Cluster assignments (clusters.csv)",
                 file_types=[".csv"],
                 type="filepath",
             )
             tissue_boundary_csv = gr.File(
-                label="tissue_boundary.csv",
+                label="Tissue boundary (optional: tissue_boundary.csv)",
                 file_types=[".csv"],
                 type="filepath",
             )
             pattern1_clusters = gr.Textbox(
-                label="Pattern1 clusters",
+                label="Clusters to outline",
                 value=DEFAULT_PATTERN1,
-                info="Comma-separated cluster labels or integers.",
+                info="Enter the cluster IDs or labels that should be treated as the target region. Separate them with commas.",
             )
             label_scheme = gr.Dropdown(
-                label="Label scheme",
-                choices=["p1_is_one", "p1_is_zero"],
-                value="p1_is_one",
+                label="Scoring direction",
+                choices=list(LABEL_SCHEME_OPTIONS.keys()),
+                value=DEFAULT_LABEL_SCHEME,
+                info="Recommended: selected clusters score high and background scores low.",
             )
 
             with gr.Accordion("Advanced parameters", open=False):
-                grid_n = gr.Slider(label="grid_n", minimum=200, maximum=1600, step=50, value=650)
-                knn_k = gr.Slider(label="knn_k", minimum=5, maximum=100, step=1, value=30)
-                smooth_sigma = gr.Slider(label="smooth_sigma", minimum=0.5, maximum=12.0, step=0.5, value=5.0)
-                min_cells_inside = gr.Slider(label="min_cells_inside", minimum=1, maximum=200, step=1, value=10)
-                bbox_expand_um = gr.Slider(label="bbox_expand_um", minimum=0, maximum=500, step=10, value=100)
-                syn_bg_density = gr.Slider(label="syn_bg_density", minimum=0.001, maximum=0.05, step=0.001, value=0.003)
+                grid_n = gr.Slider(label="Mesh resolution", minimum=200, maximum=1600, step=50, value=650)
+                knn_k = gr.Slider(label="KNN neighbors", minimum=5, maximum=100, step=1, value=30)
+                smooth_sigma = gr.Slider(label="Smoothing strength", minimum=0.5, maximum=12.0, step=0.5, value=5.0)
+                min_cells_inside = gr.Slider(label="Minimum cells inside each contour", minimum=1, maximum=200, step=1, value=10)
+                bbox_expand_um = gr.Slider(label="Boundary expansion (um)", minimum=0, maximum=500, step=10, value=100)
+                syn_bg_density = gr.Slider(label="Synthetic background density", minimum=0.001, maximum=0.05, step=0.001, value=0.003)
                 use_synth_bg = gr.Checkbox(label="Use synthetic background", value=True)
-                compute_confidence_score = gr.Checkbox(label="Compute segmentation confidence score", value=False)
+                compute_confidence_score = gr.Checkbox(
+                    label="Generate cophenetic heatmap and confidence score",
+                    value=True,
+                )
 
             run_button = gr.Button("Run HistoSeg analysis", variant="primary")
 
         with gr.Column(scale=1):
             status_text = gr.Textbox(label="Status", lines=8)
-            preview_image = gr.Image(label="Preview", type="filepath")
+            preview_image = gr.Image(label="Contour preview", type="filepath")
+            cophenetic_heatmap_image = gr.Image(label="Cophenetic heatmap", type="filepath")
             summary_json = gr.JSON(label="Run summary")
             output_files = gr.File(label="Download outputs", file_count="multiple")
 
     run_button.click(
         fn=run_analysis,
         inputs=[
-            bundle_zip,
             cells_parquet,
             clusters_csv,
             tissue_boundary_csv,
@@ -940,7 +1010,7 @@ with gr.Blocks(
             bbox_expand_um,
             syn_bg_density,
         ],
-        outputs=[status_text, preview_image, summary_json, output_files],
+        outputs=[status_text, preview_image, cophenetic_heatmap_image, summary_json, output_files],
     )
 
 
