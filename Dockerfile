@@ -4,6 +4,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PORT=7860 \
+    HOME=/tmp \
+    XDG_CACHE_HOME=/tmp/.cache \
+    MPLCONFIGDIR=/tmp/matplotlib \
+    MPLBACKEND=Agg \
     APP_DATA_DIR=/home/username/app/project-vol \
     GRADIO_TEMP_DIR=/tmp/gradio
 
@@ -22,7 +26,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY main.py .
 
-RUN mkdir -p /home/username/app/project-vol /tmp/gradio
+RUN mkdir -p /home/username/app/project-vol
 
 EXPOSE 7860
 

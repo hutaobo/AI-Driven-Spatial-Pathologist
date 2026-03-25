@@ -8,6 +8,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
+
+def bootstrap_runtime_env() -> None:
+    """Point caches to writable paths before importing HistoSeg/matplotlib."""
+    os.environ.setdefault("HOME", "/tmp")
+    os.environ.setdefault("XDG_CACHE_HOME", "/tmp/.cache")
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+    os.environ.setdefault("MPLBACKEND", "Agg")
+    os.environ.setdefault("GRADIO_TEMP_DIR", "/tmp/gradio")
+
+    for key in ("HOME", "XDG_CACHE_HOME", "MPLCONFIGDIR", "GRADIO_TEMP_DIR"):
+        Path(os.environ[key]).mkdir(parents=True, exist_ok=True)
+
+
+bootstrap_runtime_env()
+
 import gradio as gr
 
 try:
@@ -26,7 +41,26 @@ APP_DESCRIPTION = (
     "run Pattern1 isoline analysis, and download the generated contours."
 )
 DEFAULT_PATTERN1 = "10,23,19,27,14,20,25,26"
-DEFAULT_WORK_DIR = Path(os.environ.get("APP_DATA_DIR", "./project-vol")).resolve()
+PREFERRED_WORK_DIR = Path(os.environ.get("APP_DATA_DIR", "./project-vol")).resolve()
+FALLBACK_WORK_DIR = Path("/tmp/project-vol")
+
+
+def resolve_work_dir() -> Path:
+    for candidate in (PREFERRED_WORK_DIR, FALLBACK_WORK_DIR):
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            probe = candidate / ".write_test"
+            probe.write_text("ok", encoding="utf-8")
+            probe.unlink()
+            return candidate
+        except OSError:
+            continue
+    raise PermissionError(
+        f"Could not find a writable work directory. Tried: {PREFERRED_WORK_DIR} and {FALLBACK_WORK_DIR}"
+    )
+
+
+DEFAULT_WORK_DIR = resolve_work_dir()
 RUNS_DIR = DEFAULT_WORK_DIR / "runs"
 
 
