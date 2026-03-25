@@ -27,7 +27,10 @@ bootstrap_runtime_env()
 import gradio as gr
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from scipy.cluster.hierarchy import fcluster, leaves_list, linkage
 from scipy.ndimage import gaussian_filter
+from scipy.spatial.distance import squareform
 from sklearn.neighbors import KNeighborsRegressor
 
 try:
@@ -119,10 +122,12 @@ def resolve_work_dir() -> Path:
 
 DEFAULT_WORK_DIR = resolve_work_dir()
 RUNS_DIR = DEFAULT_WORK_DIR / "runs"
+SELECTIONS_DIR = DEFAULT_WORK_DIR / "structure-selections"
 
 
 def ensure_workdirs() -> None:
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    SELECTIONS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def log_event(message: str) -> None:
@@ -156,6 +161,25 @@ def parse_pattern1_clusters(raw: str) -> list[int | str]:
     if not values:
         raise ValueError("Clusters to outline cannot be empty.")
     return values
+
+
+def parse_optional_clusters(raw: str) -> list[int | str]:
+    if raw is None:
+        return []
+    if not str(raw).strip():
+        return []
+    return parse_pattern1_clusters(str(raw))
+
+
+def stringify_clusters(clusters: list[int | str]) -> str:
+    return ",".join(str(item) for item in clusters)
+
+
+def summarize_clusters(clusters: list[str], max_items: int = 8) -> str:
+    if len(clusters) <= max_items:
+        return ", ".join(clusters)
+    head = ", ".join(clusters[:max_items])
+    return f"{head}, ... (+{len(clusters) - max_items} more)"
 
 
 def safe_count_parquet_rows(parquet_path: Path) -> int | None:
@@ -285,6 +309,18 @@ def build_run_dir() -> Path:
     return run_dir
 
 
+def build_selection_dir() -> Path:
+    ensure_workdirs()
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    selection_dir = SELECTIONS_DIR / f"selection-{stamp}"
+    suffix = 1
+    while selection_dir.exists():
+        suffix += 1
+        selection_dir = SELECTIONS_DIR / f"selection-{stamp}-{suffix}"
+    selection_dir.mkdir(parents=True, exist_ok=False)
+    return selection_dir
+
+
 def cleanup_old_runs(max_keep: int = 2) -> list[str]:
     ensure_workdirs()
     runs = sorted(
@@ -294,6 +330,23 @@ def cleanup_old_runs(max_keep: int = 2) -> list[str]:
     )
     removed: list[str] = []
     for stale in runs[max_keep:]:
+        try:
+            shutil.rmtree(stale)
+            removed.append(stale.name)
+        except OSError:
+            continue
+    return removed
+
+
+def cleanup_old_selections(max_keep: int = 2) -> list[str]:
+    ensure_workdirs()
+    selections = sorted(
+        [path for path in SELECTIONS_DIR.glob("selection-*") if path.is_dir()],
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    removed: list[str] = []
+    for stale in selections[max_keep:]:
         try:
             shutil.rmtree(stale)
             removed.append(stale.name)
@@ -341,6 +394,210 @@ def zip_outputs(output_dir: Path) -> tuple[Path | None, str | None]:
                 "The raw output files are still available below."
             )
         raise
+
+
+def prepare_merged_clusters(cells_path: Path, clusters_path: Path) -> tuple[pd.DataFrame, str, str, str]:
+    merged, id_col_used, x_col, y_col = align_clusters_with_cells(
+        clusters_path,
+        cells_path,
+        barcode_col="Barcode",
+        cluster_col="Cluster",
+    )
+    merged = merged.copy()
+    merged["cluster"] = merged["cluster"].map(_normalize_cluster_label)
+    merged = merged.loc[merged["cluster"] != ""].copy()
+    return merged, id_col_used, x_col, y_col
+
+
+def normalize_row_cophenetic(row_coph: pd.DataFrame) -> pd.DataFrame:
+    labels = [_normalize_cluster_label(label) for label in row_coph.index]
+    normalized = row_coph.copy()
+    normalized.index = labels
+    normalized.columns = labels
+    return normalized
+
+
+def remap_flat_clusters_by_leaf_order(cluster_ids: list[str], linkage_matrix, flat_labels) -> dict[str, int]:
+    if linkage_matrix is None:
+        return {cluster_ids[0]: 1}
+
+    raw_map = {str(cluster_id): int(raw_label) for cluster_id, raw_label in zip(cluster_ids, flat_labels)}
+    ordered_cluster_ids = [cluster_ids[index] for index in leaves_list(linkage_matrix)]
+
+    raw_order: list[int] = []
+    seen_raw: set[int] = set()
+    for cluster_id in ordered_cluster_ids:
+        raw_label = raw_map[str(cluster_id)]
+        if raw_label in seen_raw:
+            continue
+        seen_raw.add(raw_label)
+        raw_order.append(raw_label)
+
+    remap = {raw_label: index + 1 for index, raw_label in enumerate(raw_order)}
+    return {str(cluster_id): int(remap[raw_map[str(cluster_id)]]) for cluster_id in cluster_ids}
+
+
+def build_structure_group_state(
+    row_coph: pd.DataFrame,
+    *,
+    n_groups: int,
+    linkage_method: str = "average",
+) -> dict[str, object]:
+    cluster_ids = [str(value) for value in row_coph.index]
+    if not cluster_ids:
+        raise ValueError("No clusters were available for dendrogram building.")
+
+    if len(cluster_ids) == 1:
+        ordered_clusters = cluster_ids
+        group_to_clusters = {1: ordered_clusters}
+        linkage_matrix = None
+    else:
+        condensed = squareform(row_coph.values, checks=False)
+        linkage_matrix = linkage(condensed, method=linkage_method)
+        n_groups = max(1, min(int(n_groups), len(cluster_ids)))
+        flat_labels = fcluster(linkage_matrix, t=n_groups, criterion="maxclust")
+        cluster_to_group = remap_flat_clusters_by_leaf_order(cluster_ids, linkage_matrix, flat_labels)
+        ordered_clusters = [cluster_ids[index] for index in leaves_list(linkage_matrix)]
+        group_to_clusters: dict[int, list[str]] = {}
+        for cluster_id in ordered_clusters:
+            group_id = int(cluster_to_group[cluster_id])
+            group_to_clusters.setdefault(group_id, []).append(cluster_id)
+
+    choices: list[str] = []
+    choice_to_clusters: dict[str, list[str]] = {}
+    table_rows: list[dict[str, object]] = []
+    for group_id, clusters in sorted(group_to_clusters.items()):
+        choice_label = f"Structure group {group_id} ({len(clusters)} clusters)"
+        choices.append(choice_label)
+        choice_to_clusters[choice_label] = list(clusters)
+        table_rows.append(
+            {
+                "Structure group": f"Structure group {group_id}",
+                "Cluster count": len(clusters),
+                "Clusters": ", ".join(clusters),
+            }
+        )
+
+    return {
+        "n_groups": len(group_to_clusters),
+        "ordered_clusters": ordered_clusters,
+        "choices": choices,
+        "choice_to_clusters": choice_to_clusters,
+        "table_rows": table_rows,
+    }
+
+
+def collect_clusters_from_groups(selected_groups: list[str], group_state: dict[str, object] | None) -> list[str]:
+    if not group_state:
+        return []
+    choice_to_clusters = group_state.get("choice_to_clusters", {})
+    ordered_clusters = group_state.get("ordered_clusters", [])
+    selected_set = set(selected_groups or [])
+    cluster_order: list[str] = []
+    for cluster_id in ordered_clusters:
+        for choice, clusters in choice_to_clusters.items():
+            if choice in selected_set and cluster_id in clusters and cluster_id not in cluster_order:
+                cluster_order.append(cluster_id)
+    return cluster_order
+
+
+def update_clusters_to_outline_from_groups(
+    selected_groups: list[str] | None,
+    group_state: dict[str, object] | None,
+) -> tuple[str, str]:
+    clusters = collect_clusters_from_groups(selected_groups or [], group_state)
+    if not clusters:
+        return "", "No structure groups selected yet. You can also type cluster IDs manually."
+
+    cluster_text = stringify_clusters(clusters)
+    summary = (
+        f"Selected {len(selected_groups or [])} structure group(s) -> "
+        f"{len(clusters)} cluster(s): {summarize_clusters(clusters)}"
+    )
+    return cluster_text, summary
+
+
+def build_structure_groups(
+    cells_parquet: object | None,
+    clusters_csv: object | None,
+    n_structure_groups: int,
+    progress: gr.Progress = gr.Progress(track_tqdm=False),
+):
+    if HISTOSEG_IMPORT_ERROR is not None:
+        raise gr.Error(
+            "HistoSeg could not be imported inside the app container. "
+            f"Import error: {HISTOSEG_IMPORT_ERROR}"
+        )
+
+    removed_previews = cleanup_old_selections(max_keep=2)
+    selection_dir = build_selection_dir()
+    input_dir = selection_dir / "inputs"
+    output_dir = selection_dir / "outputs"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    progress(0.1, desc="Staging files for dendrogram")
+    cells_path, clusters_path, _unused_tissue_path = resolve_inputs(
+        cells_upload=cells_parquet,
+        clusters_upload=clusters_csv,
+        tissue_upload=None,
+        target_dir=input_dir,
+    )
+
+    progress(0.35, desc="Aligning cells and clusters")
+    merged, id_col_used, x_col, y_col = prepare_merged_clusters(cells_path, clusters_path)
+    if merged["cluster"].nunique() < 2:
+        raise gr.Error("Need at least two clusters to build a dendrogram.")
+
+    progress(0.6, desc="Computing cophenetic dendrogram")
+    distance_matrix = compute_searcher_findee_distance_matrix_from_df(
+        merged,
+        x_col=x_col,
+        y_col=y_col,
+        z_col=None,
+        celltype_col="cluster",
+    )
+    row_coph, _col_coph = compute_cophenetic_from_distance_matrix(
+        distance_matrix,
+        method="average",
+        show_corr=False,
+    )
+    row_coph = normalize_row_cophenetic(row_coph)
+
+    heatmap_image = plot_cophenetic_heatmap(
+        row_coph,
+        matrix_name="row_coph",
+        sample="all clusters",
+        return_image=True,
+        dpi=300,
+    )
+    heatmap_path = output_dir / "cophenetic_heatmap_row_coph.png"
+    heatmap_image.save(heatmap_path)
+
+    progress(0.85, desc="Cutting dendrogram into structure groups")
+    group_state = build_structure_group_state(row_coph, n_groups=int(n_structure_groups), linkage_method="average")
+    group_df = pd.DataFrame(group_state["table_rows"])
+    status_lines = [
+        f"Built a cophenetic dendrogram for {merged['cluster'].nunique()} clusters.",
+        f"Cut the dendrogram into {group_state['n_groups']} structure group(s).",
+        "Select one or more structure groups below to auto-fill 'Clusters to outline'.",
+    ]
+    if removed_previews:
+        status_lines.append(f"Cleaned old dendrogram sessions: {', '.join(removed_previews)}")
+    status_lines.append(f"Merged cells available for grouping: {len(merged)}")
+    status_lines.append(f"Coordinate columns: {x_col}, {y_col}")
+    status_lines.append(f"Cell identifier column: {id_col_used}")
+
+    progress(1.0, desc="Structure groups ready")
+    return (
+        "\n".join(status_lines),
+        str(heatmap_path),
+        group_df,
+        gr.update(choices=group_state["choices"], value=[]),
+        "",
+        "No structure groups selected yet. You can also type cluster IDs manually.",
+        group_state,
+    )
 
 
 def compute_cophenetic_outputs(
@@ -925,8 +1182,8 @@ with gr.Blocks(
         <div class="hero">
           <h1>AI Driven Spatial Pathologist</h1>
           <p>
-            A SciLifeLab Serve-ready wrapper around HistoSeg for target-cluster contour analysis.
-            Upload the required analysis files, tune the parameters, and download the contour preview plus the cophenetic heatmap.
+            A SciLifeLab Serve-ready wrapper around HistoSeg for hierarchical, dendrogram-guided contour analysis.
+            First build structure groups from the cophenetic dendrogram, then select one or more groups to run the final contour analysis.
           </p>
         </div>
         """
@@ -937,10 +1194,12 @@ with gr.Blocks(
         <div class="callout">
         Required analysis inputs: <code>cells.parquet</code> and <code>clusters.csv</code>.
         Recommended: <code>tissue_boundary.csv</code> so synthetic background can be used.
-        Pick the cluster IDs you want to outline as the target region, then run the app to generate contours and the cophenetic heatmap.
+        Workflow: build the cophenetic dendrogram, cut it into structure groups, select one or more groups, and then run HistoSeg on the combined clusters.
         </div>
         """
     )
+
+    group_state = gr.State(value={})
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -959,10 +1218,29 @@ with gr.Blocks(
                 file_types=[".csv"],
                 type="filepath",
             )
+            n_structure_groups = gr.Slider(
+                label="How many structure groups to cut from the dendrogram",
+                minimum=2,
+                maximum=12,
+                step=1,
+                value=4,
+            )
+            build_groups_button = gr.Button("1. Build structure groups", variant="secondary")
+            structure_group_selector = gr.CheckboxGroup(
+                label="Structure groups to outline",
+                choices=[],
+                value=[],
+                info="Select one or more structure groups. Their clusters will be merged into the textbox below.",
+            )
             pattern1_clusters = gr.Textbox(
                 label="Clusters to outline",
-                value=DEFAULT_PATTERN1,
-                info="Enter the cluster IDs or labels that should be treated as the target region. Separate them with commas.",
+                value="",
+                info="This field is auto-filled from the selected structure groups, but you can still edit it manually.",
+            )
+            selection_summary = gr.Textbox(
+                label="Selected structure summary",
+                value="No structure groups selected yet. You can also type cluster IDs manually.",
+                lines=3,
             )
             label_scheme = gr.Dropdown(
                 label="Scoring direction",
@@ -980,18 +1258,46 @@ with gr.Blocks(
                 syn_bg_density = gr.Slider(label="Synthetic background density", minimum=0.001, maximum=0.05, step=0.001, value=0.003)
                 use_synth_bg = gr.Checkbox(label="Use synthetic background", value=True)
                 compute_confidence_score = gr.Checkbox(
-                    label="Generate cophenetic heatmap and confidence score",
+                    label="Include cophenetic heatmap and confidence score in final outputs",
                     value=True,
                 )
 
-            run_button = gr.Button("Run HistoSeg analysis", variant="primary")
+            run_button = gr.Button("2. Run contour analysis", variant="primary")
 
         with gr.Column(scale=1):
+            structure_status = gr.Textbox(label="Structure grouping status", lines=6)
+            structure_group_table = gr.Dataframe(
+                label="Structure groups and their clusters",
+                headers=["Structure group", "Cluster count", "Clusters"],
+                datatype=["str", "number", "str"],
+                interactive=False,
+                wrap=True,
+            )
+            cophenetic_heatmap_image = gr.Image(label="Cophenetic heatmap and dendrogram", type="filepath")
             status_text = gr.Textbox(label="Status", lines=8)
             preview_image = gr.Image(label="Contour preview", type="filepath")
-            cophenetic_heatmap_image = gr.Image(label="Cophenetic heatmap", type="filepath")
             summary_json = gr.JSON(label="Run summary")
             output_files = gr.File(label="Download outputs", file_count="multiple")
+
+    build_groups_button.click(
+        fn=build_structure_groups,
+        inputs=[cells_parquet, clusters_csv, n_structure_groups],
+        outputs=[
+            structure_status,
+            cophenetic_heatmap_image,
+            structure_group_table,
+            structure_group_selector,
+            pattern1_clusters,
+            selection_summary,
+            group_state,
+        ],
+    )
+
+    structure_group_selector.change(
+        fn=update_clusters_to_outline_from_groups,
+        inputs=[structure_group_selector, group_state],
+        outputs=[pattern1_clusters, selection_summary],
+    )
 
     run_button.click(
         fn=run_analysis,
