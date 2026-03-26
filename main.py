@@ -32,9 +32,16 @@ import numpy as np
 import pandas as pd
 from matplotlib.patches import Rectangle
 from scipy.cluster.hierarchy import dendrogram, fcluster, leaves_list, linkage, to_tree
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage import (
+    binary_closing,
+    binary_fill_holes,
+    binary_opening,
+    distance_transform_edt,
+    gaussian_filter,
+    generate_binary_structure,
+    label as nd_label,
+)
 from scipy.spatial.distance import squareform
-from sklearn.neighbors import KNeighborsRegressor
 
 try:
     import pyarrow.parquet as pq
@@ -49,12 +56,6 @@ try:
         _validate_label_scheme,
         align_clusters_with_cells,
         extract_contour_paths,
-        filter_loops_by_cell_count,
-        generate_synthetic_bg_in_bbox,
-        load_tissue_boundary_csv,
-        make_mesh_from_xy,
-        sample_background_from_other_cells_plus_synth,
-        tissue_mask_from_xy,
     )
     from histoseg.sfplot.Searcher_Findee_Score import (
         compute_cophenetic_from_distance_matrix,
@@ -70,12 +71,6 @@ except Exception as exc:  # pragma: no cover - startup fallback only
     _validate_label_scheme = None  # type: ignore[assignment]
     align_clusters_with_cells = None  # type: ignore[assignment]
     extract_contour_paths = None  # type: ignore[assignment]
-    filter_loops_by_cell_count = None  # type: ignore[assignment]
-    generate_synthetic_bg_in_bbox = None  # type: ignore[assignment]
-    load_tissue_boundary_csv = None  # type: ignore[assignment]
-    make_mesh_from_xy = None  # type: ignore[assignment]
-    sample_background_from_other_cells_plus_synth = None  # type: ignore[assignment]
-    tissue_mask_from_xy = None  # type: ignore[assignment]
     compute_cophenetic_from_distance_matrix = None  # type: ignore[assignment]
     compute_searcher_findee_distance_matrix_from_df = None  # type: ignore[assignment]
     plot_cophenetic_heatmap = None  # type: ignore[assignment]
@@ -88,11 +83,6 @@ APP_DESCRIPTION = (
     "spatial structures before running the final HistoSeg contour analysis."
 )
 DEFAULT_PATTERN1 = "10,23,19,27,14,20,25,26"
-LABEL_SCHEME_OPTIONS = {
-    "Treat the selected structures as the signal of interest (recommended)": "p1_is_one",
-    "Treat the selected structures as background (invert the score)": "p1_is_zero",
-}
-DEFAULT_LABEL_SCHEME = "Treat the selected structures as the signal of interest (recommended)"
 GROUP_SELECTION_EMPTY = "No structures selected yet. Click one or more colored badges on the dendrogram, or type cluster IDs manually."
 GROUP_PALETTE = [
     "#6EF0D4",
@@ -108,6 +98,20 @@ GROUP_PALETTE = [
     "#B8F0DE",
     "#A7BFFF",
 ]
+DEFAULT_STRUCTURE_ISOLINE_CFG = {
+    "bins_x": 900,
+    "bins_y": 700,
+    "gaussian_sigma": 2.25,
+    "density_scale_quantile": 0.98,
+    "support_quantile": 0.18,
+    "tissue_quantile": 0.06,
+    "min_dominance": 0.34,
+    "closing_iterations": 2,
+    "opening_iterations": 1,
+    "fill_holes": True,
+    "min_cells": 500,
+    "min_component_pixels": 180,
+}
 PREFERRED_WORK_DIR = Path(os.environ.get("APP_DATA_DIR", "./project-vol")).resolve()
 FALLBACK_WORK_DIR = Path("/tmp/project-vol")
 
@@ -154,8 +158,8 @@ def log_event(message: str) -> None:
 
 
 def to_internal_label_scheme(label_scheme: str) -> str:
-    if label_scheme in LABEL_SCHEME_OPTIONS:
-        return LABEL_SCHEME_OPTIONS[label_scheme]
+    if label_scheme is None:
+        return "p1_is_one"
     return _validate_label_scheme(label_scheme)
 
 
@@ -191,6 +195,31 @@ def parse_optional_clusters(raw: str) -> list[int | str]:
 
 def stringify_clusters(clusters: list[int | str]) -> str:
     return ",".join(str(item) for item in clusters)
+
+
+def parse_structure_cluster_groups(raw: str) -> list[list[int | str]]:
+    if raw is None or not str(raw).strip():
+        raise ValueError("Please select one or more structures, or type cluster IDs with one structure per line.")
+
+    groups: list[list[int | str]] = []
+    normalized_text = str(raw).replace(";", "\n")
+    for raw_line in normalized_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if ":" in line:
+            line = line.split(":", 1)[1].strip()
+        parsed = parse_pattern1_clusters(line)
+        if parsed:
+            groups.append(parsed)
+
+    if not groups:
+        raise ValueError("No valid structure groups were found. Use one line per structure, for example '10,23,19'.")
+    return groups
+
+
+def stringify_structure_cluster_groups(cluster_groups: list[list[int | str]]) -> str:
+    return "\n".join(stringify_clusters(group) for group in cluster_groups)
 
 
 def summarize_clusters(clusters: list[str], max_items: int = 8) -> str:
@@ -620,15 +649,17 @@ def update_clusters_to_outline_from_groups(
     selected_groups: list[str] | None,
     group_state: dict[str, object] | None,
 ) -> tuple[str, str]:
-    clusters = collect_clusters_from_groups(selected_groups or [], group_state)
-    if not clusters:
+    normalized_groups = normalize_selected_groups(selected_groups or [], group_state)
+    if not normalized_groups:
         return "", GROUP_SELECTION_EMPTY
 
-    cluster_text = stringify_clusters(clusters)
-    summary = (
-        f"Selected {len(selected_groups or [])} structure(s) -> "
-        f"{len(clusters)} cluster ID(s): {summarize_clusters(clusters)}"
-    )
+    choice_to_clusters = (group_state or {}).get("choice_to_clusters", {})
+    grouped_clusters = [list(choice_to_clusters.get(choice, [])) for choice in normalized_groups]
+    cluster_text = stringify_structure_cluster_groups(grouped_clusters)
+    summary_lines = [f"Selected {len(normalized_groups)} structure(s)."]
+    for idx, clusters in enumerate(grouped_clusters, start=1):
+        summary_lines.append(f"Structure {idx}: {summarize_clusters([str(item) for item in clusters])}")
+    summary = "\n".join(summary_lines)
     return cluster_text, summary
 
 
@@ -949,6 +980,467 @@ def clear_structure_selection(
     return refresh_structure_selection([], group_state, note="Selection cleared. Choose one or more structures to continue.")
 
 
+def build_selected_structure_specs(
+    raw_groups_text: str,
+    selected_groups: list[str] | None,
+    group_state: dict[str, object] | None,
+) -> list[dict[str, object]]:
+    parsed_groups = parse_structure_cluster_groups(raw_groups_text)
+    selected_records: list[dict[str, object]] = []
+    if group_state:
+        record_by_choice = {
+            str(record["choice_label"]): dict(record)
+            for record in group_state.get("group_records", [])
+        }
+        for choice in normalize_selected_groups(selected_groups or [], group_state):
+            record = record_by_choice.get(choice)
+            if record is not None:
+                selected_records.append(record)
+
+    specs: list[dict[str, object]] = []
+    seen_clusters: set[str] = set()
+    for index, group in enumerate(parsed_groups, start=1):
+        normalized_clusters: list[str] = []
+        for item in group:
+            normalized = _normalize_cluster_label(item)
+            if normalized and normalized not in normalized_clusters:
+                normalized_clusters.append(normalized)
+        if not normalized_clusters:
+            raise ValueError(f"Structure {index} does not contain any valid cluster IDs.")
+
+        overlap = seen_clusters.intersection(normalized_clusters)
+        if overlap:
+            raise ValueError(
+                "A cluster ID cannot belong to more than one structure in the same run. "
+                f"Repeated cluster IDs: {', '.join(sorted(overlap))}"
+            )
+        seen_clusters.update(normalized_clusters)
+
+        if index <= len(selected_records):
+            record = selected_records[index - 1]
+            structure_name = str(record["group_name"])
+            structure_color = str(record["color"])
+            source_label = str(record["choice_label"])
+        else:
+            structure_name = f"Structure {index}"
+            structure_color = group_color(index)
+            source_label = structure_name
+
+        specs.append(
+            {
+                "structure_id": int(index),
+                "structure_name": structure_name,
+                "structure_color": structure_color,
+                "source_label": source_label,
+                "cluster_ids_raw": [str(item) for item in group],
+                "cluster_ids_normalized": normalized_clusters,
+            }
+        )
+
+    return specs
+
+
+def _remove_small_components(mask: np.ndarray, min_pixels: int) -> np.ndarray:
+    labeled, n_components = nd_label(mask)
+    if n_components == 0:
+        return mask
+
+    component_sizes = np.bincount(labeled.ravel())
+    keep_labels = np.where(component_sizes >= int(min_pixels))[0]
+    keep_mask = np.isin(labeled, keep_labels)
+    keep_mask[labeled == 0] = False
+    return keep_mask
+
+
+def _prepare_binary_mask(mask: np.ndarray, isoline_cfg: dict[str, object]) -> np.ndarray:
+    structure = generate_binary_structure(2, 1)
+    result = mask.copy()
+
+    if int(isoline_cfg["closing_iterations"]) > 0:
+        result = binary_closing(result, structure=structure, iterations=int(isoline_cfg["closing_iterations"]))
+    if int(isoline_cfg["opening_iterations"]) > 0:
+        result = binary_opening(result, structure=structure, iterations=int(isoline_cfg["opening_iterations"]))
+    if bool(isoline_cfg["fill_holes"]):
+        result = binary_fill_holes(result)
+
+    return _remove_small_components(result, int(isoline_cfg["min_component_pixels"]))
+
+
+def build_structure_isolines(
+    *,
+    cells: pd.DataFrame,
+    structure_specs: list[dict[str, object]],
+    x_col: str,
+    y_col: str,
+    isoline_cfg: dict[str, object],
+) -> tuple[dict[int, dict[str, object]], dict[str, np.ndarray], dict[str, object]]:
+    x_min = float(cells[x_col].min())
+    x_max = float(cells[x_col].max())
+    y_min = float(cells[y_col].min())
+    y_max = float(cells[y_col].max())
+
+    x_edges = np.linspace(x_min, x_max, int(isoline_cfg["bins_x"]) + 1)
+    y_edges = np.linspace(y_min, y_max, int(isoline_cfg["bins_y"]) + 1)
+    x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
+    y_centers = 0.5 * (y_edges[:-1] + y_edges[1:])
+    grid_x, grid_y = np.meshgrid(x_centers, y_centers)
+
+    density_stack: list[np.ndarray] = []
+    normalized_stack: list[np.ndarray] = []
+    support_thresholds: list[float] = []
+    valid_specs: list[dict[str, object]] = []
+    raw_density_by_structure: dict[int, np.ndarray] = {}
+
+    all_hist, _, _ = np.histogram2d(
+        cells[x_col].to_numpy(dtype=float),
+        cells[y_col].to_numpy(dtype=float),
+        bins=[x_edges, y_edges],
+    )
+    occupied_mask = all_hist.T > 0
+
+    skipped_structures: list[dict[str, object]] = []
+    for spec in structure_specs:
+        structure_id = int(spec["structure_id"])
+        subset = cells.loc[cells["_selected_structure_id"] == structure_id, [x_col, y_col]]
+        if len(subset) < int(isoline_cfg["min_cells"]):
+            skipped_structures.append(
+                {
+                    "structure_id": structure_id,
+                    "structure_name": spec["structure_name"],
+                    "reason": f"Only {len(subset)} cells, below min_cells={int(isoline_cfg['min_cells'])}",
+                }
+            )
+            continue
+
+        hist, _, _ = np.histogram2d(
+            subset[x_col].to_numpy(dtype=float),
+            subset[y_col].to_numpy(dtype=float),
+            bins=[x_edges, y_edges],
+        )
+        density = gaussian_filter(hist.T, sigma=float(isoline_cfg["gaussian_sigma"]))
+        positive = density[density > 0]
+        if positive.size == 0:
+            skipped_structures.append(
+                {
+                    "structure_id": structure_id,
+                    "structure_name": spec["structure_name"],
+                    "reason": "Density map contained no positive pixels after smoothing.",
+                }
+            )
+            continue
+
+        scale_value = float(np.quantile(positive, float(isoline_cfg["density_scale_quantile"])))
+        support_value = float(np.quantile(positive, float(isoline_cfg["support_quantile"])))
+        if scale_value <= 0 or support_value <= 0:
+            skipped_structures.append(
+                {
+                    "structure_id": structure_id,
+                    "structure_name": spec["structure_name"],
+                    "reason": "Could not derive positive scale/support thresholds for this structure.",
+                }
+            )
+            continue
+
+        density_stack.append(density)
+        normalized_stack.append(density / scale_value)
+        support_thresholds.append(support_value)
+        valid_specs.append(spec)
+        raw_density_by_structure[structure_id] = density
+
+    if not density_stack:
+        raise ValueError(
+            "No selected structure had enough support to build a contour partition. "
+            "Try selecting more cells per structure or lowering the minimum-cells threshold."
+        )
+
+    density_stack_np = np.stack(density_stack, axis=0)
+    normalized_stack_np = np.stack(normalized_stack, axis=0)
+    total_density = density_stack_np.sum(axis=0)
+    total_positive = total_density[total_density > 0]
+    tissue_threshold = float(np.quantile(total_positive, float(isoline_cfg["tissue_quantile"])))
+    tissue_mask = total_density >= tissue_threshold
+    tissue_mask = tissue_mask | occupied_mask
+    tissue_mask = _prepare_binary_mask(
+        tissue_mask,
+        {
+            **isoline_cfg,
+            "min_component_pixels": max(500, int(isoline_cfg["min_component_pixels"])),
+        },
+    )
+    tissue_mask = tissue_mask | occupied_mask
+
+    posterior = normalized_stack_np / (normalized_stack_np.sum(axis=0, keepdims=True) + 1e-12)
+    assignment_idx = posterior.argmax(axis=0)
+    best_posterior = posterior.max(axis=0)
+
+    structure_contours: dict[int, dict[str, object]] = {}
+    seed_masks: dict[int, np.ndarray] = {}
+    for idx, spec in enumerate(valid_specs):
+        structure_id = int(spec["structure_id"])
+        own_support = raw_density_by_structure[structure_id] >= support_thresholds[idx]
+        dominant_mask = assignment_idx == idx
+        confident_mask = best_posterior >= float(isoline_cfg["min_dominance"])
+        seed_mask = tissue_mask & own_support & dominant_mask & confident_mask
+        seed_mask = _prepare_binary_mask(seed_mask, isoline_cfg)
+        if not seed_mask.any():
+            fallback_mask = tissue_mask & dominant_mask & (raw_density_by_structure[structure_id] > 0)
+            fallback_mask = _remove_small_components(
+                fallback_mask,
+                max(20, int(isoline_cfg["min_component_pixels"]) // 2),
+            )
+            if fallback_mask.any():
+                seed_mask = fallback_mask
+            else:
+                peak_y, peak_x = np.unravel_index(
+                    np.argmax(raw_density_by_structure[structure_id]),
+                    raw_density_by_structure[structure_id].shape,
+                )
+                seed_mask = np.zeros_like(tissue_mask, dtype=bool)
+                seed_mask[peak_y, peak_x] = True
+
+        seed_masks[structure_id] = seed_mask
+        structure_contours[structure_id] = {
+            "structure_name": spec["structure_name"],
+            "structure_color": spec["structure_color"],
+            "cluster_ids_normalized": list(spec["cluster_ids_normalized"]),
+            "grid_x": grid_x,
+            "grid_y": grid_y,
+            "seed_mask": seed_mask.astype(float),
+            "density": raw_density_by_structure[structure_id],
+            "posterior": posterior[idx],
+        }
+
+    overlap_after = 0
+    if seed_masks:
+        sorted_ids = sorted(seed_masks)
+        mask_stack = np.stack([seed_masks[sid] for sid in sorted_ids], axis=0)
+        overlap_map = mask_stack.sum(axis=0)
+        if np.any(overlap_map >= 2):
+            posterior_lookup = {
+                int(spec["structure_id"]): posterior[idx]
+                for idx, spec in enumerate(valid_specs)
+            }
+            posterior_stack = np.stack([posterior_lookup[sid] for sid in sorted_ids], axis=0)
+            winner_idx = posterior_stack.argmax(axis=0)
+
+            for idx, structure_id in enumerate(sorted_ids):
+                exclusive_mask = mask_stack[idx] & ((overlap_map == 1) | (winner_idx == idx))
+                exclusive_mask = _remove_small_components(
+                    exclusive_mask,
+                    int(isoline_cfg["min_component_pixels"]),
+                )
+                seed_masks[structure_id] = exclusive_mask
+                structure_contours[structure_id]["seed_mask"] = exclusive_mask.astype(float)
+
+            mask_stack = np.stack([seed_masks[sid] for sid in sorted_ids], axis=0)
+            overlap_map = mask_stack.sum(axis=0)
+        overlap_after = int((overlap_map >= 2).sum())
+
+    seed_labels = np.zeros_like(tissue_mask, dtype=np.int32)
+    for structure_id in sorted(seed_masks):
+        seed_labels[seed_masks[structure_id]] = int(structure_id)
+
+    posterior_defined_mask = tissue_mask & (normalized_stack_np.sum(axis=0) > 0)
+    posterior_structure_ids = np.array([int(spec["structure_id"]) for spec in valid_specs], dtype=np.int32)[assignment_idx]
+    partition_labels = np.zeros_like(seed_labels, dtype=np.int32)
+    partition_labels[posterior_defined_mask] = posterior_structure_ids[posterior_defined_mask]
+    partition_labels[seed_labels > 0] = seed_labels[seed_labels > 0]
+
+    unassigned_mask = tissue_mask & (partition_labels == 0)
+    if unassigned_mask.any() and np.any(seed_labels > 0):
+        _, nearest_indices = distance_transform_edt(seed_labels == 0, return_indices=True)
+        nearest_seed_labels = seed_labels[nearest_indices[0], nearest_indices[1]]
+        partition_labels[unassigned_mask] = nearest_seed_labels[unassigned_mask]
+
+    partition_labels[occupied_mask & (partition_labels == 0)] = posterior_structure_ids[
+        occupied_mask & (partition_labels == 0)
+    ]
+
+    for spec in valid_specs:
+        structure_id = int(spec["structure_id"])
+        partition_mask = partition_labels == structure_id
+        if not partition_mask.any():
+            continue
+        structure_contours[structure_id]["partition_mask"] = partition_mask.astype(float)
+
+    metrics = {
+        "valid_structures": [int(spec["structure_id"]) for spec in valid_specs],
+        "skipped_structures": skipped_structures,
+        "grid_shape": [int(grid_x.shape[0]), int(grid_x.shape[1])],
+        "tissue_threshold": tissue_threshold,
+        "overlap_pixels_after": overlap_after,
+        "occupied_pixels": int(occupied_mask.sum()),
+        "partition_pixels_total": int((partition_labels > 0).sum()),
+        "structure_pixels": {
+            str(spec["structure_id"]): int((partition_labels == int(spec["structure_id"])).sum())
+            for spec in valid_specs
+        },
+        "seed_pixels": {
+            str(structure_id): int(seed_masks[structure_id].sum())
+            for structure_id in sorted(seed_masks)
+        },
+    }
+    partition_data = {
+        "grid_x": grid_x,
+        "grid_y": grid_y,
+        "x_edges": x_edges,
+        "y_edges": y_edges,
+        "partition_labels": partition_labels,
+    }
+    return structure_contours, partition_data, metrics
+
+
+def assign_cells_to_partition(
+    *,
+    cells: pd.DataFrame,
+    partition_data: dict[str, np.ndarray],
+    structure_specs: list[dict[str, object]],
+    x_col: str,
+    y_col: str,
+) -> tuple[pd.DataFrame, dict[str, object]]:
+    x_edges = np.asarray(partition_data["x_edges"], dtype=float)
+    y_edges = np.asarray(partition_data["y_edges"], dtype=float)
+    partition_labels = np.asarray(partition_data["partition_labels"], dtype=np.int32)
+
+    x_idx = np.searchsorted(x_edges, cells[x_col].to_numpy(dtype=float), side="right") - 1
+    y_idx = np.searchsorted(y_edges, cells[y_col].to_numpy(dtype=float), side="right") - 1
+    x_idx = np.clip(x_idx, 0, partition_labels.shape[1] - 1)
+    y_idx = np.clip(y_idx, 0, partition_labels.shape[0] - 1)
+
+    assigned_ids = partition_labels[y_idx, x_idx]
+    name_lookup = {int(spec["structure_id"]): str(spec["structure_name"]) for spec in structure_specs}
+    assigned_names = [name_lookup.get(int(value), "unassigned") for value in assigned_ids]
+
+    assigned_cells = cells.copy()
+    assigned_cells["isoline_structure_id"] = assigned_ids.astype(int)
+    assigned_cells["isoline_structure_name"] = assigned_names
+
+    assignment_mask = assigned_cells["isoline_structure_id"] > 0
+    metrics = {
+        "cell_count": int(len(assigned_cells)),
+        "assigned_cell_count": int(assignment_mask.sum()),
+        "assigned_cell_fraction": float(assignment_mask.mean()),
+        "structure_cell_counts": {
+            str(spec["structure_id"]): int((assigned_cells["isoline_structure_id"] == int(spec["structure_id"])).sum())
+            for spec in structure_specs
+        },
+    }
+    return assigned_cells, metrics
+
+
+def attach_partition_contours(
+    structure_contours: dict[int, dict[str, object]],
+) -> dict[int, dict[str, object]]:
+    updated: dict[int, dict[str, object]] = {}
+    for structure_id, payload in structure_contours.items():
+        data = dict(payload)
+        partition_mask = np.asarray(data.get("partition_mask"))
+        if partition_mask.size == 0:
+            data["contours"] = []
+            updated[structure_id] = data
+            continue
+        contours = extract_contour_paths(
+            np.asarray(data["grid_x"], dtype=float),
+            np.asarray(data["grid_y"], dtype=float),
+            partition_mask.astype(float),
+            level=0.5,
+        )
+        data["contours"] = [np.asarray(contour, dtype=float) for contour in contours if len(contour) >= 3]
+        updated[structure_id] = data
+    return updated
+
+
+def render_multi_structure_preview(
+    *,
+    assigned_cells: pd.DataFrame,
+    structure_contours: dict[int, dict[str, object]],
+    structure_specs: list[dict[str, object]],
+    x_col: str,
+    y_col: str,
+    output_path: Path,
+) -> Path:
+    sampled_cells = assigned_cells
+    if len(sampled_cells) > 60000:
+        sampled_cells = assigned_cells.sample(n=60000, random_state=42)
+
+    fig, ax = plt.subplots(figsize=(13.8, 13.2))
+    fig.patch.set_facecolor("#09111A")
+    ax.set_facecolor("#09111A")
+
+    background_mask = sampled_cells["isoline_structure_id"] <= 0
+    if background_mask.any():
+        ax.scatter(
+            sampled_cells.loc[background_mask, x_col],
+            sampled_cells.loc[background_mask, y_col],
+            s=1,
+            alpha=0.12,
+            color="#4A5B70",
+            rasterized=True,
+        )
+
+    for spec in structure_specs:
+        structure_id = int(spec["structure_id"])
+        color = str(spec["structure_color"])
+        mask = sampled_cells["isoline_structure_id"] == structure_id
+        if mask.any():
+            ax.scatter(
+                sampled_cells.loc[mask, x_col],
+                sampled_cells.loc[mask, y_col],
+                s=2.2,
+                alpha=0.58,
+                color=color,
+                label=f"S{structure_id}: {spec['structure_name']}",
+                rasterized=True,
+            )
+
+    for spec in structure_specs:
+        structure_id = int(spec["structure_id"])
+        contour_data = structure_contours.get(structure_id)
+        if not contour_data or "partition_mask" not in contour_data:
+            continue
+        color = str(spec["structure_color"])
+        ax.contourf(
+            np.asarray(contour_data["grid_x"], dtype=float),
+            np.asarray(contour_data["grid_y"], dtype=float),
+            np.asarray(contour_data["partition_mask"], dtype=float),
+            levels=[0.5, 1.5],
+            colors=[color],
+            alpha=0.17,
+        )
+        ax.contour(
+            np.asarray(contour_data["grid_x"], dtype=float),
+            np.asarray(contour_data["grid_y"], dtype=float),
+            np.asarray(contour_data["partition_mask"], dtype=float),
+            levels=[0.5],
+            colors=[color],
+            linewidths=2.0,
+            alpha=0.98,
+        )
+
+    ax.set_xlabel("X (um)", color="#B7C7D8", fontsize=10)
+    ax.set_ylabel("Y (um)", color="#B7C7D8", fontsize=10)
+    ax.tick_params(colors="#70869D", labelsize=8)
+    for spine in ax.spines.values():
+        spine.set_color("#26384B")
+    ax.set_aspect("equal")
+    ax.set_title(
+        f"Multi-structure spatial contour map | structures={len(structure_specs)}",
+        color="#EAF2FA",
+        fontsize=14,
+    )
+    ax.legend(
+        loc="upper right",
+        fontsize=8,
+        facecolor="#0F1B29",
+        edgecolor="#29435D",
+        labelcolor="white",
+    )
+
+    fig.savefig(output_path, dpi=200, bbox_inches="tight", facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return output_path
+
+
 def build_structure_groups(
     cells_parquet: object | None,
     clusters_csv: object | None,
@@ -1108,6 +1600,44 @@ def compute_cophenetic_outputs(
     return float(stats["mean"]), stats, heatmap_path
 
 
+def save_cophenetic_heatmap_only(
+    *,
+    merged_df: pd.DataFrame,
+    x_col: str,
+    y_col: str,
+    output_dir: Path,
+    sample_label: str,
+) -> tuple[Path, dict[str, object]]:
+    distance_matrix = compute_searcher_findee_distance_matrix_from_df(
+        merged_df,
+        x_col=x_col,
+        y_col=y_col,
+        z_col=None,
+        celltype_col="cluster",
+    )
+    row_coph, _col_coph = compute_cophenetic_from_distance_matrix(
+        distance_matrix,
+        method="average",
+        show_corr=False,
+    )
+    row_coph = normalize_row_cophenetic(row_coph)
+    heatmap_image = plot_cophenetic_heatmap(
+        row_coph,
+        matrix_name="row_coph",
+        sample=sample_label,
+        return_image=True,
+        dpi=300,
+    )
+    heatmap_path = output_dir / "cophenetic_heatmap_row_coph.png"
+    heatmap_image.save(heatmap_path)
+    stats = {
+        "n_clusters": int(row_coph.shape[0]),
+        "matrix_min": float(np.min(row_coph.to_numpy())),
+        "matrix_max": float(np.max(row_coph.to_numpy())),
+    }
+    return heatmap_path, stats
+
+
 def format_summary(result: object, *, used_tissue_boundary: bool, work_dir: Path) -> dict[str, object]:
     payload = {
         "work_dir": str(work_dir),
@@ -1149,15 +1679,16 @@ def run_analysis(
     clusters_csv: object | None,
     tissue_boundary_csv: object | None,
     pattern1_clusters: str,
+    selected_groups: list[str] | None,
+    group_state: dict[str, object] | None,
     grid_n: int,
     knn_k: int,
     smooth_sigma: float,
     min_cells_inside: int,
-    label_scheme: str,
-    use_synth_bg: bool,
     compute_confidence_score: bool,
     bbox_expand_um: float,
     syn_bg_density: float,
+    use_synth_bg: bool,
     progress: gr.Progress = gr.Progress(track_tqdm=False),
 ):
     if HISTOSEG_IMPORT_ERROR is not None:
@@ -1193,57 +1724,72 @@ def run_analysis(
             target_dir=upload_dir,
         )
 
-        parsed_clusters = parse_pattern1_clusters(pattern1_clusters)
-        internal_label_scheme = to_internal_label_scheme(label_scheme)
+        structure_specs = build_selected_structure_specs(
+            pattern1_clusters,
+            selected_groups,
+            group_state,
+        )
         estimated_cells_rows = safe_count_parquet_rows(cells_path)
         estimated_cluster_rows = safe_count_csv_rows(clusters_path)
-        estimated_rows = max(x for x in [estimated_cells_rows, estimated_cluster_rows] if x is not None) if any(
-            x is not None for x in [estimated_cells_rows, estimated_cluster_rows]
-        ) else None
-
-        effective_use_synth_bg = bool(use_synth_bg and tissue_path is not None)
-        if use_synth_bg and tissue_path is None:
-            log_event("No tissue_boundary.csv uploaded; synthetic background disabled automatically")
-
-        profile = choose_runtime_profile(
-            requested_grid_n=int(grid_n),
-            requested_syn_bg_density=float(syn_bg_density),
-            use_synth_bg=effective_use_synth_bg,
-            estimated_rows=estimated_rows,
-        )
+        isoline_cfg = {
+            **DEFAULT_STRUCTURE_ISOLINE_CONFIG,
+            "bins_x": int(grid_n),
+            "bins_y": int(knn_k),
+            "gaussian_sigma": float(smooth_sigma),
+            "min_cells": int(min_cells_inside),
+            "min_dominance": float(bbox_expand_um),
+            "support_quantile": float(syn_bg_density),
+            "fill_holes": bool(use_synth_bg),
+        }
         summary.update(
             {
                 "estimated_cells_rows": estimated_cells_rows,
                 "estimated_cluster_rows": estimated_cluster_rows,
-                "dataset_scale": profile.scale_label,
-                "requested_grid_n": int(grid_n),
-                "effective_grid_n": profile.grid_n,
-                "requested_syn_bg_density": float(syn_bg_density),
-                "effective_syn_bg_density": profile.syn_bg_density,
-                "effective_bg_max_points": profile.bg_max_points,
                 "used_tissue_boundary": tissue_path is not None,
-                "selected_clusters": [str(item) for item in parsed_clusters],
-                "label_scheme": describe_label_scheme(internal_label_scheme),
-                "label_scheme_internal": internal_label_scheme,
+                "selected_structure_count": len(structure_specs),
+                "selected_structures": [
+                    {
+                        "structure_id": int(spec["structure_id"]),
+                        "structure_name": str(spec["structure_name"]),
+                        "cluster_ids": list(spec["cluster_ids_raw"]),
+                    }
+                    for spec in structure_specs
+                ],
+                "isoline_parameters": {
+                    "bins_x": int(isoline_cfg["bins_x"]),
+                    "bins_y": int(isoline_cfg["bins_y"]),
+                    "gaussian_sigma": float(isoline_cfg["gaussian_sigma"]),
+                    "min_cells": int(isoline_cfg["min_cells"]),
+                    "support_quantile": float(isoline_cfg["support_quantile"]),
+                    "tissue_quantile": float(isoline_cfg["tissue_quantile"]),
+                    "min_dominance": float(isoline_cfg["min_dominance"]),
+                    "fill_holes": bool(isoline_cfg["fill_holes"]),
+                    "min_component_pixels": int(isoline_cfg["min_component_pixels"]),
+                },
             }
         )
 
         preflight_lines = [
             f"Estimated cells.parquet rows: {estimated_cells_rows if estimated_cells_rows is not None else 'unknown'}",
             f"Estimated clusters.csv rows: {estimated_cluster_rows if estimated_cluster_rows is not None else 'unknown'}",
-            f"Dataset scale profile: {profile.scale_label}",
-            f"Effective grid_n: {profile.grid_n}",
-            f"Cluster IDs entering contour analysis: {', '.join(str(item) for item in parsed_clusters)}",
-            f"Scoring mode: {describe_label_scheme(internal_label_scheme)}",
+            f"Structures requested for contouring: {len(structure_specs)}",
+            f"Partition grid: {int(isoline_cfg['bins_x'])} x {int(isoline_cfg['bins_y'])}",
+            f"Gaussian sigma: {float(isoline_cfg['gaussian_sigma']):.2f}",
+            f"Minimum cells per structure: {int(isoline_cfg['min_cells'])}",
         ]
-        if not effective_use_synth_bg:
-            preflight_lines.append("Synthetic background is disabled for this run.")
-        preflight_lines.extend(profile.notes)
+        for spec in structure_specs:
+            preflight_lines.append(
+                f"{spec['structure_name']} -> {', '.join(str(item) for item in spec['cluster_ids_raw'])}"
+            )
+        if tissue_path is not None:
+            preflight_lines.append(
+                "tissue_boundary.csv was uploaded, but the current multi-structure isoline mode does not use it."
+            )
 
         progress(0.12, desc="Inputs ready")
         log_event(
             f"Inputs ready | cells_rows={estimated_cells_rows} | cluster_rows={estimated_cluster_rows} | "
-            f"grid_n={profile.grid_n} | synth_bg={effective_use_synth_bg}"
+            f"structures={len(structure_specs)} | bins=({int(isoline_cfg['bins_x'])},{int(isoline_cfg['bins_y'])})"
         )
         yield emit_status(
             phase="preflight",
@@ -1252,303 +1798,215 @@ def run_analysis(
             summary=summary,
         )
 
-        cfg = Pattern1IsolineConfig(
-            clusters_csv=clusters_path,
-            cells_parquet=cells_path,
-            tissue_boundary_csv=tissue_path,
-            out_dir=output_dir,
-            pattern1_clusters=parsed_clusters,
-            grid_n=profile.grid_n,
-            knn_k=int(knn_k),
-            smooth_sigma=float(smooth_sigma),
-            min_cells_inside=int(min_cells_inside),
-            label_scheme=internal_label_scheme,
-            use_synth_bg=effective_use_synth_bg,
-            compute_confidence_score=bool(compute_confidence_score),
-            bbox_expand_um=float(bbox_expand_um),
-            syn_bg_density=profile.syn_bg_density,
-            bg_max_points=profile.bg_max_points,
-            syn_bg_min=profile.syn_bg_min,
-            syn_bg_max=profile.syn_bg_max,
-        )
-
         progress(0.2, desc="Aligning clusters and cell coordinates")
         log_event("Aligning clusters with cells.parquet")
         yield emit_status(
             phase="aligning-cells",
             run_dir=run_dir,
-            lines=["Matching GraphClust barcodes with cell coordinates."],
+            lines=["Matching GraphClust barcodes with cell coordinates and preparing selected structures."],
             summary=summary,
         )
 
         merged, id_col_used, x_col, y_col = align_clusters_with_cells(
-            cfg.clusters_csv,
-            cfg.cells_parquet,
-            barcode_col=cfg.barcode_col,
-            cluster_col=cfg.cluster_col,
+            clusters_path,
+            cells_path,
+            barcode_col="Barcode",
+            cluster_col="Cluster",
         )
         merged = merged.copy()
         merged["cluster"] = merged["cluster"].map(_normalize_cluster_label)
         merged = merged.loc[merged["cluster"] != ""].copy()
+        merged["_selected_structure_id"] = 0
+        cell_counts_by_structure: dict[int, int] = {}
+        for spec in structure_specs:
+            structure_id = int(spec["structure_id"])
+            structure_mask = merged["cluster"].isin(set(spec["cluster_ids_normalized"]))
+            merged.loc[structure_mask, "_selected_structure_id"] = structure_id
+            cell_counts_by_structure[structure_id] = int(structure_mask.sum())
 
-        p1 = set(_normalize_cluster_label(x) for x in cfg.pattern1_clusters)
-        p1 = {x for x in p1 if x != ""}
-        if len(p1) == 0:
-            raise ValueError("The selected clusters could not be matched after normalization.")
+        missing_structures = [
+            spec["structure_name"]
+            for spec in structure_specs
+            if cell_counts_by_structure.get(int(spec["structure_id"]), 0) == 0
+        ]
+        if missing_structures:
+            raise ValueError(
+                "Some selected structures could not be matched to any cells after cluster normalization: "
+                + ", ".join(str(name) for name in missing_structures)
+            )
 
-        merged["_is_p1"] = merged["cluster"].isin(p1)
-        p1_df = merged.loc[merged["_is_p1"], [id_col_used, x_col, y_col]].copy()
-        if len(p1_df) < 10:
-            raise RuntimeError(f"Too few cells were found in the selected clusters after merging: {len(p1_df)}")
-
-        target_ids = set(p1_df[id_col_used].astype(str))
-        target_xy = p1_df[[x_col, y_col]].to_numpy(float)
+        selected_cell_count = int((merged["_selected_structure_id"] > 0).sum())
         summary.update(
             {
                 "id_col_used": id_col_used,
                 "x_col": x_col,
                 "y_col": y_col,
                 "merged_rows": int(len(merged)),
-                "n_target_cells": int(len(target_xy)),
+                "selected_cell_count": selected_cell_count,
+                "selected_structure_cell_counts": {
+                    str(spec["structure_id"]): int(cell_counts_by_structure[int(spec["structure_id"])])
+                    for spec in structure_specs
+                },
             }
         )
 
-        progress(0.34, desc="Sampling background points")
-        log_event(f"Sampling background points | merged_rows={len(merged)} | target_cells={len(target_xy)}")
+        progress(0.42, desc="Building non-overlapping structure partitions")
+        log_event(
+            f"Building structure partitions | selected_cells={selected_cell_count} | "
+            f"structures={len(structure_specs)}"
+        )
         yield emit_status(
-            phase="sampling-background",
+            phase="building-partitions",
             run_dir=run_dir,
             lines=[
-                f"Merged rows: {len(merged)}",
-                f"Selected-cluster cells: {len(target_xy)}",
-                "Sampling real-cell background and optional synthetic background.",
+                f"Selected cells entering the partition step: {selected_cell_count}",
+                "Each selected structure is modeled separately, then the masks are forced to be non-overlapping.",
             ],
             summary=summary,
         )
 
-        syn_bg_xy: np.ndarray | None = None
-        if cfg.use_synth_bg:
-            if cfg.tissue_boundary_csv is None:
-                raise ValueError("use_synth_bg=True but tissue_boundary_csv is missing.")
-            boundary_xy = load_tissue_boundary_csv(cfg.tissue_boundary_csv)
-            syn_bg_xy = generate_synthetic_bg_in_bbox(
-                boundary_xy,
-                expand_um=cfg.bbox_expand_um,
-                density=cfg.syn_bg_density,
-                min_n=cfg.syn_bg_min,
-                max_n=cfg.syn_bg_max,
-                seed=cfg.random_state,
-            )
-            summary["n_synthetic_bg_points"] = int(len(syn_bg_xy))
-
-        bg0_xy = sample_background_from_other_cells_plus_synth(
-            cells_df=merged.rename(columns={id_col_used: "tmp_id"}),
-            synthetic_bg_xy=syn_bg_xy,
-            target_ids=set(str(x) for x in target_ids),
-            target_xy=target_xy,
-            cell_id_col="tmp_id",
+        structure_contours, partition_data, isoline_metrics = build_structure_isolines(
+            cells=merged,
+            structure_specs=structure_specs,
             x_col=x_col,
             y_col=y_col,
-            d_min=cfg.bg_d_min,
-            d_max=cfg.bg_d_max,
-            max_points=cfg.bg_max_points,
-            seed=cfg.random_state,
-            margin_um=cfg.margin_um,
+            isoline_cfg=isoline_cfg,
         )
-        if len(bg0_xy) == 0:
-            raise RuntimeError("No bg0 points sampled. Try relaxing bg_d_min/bg_d_max, or disabling synth bg.")
-        summary["n_bg0_points"] = int(len(bg0_xy))
 
-        progress(0.48, desc="Training spatial KNN model")
-        log_event(f"Training KNN | bg0={len(bg0_xy)} | target={len(target_xy)} | k={cfg.knn_k}")
+        progress(0.62, desc="Assigning cells to structure partitions")
+        log_event("Assigning cells to partition masks")
         yield emit_status(
-            phase="training-knn",
+            phase="assigning-cells",
             run_dir=run_dir,
             lines=[
-                f"Background points kept: {len(bg0_xy)}",
-                f"Training KNN with k={cfg.knn_k}.",
+                "Projecting every cell onto the non-overlapping partition grid.",
+                "This produces one contour-ready region per selected structure.",
             ],
             summary=summary,
         )
 
-        X_train = np.vstack([bg0_xy, target_xy])
-        if _validate_label_scheme(cfg.label_scheme) == "p1_is_one":
-            y_train = np.hstack([np.zeros(len(bg0_xy)), np.ones(len(target_xy))])
-        else:
-            y_train = np.hstack([np.ones(len(bg0_xy)), np.zeros(len(target_xy))])
-
-        reg = KNeighborsRegressor(n_neighbors=cfg.knn_k, weights="distance")
-        reg.fit(X_train, y_train)
-
-        progress(0.62, desc="Predicting on spatial mesh")
-        log_event(f"Predicting on mesh | grid_n={cfg.grid_n} | grid_points={cfg.grid_n * cfg.grid_n}")
-        yield emit_status(
-            phase="predicting-mesh",
-            run_dir=run_dir,
-            lines=[
-                f"Predicting on a {cfg.grid_n} x {cfg.grid_n} mesh.",
-                "This is usually the slowest step for larger Xenium inputs.",
-            ],
-            summary=summary,
+        assigned_cells, cell_assignment_metrics = assign_cells_to_partition(
+            cells=merged,
+            partition_data=partition_data,
+            structure_specs=structure_specs,
+            x_col=x_col,
+            y_col=y_col,
+        )
+        structure_contours = attach_partition_contours(structure_contours)
+        total_contours = int(
+            sum(len(payload.get("contours", [])) for payload in structure_contours.values())
         )
 
-        xx, yy, grid = make_mesh_from_xy(
-            target_xy,
-            grid_n=cfg.grid_n,
-            pad_fraction=cfg.pad_fraction,
-            margin_um=cfg.margin_um,
-        )
-        prob = reg.predict(grid).reshape(xx.shape)
-        prob_smooth = gaussian_filter(prob, sigma=cfg.smooth_sigma)
-
-        progress(0.76, desc="Extracting contours")
-        log_event("Applying tissue mask and extracting isolines")
-        yield emit_status(
-            phase="extracting-contours",
-            run_dir=run_dir,
-            lines=["Applying tissue mask, smoothing, and contour extraction."],
-            summary=summary,
+        progress(0.78, desc="Rendering multi-structure contour preview")
+        log_event(f"Rendering preview | total_contours={total_contours}")
+        preview_path = output_dir / "multi_structure_contour_preview.png"
+        render_multi_structure_preview(
+            assigned_cells=assigned_cells,
+            structure_contours=structure_contours,
+            structure_specs=structure_specs,
+            x_col=x_col,
+            y_col=y_col,
+            output_path=preview_path,
         )
 
-        all_xy = merged[[x_col, y_col]].to_numpy(float)
-        tissue_mask = tissue_mask_from_xy(all_xy, xx, yy, max_dist_threshold=cfg.max_dist_threshold)
-        prob_smooth_masked = prob_smooth.copy()
-        prob_smooth_masked[~tissue_mask] = np.nan
-
-        verts_list = extract_contour_paths(xx, yy, prob_smooth_masked, level=cfg.isoline_level)
-        verts_list = filter_loops_by_cell_count(verts_list, target_xy, min_cells_inside=cfg.min_cells_inside)
-        if len(verts_list) == 0:
-            raise RuntimeError(
-                "No isoline found.\n"
-                "Try reducing min_cells_inside, increasing smooth_sigma, increasing knn_k, or lowering grid_n."
-            )
-
-        conf_score: float | None = None
-        conf_stats: dict[str, object] | None = None
         cophenetic_heatmap_path: Path | None = None
-        cophenetic_note: str | None = None
-        if cfg.compute_confidence_score:
-            progress(0.86, desc="Computing cophenetic heatmap")
-            log_event("Computing cophenetic heatmap and confidence score")
-            yield emit_status(
-                phase="cophenetic-analysis",
-                run_dir=run_dir,
-                lines=["Computing the cophenetic heatmap and summary confidence score."],
-                summary=summary,
+        cophenetic_stats: dict[str, object] | None = None
+        if compute_confidence_score:
+            progress(0.86, desc="Saving cophenetic heatmap for the final output set")
+            log_event("Saving cophenetic heatmap")
+            cophenetic_heatmap_path, cophenetic_stats = save_cophenetic_heatmap_only(
+                merged_df=merged,
+                x_col=x_col,
+                y_col=y_col,
+                output_dir=output_dir,
+                sample_label="selected structures",
             )
-            try:
-                conf_score, conf_stats, cophenetic_heatmap_path = compute_cophenetic_outputs(
-                    merged_df=merged,
-                    pattern1_clusters=list(cfg.pattern1_clusters),
-                    x_col=x_col,
-                    y_col=y_col,
-                    output_dir=output_dir,
-                    linkage_method=cfg.confidence_linkage_method,
-                    show_corr=cfg.confidence_show_corr,
-                )
-            except Exception as exc:
-                cophenetic_note = f"Skipped cophenetic heatmap: {exc}"
-                log_event(cophenetic_note)
-                summary["cophenetic_note"] = cophenetic_note
 
-        progress(0.93, desc="Saving outputs")
-        log_event(f"Saving outputs | contours={len(verts_list)}")
+        progress(0.93, desc="Writing structure contour outputs")
+        log_event("Writing output files")
         yield emit_status(
             phase="saving-outputs",
             run_dir=run_dir,
             lines=[
-                f"Contours extracted: {len(verts_list)}",
-                "Writing the contour preview, cophenetic heatmap, and downloadable outputs.",
+                f"Valid structures with partition masks: {len(structure_contours)}",
+                f"Total contour paths written: {total_contours}",
+                "Saving the preview, partition assignments, metrics, and per-structure contour files.",
             ],
             summary=summary,
+            preview_path=str(preview_path),
             cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
         )
 
-        params_path: Path | None = None
-        params = asdict(cfg)
-        params.update(
-            dict(
-                id_col_used=id_col_used,
-                x_col=x_col,
-                y_col=y_col,
-                n_target_cells=int(len(target_xy)),
-                n_bg0=int(len(bg0_xy)),
-                n_contours=int(len(verts_list)),
-                label_scheme=describe_label_scheme(cfg.label_scheme),
-                label_scheme_internal=_validate_label_scheme(cfg.label_scheme),
-                segmentation_confidence_score=conf_score,
-                segmentation_confidence_stats=conf_stats,
-                cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
-            )
-        )
-        if cfg.save_params_json:
-            params_path = output_dir / "params.json"
-            with params_path.open("w", encoding="utf-8") as handle:
-                json.dump(params, handle, indent=2, ensure_ascii=False, default=str)
-
-        if cfg.save_contours_npy:
-            for i, vertices in enumerate(verts_list):
-                np.save(output_dir / f"pattern1_isoline_{cfg.isoline_level:g}_{i}.npy", vertices)
-
-        preview_path: Path | None = None
-        if cfg.save_preview_png:
-            plt.figure(figsize=(10, 10))
-            plt.scatter(bg0_xy[:, 0], bg0_xy[:, 1], s=1, alpha=0.05, label="background points")
-            plt.scatter(target_xy[:, 0], target_xy[:, 1], s=3, alpha=0.85, label="selected-structure cells")
-            for vertices in verts_list:
-                plt.plot(vertices[:, 0], vertices[:, 1], linewidth=2)
-            plt.gca().set_aspect("equal")
-            title = (
-                f"Selected-structure contours | isoline={cfg.isoline_level:g} | "
-                f"contours={len(verts_list)} | scoring={describe_label_scheme(cfg.label_scheme)}"
-            )
-            if conf_score is not None:
-                title += f" | cophenetic confidence={conf_score:.4f}"
-            plt.title(title)
-            plt.legend(frameon=False)
-            plt.tight_layout()
-            preview_path = output_dir / f"pattern1_isoline_{cfg.isoline_level:g}.png"
-            plt.savefig(preview_path, dpi=200)
-            plt.close()
-
-        archive_path, archive_note = zip_outputs(output_dir)
-        result = Pattern1IsolineResult(
-            out_dir=output_dir,
-            id_col_used=id_col_used,
-            x_col=x_col,
-            y_col=y_col,
-            n_target_cells=int(len(target_xy)),
-            n_bg0_points=int(len(bg0_xy)),
-            contours=list(verts_list),
-            label_scheme=_validate_label_scheme(cfg.label_scheme),
-            segmentation_confidence_score=conf_score,
-            segmentation_confidence_stats=conf_stats,
-            params_json=params_path,
-            preview_png=preview_path,
+        metrics_payload = {
+            "selected_structures": summary["selected_structures"],
+            "isoline_parameters": summary["isoline_parameters"],
+            "isoline_metrics": isoline_metrics,
+            "cell_assignment_metrics": cell_assignment_metrics,
+            "cophenetic_stats": cophenetic_stats,
+        }
+        params_path = output_dir / "structure_contour_metrics.json"
+        params_path.write_text(
+            json.dumps(metrics_payload, indent=2, ensure_ascii=False, default=str),
+            encoding="utf-8",
         )
 
-        output_files: list[str] = []
-        if archive_path is not None:
-            output_files.append(str(archive_path))
-        if preview_path is not None:
-            output_files.append(str(preview_path))
+        partitioned_cells_path: Path | None = None
+        try:
+            partitioned_cells_path = output_dir / "cells_with_structure_partition.parquet"
+            assigned_cells.to_parquet(partitioned_cells_path, index=False)
+        except Exception:
+            partitioned_cells_path = output_dir / "cells_with_structure_partition.csv"
+            assigned_cells.to_csv(partitioned_cells_path, index=False)
+
+        structure_count_rows = []
+        output_files: list[str] = [str(preview_path), str(params_path), str(partitioned_cells_path)]
+        for spec in structure_specs:
+            structure_id = int(spec["structure_id"])
+            payload = structure_contours.get(structure_id)
+            structure_count_rows.append(
+                {
+                    "structure_id": structure_id,
+                    "structure_name": spec["structure_name"],
+                    "selected_cluster_ids": ", ".join(str(item) for item in spec["cluster_ids_raw"]),
+                    "input_cell_count": int(cell_counts_by_structure.get(structure_id, 0)),
+                    "assigned_cell_count": int((assigned_cells["isoline_structure_id"] == structure_id).sum()),
+                    "contour_count": int(len(payload.get("contours", [])) if payload else 0),
+                }
+            )
+            if not payload:
+                continue
+            for contour_index, contour_vertices in enumerate(payload.get("contours", [])):
+                contour_path = output_dir / f"structure_{structure_id}_contour_{contour_index}.npy"
+                np.save(contour_path, np.asarray(contour_vertices, dtype=float))
+                output_files.append(str(contour_path))
+
+        structure_counts_path = output_dir / "structure_contour_cell_counts.csv"
+        pd.DataFrame(structure_count_rows).to_csv(structure_counts_path, index=False)
+        output_files.append(str(structure_counts_path))
+
         if cophenetic_heatmap_path is not None:
             output_files.append(str(cophenetic_heatmap_path))
-        if params_path is not None:
-            output_files.append(str(params_path))
-        output_files.extend(str(path) for path in sorted(output_dir.glob("pattern1_isoline_*.npy")))
 
-        summary.update(format_summary(result, used_tissue_boundary=tissue_path is not None, work_dir=run_dir))
-        summary["effective_runtime_seconds"] = round(time.perf_counter() - start_time, 2)
-        summary["profile_notes"] = list(profile.notes)
-        summary["cophenetic_heatmap_generated"] = cophenetic_heatmap_path is not None
-        summary["cophenetic_heatmap_path"] = (
-            str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None
+        archive_path, archive_note = zip_outputs(output_dir)
+        if archive_path is not None:
+            output_files.insert(0, str(archive_path))
+
+        summary.update(
+            {
+                "effective_runtime_seconds": round(time.perf_counter() - start_time, 2),
+                "cophenetic_heatmap_generated": cophenetic_heatmap_path is not None,
+                "cophenetic_heatmap_path": str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
+                "partition_metrics_path": str(params_path),
+                "partitioned_cells_path": str(partitioned_cells_path),
+                "structure_count_table_path": str(structure_counts_path),
+                "total_contours": total_contours,
+                "valid_structure_ids": sorted(int(key) for key in structure_contours.keys()),
+            }
         )
 
         log_event(
-            f"Run finished successfully | contours={len(result.contours)} | "
-            f"elapsed_s={summary['effective_runtime_seconds']}"
+            f"Run finished successfully | structures={len(structure_contours)} | "
+            f"total_contours={total_contours} | elapsed_s={summary['effective_runtime_seconds']}"
         )
         progress(1.0, desc="Finished")
         yield emit_status(
@@ -1556,15 +2014,20 @@ def run_analysis(
             run_dir=run_dir,
             lines=[
                 f"{APP_NAME} finished successfully.",
-                f"Contours generated: {len(result.contours)}",
+                f"Structure partitions generated: {len(structure_contours)}",
+                f"Contour paths generated: {total_contours}",
                 f"Elapsed time: {summary['effective_runtime_seconds']} seconds",
             ]
-            + ([f"Cophenetic confidence score: {conf_score:.4f}"] if conf_score is not None else [])
-            + ([cophenetic_note] if cophenetic_note else [])
-            + list(profile.notes)
+            + (
+                [
+                    f"{spec['structure_name']} -> assigned cells: "
+                    f"{int((assigned_cells['isoline_structure_id'] == int(spec['structure_id'])).sum())}"
+                    for spec in structure_specs
+                ]
+            )
             + ([archive_note] if archive_note else []),
             summary=summary,
-            preview_path=str(preview_path) if preview_path is not None else None,
+            preview_path=str(preview_path),
             cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
             output_files=output_files,
         )
@@ -1926,7 +2389,7 @@ with gr.Blocks(
                 """
                 <div class="micro-guide">
                   Build the dendrogram first. Then click one or more colored badges on the interactive structure selector.
-                  The checkbox list below stays available as a fallback and stays synchronized with the image selection.
+                  Each selected structure will be contoured separately. The text box below uses one line per structure as a manual fallback format.
                 </div>
                 """
             )
@@ -1938,9 +2401,9 @@ with gr.Blocks(
             )
             clear_selection_button = gr.Button("Clear selected structures", variant="secondary")
             pattern1_clusters = gr.Textbox(
-                label="Cluster IDs included in the final contour",
+                label="Cluster IDs for each structure (one structure per line)",
                 value="",
-                info="This field is auto-filled from the selected structures, but you can still edit it manually if you already know the exact cluster IDs.",
+                info="This field is auto-filled from the selected structures. Manual format: one line per structure, for example '10,23,19' on one line and '27,14,20' on the next.",
             )
             selection_summary = gr.Textbox(
                 label="Current structure selection",
@@ -1948,27 +2411,21 @@ with gr.Blocks(
                 lines=3,
                 elem_id="selection-summary",
             )
-            label_scheme = gr.Dropdown(
-                label="How should the selected structures be scored?",
-                choices=list(LABEL_SCHEME_OPTIONS.keys()),
-                value=DEFAULT_LABEL_SCHEME,
-                info="Recommended: treat the selected structures as the signal of interest and let background score low.",
-            )
 
             with gr.Accordion("Advanced parameters", open=False):
-                grid_n = gr.Slider(label="Mesh resolution", minimum=200, maximum=1600, step=50, value=650)
-                knn_k = gr.Slider(label="KNN neighbors", minimum=5, maximum=100, step=1, value=30)
-                smooth_sigma = gr.Slider(label="Smoothing strength", minimum=0.5, maximum=12.0, step=0.5, value=5.0)
-                min_cells_inside = gr.Slider(label="Minimum cells inside each contour", minimum=1, maximum=200, step=1, value=10)
-                bbox_expand_um = gr.Slider(label="Boundary expansion (um)", minimum=0, maximum=500, step=10, value=100)
-                syn_bg_density = gr.Slider(label="Synthetic background density", minimum=0.001, maximum=0.05, step=0.001, value=0.003)
-                use_synth_bg = gr.Checkbox(label="Use synthetic background", value=True)
+                grid_n = gr.Slider(label="Partition grid bins along X", minimum=300, maximum=1600, step=50, value=900)
+                knn_k = gr.Slider(label="Partition grid bins along Y", minimum=250, maximum=1400, step=50, value=700)
+                smooth_sigma = gr.Slider(label="Gaussian smoothing sigma", minimum=0.5, maximum=6.0, step=0.25, value=2.25)
+                min_cells_inside = gr.Slider(label="Minimum cells required for one structure", minimum=50, maximum=3000, step=50, value=500)
+                bbox_expand_um = gr.Slider(label="Minimum dominance needed to claim a pixel", minimum=0.10, maximum=0.80, step=0.01, value=0.34)
+                syn_bg_density = gr.Slider(label="Support threshold quantile", minimum=0.05, maximum=0.40, step=0.01, value=0.18)
+                use_synth_bg = gr.Checkbox(label="Fill holes inside each structure partition", value=True)
                 compute_confidence_score = gr.Checkbox(
-                    label="Include the cophenetic heatmap and confidence score in the final outputs",
+                    label="Include the cophenetic heatmap in the final output set",
                     value=True,
                 )
 
-            run_button = gr.Button("2. Run final HistoSeg contour analysis", variant="primary")
+            run_button = gr.Button("2. Run multi-structure contour analysis", variant="primary")
 
         with gr.Column(scale=1, elem_id="right-rail"):
             structure_status = gr.Textbox(label="Step 1 status", lines=6, elem_id="dendrogram-status")
@@ -1987,12 +2444,12 @@ with gr.Blocks(
                 wrap=True,
             )
             cophenetic_heatmap_image = gr.Image(
-                label="Raw cophenetic heatmap from HistoSeg",
+                label="Cophenetic heatmap reference",
                 type="filepath",
                 elem_id="cophenetic-preview",
             )
             status_text = gr.Textbox(label="Step 2 status", lines=8, elem_id="run-status")
-            preview_image = gr.Image(label="Final contour preview", type="filepath", elem_id="contour-preview")
+            preview_image = gr.Image(label="Multi-structure contour preview", type="filepath", elem_id="contour-preview")
             summary_json = gr.JSON(label="Run summary")
             output_files = gr.File(label="Download outputs", file_count="multiple")
 
@@ -2058,15 +2515,16 @@ with gr.Blocks(
             clusters_csv,
             tissue_boundary_csv,
             pattern1_clusters,
+            structure_group_selector,
+            group_state,
             grid_n,
             knn_k,
             smooth_sigma,
             min_cells_inside,
-            label_scheme,
-            use_synth_bg,
             compute_confidence_score,
             bbox_expand_um,
             syn_bg_density,
+            use_synth_bg,
         ],
         outputs=[status_text, preview_image, cophenetic_heatmap_image, summary_json, output_files],
     )
