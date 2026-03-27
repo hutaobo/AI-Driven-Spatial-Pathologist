@@ -1732,7 +1732,7 @@ def run_analysis(
         estimated_cells_rows = safe_count_parquet_rows(cells_path)
         estimated_cluster_rows = safe_count_csv_rows(clusters_path)
         isoline_cfg = {
-            **DEFAULT_STRUCTURE_ISOLINE_CONFIG,
+            **DEFAULT_STRUCTURE_ISOLINE_CFG,
             "bins_x": int(grid_n),
             "bins_y": int(knn_k),
             "gaussian_sigma": float(smooth_sigma),
