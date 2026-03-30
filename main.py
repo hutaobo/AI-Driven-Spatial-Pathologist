@@ -26,11 +26,9 @@ def bootstrap_runtime_env() -> None:
 bootstrap_runtime_env()
 
 import gradio as gr
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import Rectangle
 from scipy.cluster.hierarchy import dendrogram, fcluster, leaves_list, linkage, to_tree
 from scipy.ndimage import (
     binary_closing,
@@ -689,7 +687,6 @@ def render_structure_selector_image(
         columns=list(group_state["row_coph_labels"]),
     )
     ordered_clusters = list(group_state["ordered_clusters"])
-    ordered_matrix = row_coph.loc[ordered_clusters, ordered_clusters]
     linkage_payload = group_state.get("linkage_matrix")
     linkage_matrix = np.asarray(linkage_payload, dtype=float) if linkage_payload is not None else None
 
@@ -699,24 +696,8 @@ def render_structure_selector_image(
         selector_key = "_".join(selected_ids)
     selector_path = output_dir / f"interactive_structure_selector_{selector_key}.png"
 
-    cluster_to_record: dict[str, dict[str, Any]] = {}
-    for record in group_records:
-        for cluster_id in record["clusters"]:
-            cluster_to_record[str(cluster_id)] = record
-
-    fig = plt.figure(figsize=(13.5, 8.7), facecolor="#07111D")
-    outer = fig.add_gridspec(2, 1, height_ratios=[1.0, 1.55], hspace=0.08)
-    ax_dendro = fig.add_subplot(outer[0])
-    heat_grid = outer[1].subgridspec(2, 2, height_ratios=[0.075, 1.0], width_ratios=[0.075, 1.0], hspace=0.03, wspace=0.03)
-    ax_corner = fig.add_subplot(heat_grid[0, 0])
-    ax_top_band = fig.add_subplot(heat_grid[0, 1])
-    ax_left_band = fig.add_subplot(heat_grid[1, 0])
-    ax_heat = fig.add_subplot(heat_grid[1, 1])
-
-    for axis in (ax_dendro, ax_top_band, ax_left_band, ax_heat):
-        axis.set_facecolor("#0C1726")
-    ax_corner.set_facecolor("#07111D")
-    ax_corner.axis("off")
+    fig, ax_dendro = plt.subplots(figsize=(13.5, 5.8), facecolor="#07111D")
+    ax_dendro.set_facecolor("#0C1726")
 
     if linkage_matrix is not None:
         dendrogram(
@@ -803,56 +784,25 @@ def render_structure_selector_image(
     )
     ax_dendro.set_title("Interactive structure selector", loc="left", fontsize=15, color="#F5F9FF", pad=12)
     ax_dendro.set_ylabel("Cophenetic distance", color="#A8BCD3")
-    ax_dendro.tick_params(axis="x", bottom=False, labelbottom=False)
-    ax_dendro.tick_params(axis="y", colors="#90A6BF")
-    for spine in ax_dendro.spines.values():
-        spine.set_color("#20354A")
-    ax_dendro.set_ylim(-marker_offset * 0.4, max_dist + marker_offset * 2.0)
-
-    band_rgba = np.array([[mcolors.to_rgba(cluster_to_record[cluster]["color"]) for cluster in ordered_clusters]])
-    ax_top_band.imshow(band_rgba, aspect="auto")
-    ax_left_band.imshow(np.transpose(band_rgba, (1, 0, 2)), aspect="auto")
-    for axis in (ax_top_band, ax_left_band):
-        axis.set_xticks([])
-        axis.set_yticks([])
-        for spine in axis.spines.values():
-            spine.set_color("#20354A")
-
-    heat = ax_heat.imshow(ordered_matrix.to_numpy(float), cmap="magma", interpolation="nearest", aspect="auto")
-    for record in group_records:
-        start = int(record["leaf_start"])
-        end = int(record["leaf_end"])
-        size = end - start + 1
-        ax_heat.add_patch(
-            Rectangle(
-                (start - 0.5, start - 0.5),
-                size,
-                size,
-                fill=False,
-                edgecolor=str(record["color"]),
-                linewidth=2.4 if record["choice_label"] in selected_set else 0.9,
-                alpha=0.95 if record["choice_label"] in selected_set else 0.28,
-            )
-        )
-
+    leaf_positions = [5 + 10 * idx for idx in range(len(ordered_clusters))]
     if len(ordered_clusters) <= 18:
-        tick_positions = range(len(ordered_clusters))
+        tick_positions = leaf_positions
         tick_labels = ordered_clusters
     else:
         step = max(1, len(ordered_clusters) // 12)
-        tick_positions = list(range(0, len(ordered_clusters), step))
-        tick_labels = [ordered_clusters[index] for index in tick_positions]
-
-    ax_heat.set_xticks(list(tick_positions))
-    ax_heat.set_xticklabels(tick_labels, rotation=45, ha="right", fontsize=8, color="#A9BDD4")
-    ax_heat.set_yticks(list(tick_positions))
-    ax_heat.set_yticklabels(tick_labels, fontsize=8, color="#A9BDD4")
-    ax_heat.set_title("Cophenetic heatmap ordered by the dendrogram", loc="left", fontsize=13, color="#F5F9FF", pad=8)
-    for spine in ax_heat.spines.values():
+        keep_indices = list(range(0, len(ordered_clusters), step))
+        if keep_indices[-1] != len(ordered_clusters) - 1:
+            keep_indices.append(len(ordered_clusters) - 1)
+        tick_positions = [leaf_positions[idx] for idx in keep_indices]
+        tick_labels = [ordered_clusters[idx] for idx in keep_indices]
+    ax_dendro.set_xticks(tick_positions)
+    ax_dendro.set_xticklabels(tick_labels, rotation=45, ha="right", fontsize=8, color="#A9BDD4")
+    ax_dendro.tick_params(axis="x", colors="#90A6BF")
+    ax_dendro.tick_params(axis="y", colors="#90A6BF")
+    ax_dendro.set_xlabel("Cluster IDs ordered by the dendrogram", color="#A8BCD3", labelpad=10)
+    for spine in ax_dendro.spines.values():
         spine.set_color("#20354A")
-    cbar = fig.colorbar(heat, ax=ax_heat, fraction=0.046, pad=0.02)
-    cbar.outline.set_edgecolor("#20354A")
-    cbar.ax.tick_params(colors="#A8BCD3")
+    ax_dendro.set_ylim(-marker_offset * 0.4, max_dist + marker_offset * 2.0)
 
     fig.canvas.draw()
     width, height = fig.canvas.get_width_height()
@@ -2333,7 +2283,11 @@ with gr.Blocks(
           <div class="guide-card">
             <div class="guide-step">Step 1</div>
             <h3>Upload the Xenium-derived tables</h3>
-            <p>Provide <code>cells.parquet</code> and <code>clusters.csv</code>. Add <code>tissue_boundary.csv</code> if you want synthetic background support during contour generation.</p>
+            <p>
+              Provide <code>cells.parquet</code> and <code>clusters.csv</code>. In a Xenium export, <code>cells.parquet</code> is usually in the
+              <code>outs</code> folder root, and one common <code>clusters.csv</code> location is
+              <code>outs\\analysis\\clustering\\gene_expression_graphclust\\clusters.csv</code>. Add <code>tissue_boundary.csv</code> if you want synthetic background support during contour generation.
+            </p>
           </div>
           <div class="guide-card">
             <div class="guide-step">Step 2</div>
@@ -2362,6 +2316,15 @@ with gr.Blocks(
 
     with gr.Row():
         with gr.Column(scale=1, elem_id="left-rail"):
+            gr.HTML(
+                """
+                <div class="micro-guide">
+                  <strong>Where to find the Xenium input files.</strong> In a standard Xenium <code>outs</code> directory,
+                  <code>cells.parquet</code> is typically located directly in <code>outs</code>, and one common
+                  <code>clusters.csv</code> path is <code>outs\\analysis\\clustering\\gene_expression_graphclust\\clusters.csv</code>.
+                </div>
+                """
+            )
             cells_parquet = gr.File(
                 label="Cell coordinates (cells.parquet)",
                 file_types=[".parquet"],
