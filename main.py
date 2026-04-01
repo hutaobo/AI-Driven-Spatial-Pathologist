@@ -30,6 +30,7 @@ import gradio as gr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from skimage import measure
 from scipy.cluster.hierarchy import dendrogram, fcluster, leaves_list, linkage, to_tree
 from scipy.ndimage import (
     binary_closing,
@@ -83,6 +84,7 @@ APP_DESCRIPTION = (
 )
 DEFAULT_PATTERN1 = "10,23,19,27,14,20,25,26"
 GROUP_SELECTION_EMPTY = "No structures selected yet. Click one or more colored badges on the dendrogram, or type cluster IDs manually."
+XENIUM_PIXEL_SIZE_UM = 0.2125
 GROUP_PALETTE = [
     "#6EF0D4",
     "#78B9FF",
@@ -1314,98 +1316,143 @@ def _selection_base_name(structure_id: int, structure_name: str) -> str:
     return f"S{int(structure_id)} {str(structure_name).replace('[', '').replace(']', '')}".strip()
 
 
-def _ensure_closed_polygon(vertices: np.ndarray) -> np.ndarray | None:
-    polygon = np.asarray(vertices, dtype=float)
-    if polygon.ndim != 2 or polygon.shape[1] != 2 or polygon.shape[0] < 3:
-        return None
+def _component_mask_to_polygons_xenium(
+    component_mask: np.ndarray,
+    *,
+    x_edges: np.ndarray,
+    y_edges: np.ndarray,
+    max_vertices: int = 100000,
+) -> list[np.ndarray]:
+    """Match the stable segmentation_methods export path for Xenium Explorer polygons."""
+    if not component_mask.any():
+        return []
 
-    rounded_polygon = np.round(polygon, 6)
-    dedup_points = [rounded_polygon[0]]
-    for point in rounded_polygon[1:]:
-        if not np.allclose(point, dedup_points[-1]):
-            dedup_points.append(point)
-    polygon = np.asarray(dedup_points, dtype=float)
-    if polygon.shape[0] < 3:
-        return None
-    if not np.allclose(polygon[0], polygon[-1]):
-        polygon = np.vstack([polygon, polygon[0]])
-    if polygon.shape[0] < 4:
-        return None
-    return polygon
+    dx = float(x_edges[1] - x_edges[0])
+    dy = float(y_edges[1] - y_edges[0])
+    padded = np.pad(binary_fill_holes(component_mask).astype(np.uint8), 1, mode="constant")
+    contours = measure.find_contours(padded.astype(float), 0.5)
+    polygons: list[np.ndarray] = []
+
+    x0 = float(x_edges[0] - dx)
+    y0 = float(y_edges[0] - dy)
+    for contour in contours:
+        if contour.shape[0] < 4:
+            continue
+
+        rows = contour[:, 0]
+        cols = contour[:, 1]
+        x_coords = x0 + (cols + 0.5) * dx
+        y_coords = y0 + (rows + 0.5) * dy
+        polygon = np.column_stack([x_coords, y_coords]).astype(float)
+
+        if not np.allclose(polygon[0], polygon[-1]):
+            polygon = np.vstack([polygon, polygon[0]])
+
+        rounded_polygon = np.round(polygon, 6)
+        dedup_points = [rounded_polygon[0]]
+        for point in rounded_polygon[1:]:
+            if not np.allclose(point, dedup_points[-1]):
+                dedup_points.append(point)
+        polygon = np.asarray(dedup_points, dtype=float)
+        if polygon.shape[0] < 4:
+            continue
+        if not np.allclose(polygon[0], polygon[-1]):
+            polygon = np.vstack([polygon, polygon[0]])
+
+        if polygon.shape[0] > max_vertices:
+            step = int(np.ceil(polygon.shape[0] / max_vertices))
+            polygon = polygon[::step]
+            if not np.allclose(polygon[0], polygon[-1]):
+                polygon = np.vstack([polygon, polygon[0]])
+
+        if polygon.shape[0] >= 4:
+            polygons.append(polygon)
+
+    return polygons
 
 
 def write_xenium_explorer_annotation_exports(
     *,
     output_dir: Path,
-    structure_contours: dict[int, dict[str, object]],
+    partition_data: dict[str, np.ndarray],
     structure_specs: list[dict[str, object]],
 ) -> dict[str, str]:
     features: list[dict[str, object]] = []
     csv_rows: list[dict[str, object]] = []
     summary_rows: list[dict[str, object]] = []
+    partition_labels = np.asarray(partition_data["partition_labels"], dtype=np.int32)
+    x_edges = np.asarray(partition_data["x_edges"], dtype=float) / float(XENIUM_PIXEL_SIZE_UM)
+    y_edges = np.asarray(partition_data["y_edges"], dtype=float) / float(XENIUM_PIXEL_SIZE_UM)
 
     for spec in structure_specs:
         structure_id = int(spec["structure_id"])
         structure_name = str(spec["structure_name"])
         structure_color = str(spec["structure_color"])
-        payload = structure_contours.get(structure_id)
-        if not payload:
+        structure_mask = partition_labels == structure_id
+        if not structure_mask.any():
             continue
 
-        contours = payload.get("contours", [])
-        if not contours:
-            continue
-
+        labeled_components, n_components = nd_label(structure_mask)
         base_name = _selection_base_name(structure_id, structure_name)
         rgb_color = _hex_to_rgb_triplet(structure_color)
 
-        for polygon_index, contour_vertices in enumerate(contours, start=1):
-            polygon = _ensure_closed_polygon(np.asarray(contour_vertices, dtype=float))
-            if polygon is None:
+        for component_index in range(1, int(n_components) + 1):
+            component_mask = labeled_components == component_index
+            polygons = _component_mask_to_polygons_xenium(
+                component_mask,
+                x_edges=x_edges,
+                y_edges=y_edges,
+            )
+            if not polygons:
                 continue
 
-            selection_name = base_name if len(contours) == 1 else f"{base_name} #{polygon_index}"
-            feature = {
-                "type": "Feature",
-                "id": str(uuid.uuid4()),
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [[list(map(float, point)) for point in polygon]],
-                },
-                "properties": {
-                    "objectType": "annotation",
-                    "name": selection_name,
-                    "classification": {
-                        "name": selection_name,
-                        "color": rgb_color,
+            for polygon_index, polygon in enumerate(polygons, start=1):
+                selection_name = (
+                    base_name
+                    if int(n_components) == 1 and len(polygons) == 1
+                    else f"{base_name} #{component_index}.{polygon_index}"
+                )
+                feature = {
+                    "type": "Feature",
+                    "id": str(uuid.uuid4()),
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[list(map(float, point)) for point in polygon]],
                     },
-                    "structure_id": structure_id,
-                    "assigned_structure": structure_name,
-                    "component_index": int(polygon_index),
-                    "polygon_index": 1,
-                },
-            }
-            features.append(feature)
+                    "properties": {
+                        "objectType": "annotation",
+                        "name": selection_name,
+                        "classification": {
+                            "name": selection_name,
+                            "color": rgb_color,
+                        },
+                        "structure_id": structure_id,
+                        "assigned_structure": structure_name,
+                        "component_index": int(component_index),
+                        "polygon_index": int(polygon_index),
+                    }
+                }
+                features.append(feature)
 
-            for x_value, y_value in polygon:
-                csv_rows.append(
+                for x_value, y_value in polygon:
+                    csv_rows.append(
+                        {
+                            "Selection": selection_name,
+                            "X": float(x_value),
+                            "Y": float(y_value),
+                        }
+                    )
+
+                summary_rows.append(
                     {
                         "Selection": selection_name,
-                        "X": float(x_value),
-                        "Y": float(y_value),
+                        "StructureID": structure_id,
+                        "AssignedStructure": structure_name,
+                        "ComponentIndex": int(component_index),
+                        "PolygonIndex": int(polygon_index),
+                        "VertexCount": int(polygon.shape[0]),
                     }
                 )
-
-            summary_rows.append(
-                {
-                    "Selection": selection_name,
-                    "StructureID": structure_id,
-                    "AssignedStructure": structure_name,
-                    "ComponentIndex": int(polygon_index),
-                    "PolygonIndex": 1,
-                    "VertexCount": int(polygon.shape[0]),
-                }
-            )
 
     geojson_payload = {
         "type": "FeatureCollection",
@@ -2077,7 +2124,7 @@ def run_analysis(
 
         xenium_annotation_exports = write_xenium_explorer_annotation_exports(
             output_dir=output_dir,
-            structure_contours=structure_contours,
+            partition_data=partition_data,
             structure_specs=structure_specs,
         )
         output_files.extend(
