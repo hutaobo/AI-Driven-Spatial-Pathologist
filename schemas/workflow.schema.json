@@ -1,0 +1,151 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "case_name": {
+      "minLength": 1,
+      "title": "Case Name",
+      "type": "string"
+    },
+    "study_context": {
+      "minLength": 1,
+      "title": "Study Context",
+      "type": "string"
+    },
+    "base_pipeline_config": {
+      "format": "path",
+      "title": "Base Pipeline Config",
+      "type": "string"
+    },
+    "output_root": {
+      "format": "path",
+      "title": "Output Root",
+      "type": "string"
+    },
+    "annotation_taxonomy": {
+      "default": "lung",
+      "title": "Annotation Taxonomy",
+      "type": "string",
+      "enum": [
+        "breast",
+        "lung"
+      ]
+    },
+    "differential_expression_csv": {
+      "anyOf": [
+        {
+          "format": "path",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Differential Expression Csv"
+    },
+    "projection_csv": {
+      "anyOf": [
+        {
+          "format": "path",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Projection Csv"
+    },
+    "openai_enabled": {
+      "default": true,
+      "title": "Openai Enabled",
+      "type": "boolean"
+    },
+    "openai_api_key_env": {
+      "default": "OPENAI_API_KEY",
+      "title": "Openai Api Key Env",
+      "type": "string"
+    },
+    "openai_model": {
+      "default": "gpt-5.4",
+      "title": "Openai Model",
+      "type": "string"
+    },
+    "openai_reasoning_effort": {
+      "default": "medium",
+      "title": "Openai Reasoning Effort",
+      "type": "string"
+    },
+    "openai_store": {
+      "default": false,
+      "title": "Openai Store",
+      "type": "boolean"
+    },
+    "force_recompute_annotation": {
+      "default": false,
+      "title": "Force Recompute Annotation",
+      "type": "boolean"
+    },
+    "force_recompute_pipeline": {
+      "default": false,
+      "title": "Force Recompute Pipeline",
+      "type": "boolean"
+    },
+    "top_positive_markers": {
+      "default": 15,
+      "minimum": 1,
+      "title": "Top Positive Markers",
+      "type": "integer"
+    },
+    "top_negative_markers": {
+      "default": 6,
+      "minimum": 0,
+      "title": "Top Negative Markers",
+      "type": "integer"
+    },
+    "min_log2fc": {
+      "default": 0.5,
+      "title": "Min Log2Fc",
+      "type": "number"
+    },
+    "max_adjusted_p_value": {
+      "default": 0.05,
+      "title": "Max Adjusted P Value",
+      "type": "number"
+    },
+    "top_neighbors": {
+      "default": 5,
+      "minimum": 1,
+      "title": "Top Neighbors",
+      "type": "integer"
+    },
+    "low_confidence_threshold": {
+      "default": 0.65,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Low Confidence Threshold",
+      "type": "number"
+    },
+    "ambiguity_margin_threshold": {
+      "default": 0.08,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Ambiguity Margin Threshold",
+      "type": "number"
+    },
+    "top_clusters_per_structure": {
+      "default": 8,
+      "minimum": 1,
+      "title": "Top Clusters Per Structure",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "case_name",
+    "study_context",
+    "base_pipeline_config",
+    "output_root"
+  ],
+  "title": "WorkflowConfig",
+  "type": "object"
+}

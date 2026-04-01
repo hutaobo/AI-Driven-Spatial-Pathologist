@@ -1,197 +1,226 @@
-# AI Driven Spatial Pathologist
+# SPatho
 
-`AI Driven Spatial Pathologist` 是一个独立于 `HistoSeg` 主仓库的 SciLifeLab Serve 部署包装层。
+`spatho` is the public-facing product layer for an AI-driven spatial pathologist workflow built around Xenium-scale spatial transcriptomics.
 
-它的目标是：
+It is designed to sit above the lower-level `histoseg` engine and expose a cleaner public experience:
 
-- 让其他用户通过网页上传 Xenium 数据或关键输入文件
-- 调用 `HistoSeg` 的 Pattern1 isoline 分析
-- 下载 `params.json`、预览图和 contour `.npy` 文件
+- OpenAI-driven cluster annotation
+- dendrogram-guided structure discovery
+- H&E overlay generation
+- structure-level pathology review
+- HTML reporting for human-in-the-loop interpretation
 
-这个目录可以单独维护，不需要并入 `HistoSeg` 仓库。
+This repo is where the public product experience should live.  
+The underlying geometry and segmentation engine still comes from `histoseg`.
 
-## 现在这版 app 支持什么
+## Current Status
 
-当前包装的是 `HistoSeg` 仓库里最稳定的主流程：
+This is the first public product-layer scaffold.
 
-- 输入：
-  - `cells.parquet`
-  - `clusters.csv`
-  - 推荐提供 `tissue_boundary.csv`
-- 输出：
-  - `params.json`
-  - `pattern1_isoline_<level>_<i>.npy`
-  - `pattern1_isoline_<level>.png`
-  - 一个额外打包好的 `histoseg_outputs.zip`
+Today it provides:
 
-用户可以用两种方式上传：
+- a package name: `spatho`
+- a user-facing CLI
+- a starter-workflow generator
+- built-in `lung` and `breast` organ packs
+- a formal workflow config schema
+- automatic artifact manifest generation
+- a wrapper API that runs the existing `histoseg` full-auto workflow
+- a roadmap for gradually migrating product logic out of `histoseg`
 
-1. 直接上传一个 Xenium 输出目录压缩包 `.zip`
-2. 分别上传 `cells.parquet`、`clusters.csv`、`tissue_boundary.csv`
+## Why a Separate Repo?
 
-如果 zip 里包含下面这些路径，app 会自动识别：
+`histoseg` started as a segmentation and contour-generation toolkit.
 
-- `cells.parquet`
-- `tissue_boundary.csv`
-- `analysis/clustering/gene_expression_graphclust/clusters.csv`
+The full pathology workflow now has a different audience and a different contract:
 
-## 重要限制
+- users care about complete case analysis, not just contour extraction
+- users want reports, review priorities, and organ-specific workflows
+- public documentation should focus on pathology workflows, not internal engine history
 
-这版 app 不是“任意原始 Xenium 数据一上传就自动完成所有上游分析”。
-它依赖 `HistoSeg` 当前已有的 Pattern1 isoline 工作流，所以本质上需要：
+This repo creates that separation.
 
-- 细胞表 `cells.parquet`
-- 聚类结果 `clusters.csv`
+## Quick Start
 
-如果你的 Xenium 输出 zip 里已经有 `analysis/clustering/gene_expression_graphclust/clusters.csv`，那么通常就可以直接跑。
-如果没有，就需要在 app 里再补一段上游 clustering 流程，这是下一阶段工作，不在当前脚手架范围内。
-
-## 本地运行
+### Install for local development
 
 ```bash
+git clone https://github.com/hutaobo/AI-Driven-Spatial-Pathologist.git
 cd AI-Driven-Spatial-Pathologist
-python -m venv .venv
-. .venv/bin/activate
 pip install -U pip
-pip install -r requirements.txt
-python main.py
+pip install -e .
 ```
 
-Windows PowerShell:
-
-```powershell
-cd D:\GitHub\AI-Driven-Spatial-Pathologist
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -U pip
-pip install -r requirements.txt
-python .\main.py
-```
-
-默认端口是 `7860`。
-
-## Docker 构建
-
-在这个目录下构建镜像：
+If you are actively developing against a local `histoseg` checkout, also install that editable copy first:
 
 ```bash
-docker build --platform linux/amd64 -t <dockerhub-user>/ai-driven-spatial-pathologist:v1 .
+pip install -e ../HistoSeg
 ```
 
-本地测试：
+### Check your environment
 
 ```bash
-docker run --rm -p 7860:7860 <dockerhub-user>/ai-driven-spatial-pathologist:v1
+spatho doctor --config /path/to/workflow.json
 ```
 
-然后打开：
-
-- `http://localhost:7860`
-
-## 推送镜像
+### List built-in organ packs
 
 ```bash
-docker push <dockerhub-user>/ai-driven-spatial-pathologist:v1
+spatho list-organ-packs
 ```
 
-注意：
+### Generate a starter workflow
 
-- SciLifeLab Serve 要求镜像是公开可访问的
-- 每次更新都必须使用新的 tag
-- 不要重复使用同一个 tag 覆盖旧版本
+```bash
+spatho init-workflow \
+  --organ breast \
+  --case-name breast_case_01 \
+  --dataset-root /path/to/Xenium_outs \
+  --base-pipeline-config /path/to/project/configs/breast_case_01.json \
+  --output /path/to/workflows/breast_case_01_full_auto_openai.json
+```
 
-## GitHub Actions 自动构建镜像
+### Run a full workflow
 
-如果你不想在本地装 Docker，可以直接把这个目录放到一个公开 GitHub 仓库里。
+```bash
+spatho run --config /path/to/workflow.json
+```
 
-本目录已经包含：
+Disable OpenAI and force heuristic mode:
 
-- `.github/workflows/docker-image-ghcr.yml`
+```bash
+spatho run --config /path/to/workflow.json --heuristic-only
+```
 
-它会在你 push 到 `main` 后自动构建镜像并发布到：
+### Export the workflow JSON schema
 
-- `ghcr.io/<你的GitHub用户名>/ai-driven-spatial-pathologist:sha-<commit>`
+```bash
+spatho config-schema --output /path/to/workflow.schema.json
+```
 
-同时也会更新：
+### Build or refresh an artifact manifest
 
-- `ghcr.io/<你的GitHub用户名>/ai-driven-spatial-pathologist:latest`
+```bash
+spatho build-manifest --config /path/to/workflow.json
+```
 
-注意：
+## Python Usage
 
-- Serve 更新版本时不要用 `latest`
-- 应该使用唯一 tag，比如 `sha-abc1234`
-- GitHub Container Registry 的 package 需要设为 `Public`，否则 Serve 拉不到
+```python
+from spatho import run_workflow
 
-## 上传到 SciLifeLab Serve
+result = run_workflow(r"D:\GitHub\HistoSeg\workflows\breast_s1_top_graphclust_full_auto_openai.json")
+print(result["pathology_report_html"])
+```
 
-参考官方文档：
+You can also generate the starter config from Python:
 
-- [Gradio app hosting](https://serve.scilifelab.se/docs/application-hosting/gradio/)
-- [Other app types](https://serve.scilifelab.se/docs/application-hosting/other/)
-- [File management](https://serve.scilifelab.se/docs/files/)
+```python
+from spatho import init_workflow
 
-推荐按 `Gradio app` 类型部署。
+result = init_workflow(
+    r"D:\GitHub\HistoSeg\workflows\breast_case_01_full_auto_openai.json",
+    organ="breast",
+    case_name="breast_case_01",
+    dataset_root=r"Y:\long\10X_datasets\Xenium\Xenium_Breast_Cancer\Human_Breast_Biomarkers_S1_Top_outs",
+    base_pipeline_config=r"D:\GitHub\sfplot\segmentation_methods\projects\breast_s1_top_graphclust\configs\breast_s1_top_graphclust.json",
+)
+print(result["workflow_config"])
+```
 
-### Serve 中建议填写
+## What a Workflow Produces
 
-- Name: `AI Driven Spatial Pathologist`
-- Description: A browser-based HistoSeg app for Xenium Pattern1 isoline analysis.
-- Keywords: `xenium, spatial transcriptomics, histoseg, pathology, contour`
-- Permissions:
-  - 开发阶段推荐 `Link`
-  - 官方文档目前提示 `Private` 和 `Project` 对 Gradio 有已知 bug，尽量不要用
-- Port: `7860`
-- Image: `<dockerhub-user>/ai-driven-spatial-pathologist:v1`
-- Mount path:
-  - 推荐在项目 Storage 里配置 `/home/username/app/project-vol`
-  - 这样 app 输出和临时工作目录可以写到持久卷
+A typical full run produces:
 
-如果你改成 GitHub Actions + GHCR 路线，那么 Image 直接填：
+- cluster evidence bundles
+- OpenAI or heuristic cluster annotations
+- structure assignments
+- clustermap and overlay artifacts
+- structure-level pathology reviews
+- case-level HTML report
+- a machine-readable artifact manifest
 
-- `ghcr.io/<你的GitHub用户名>/ai-driven-spatial-pathologist:sha-<commit>`
+## Organ Packs
 
-### Source code URL 不能省略
+`spatho` now ships with built-in organ packs that define:
 
-Serve 的 app 表单要求提供 `Source code URL`。
+- the annotation taxonomy
+- default study context
+- workflow parameter defaults
+- the expected artifact contract for completed runs
 
-这个 URL 不一定非要是 GitHub，但必须是一个可访问的公开地址，例如：
+The first built-in packs are:
 
-- 独立 GitHub 仓库
-- Zenodo 记录
-- Figshare
-- 其他公开代码归档地址
+- `lung`
+- `breast`
 
-如果你不想把这些部署文件放进 `HistoSeg` 主仓库，完全可以：
+These packs live in [src/spatho/organ_packs](src/spatho/organ_packs).
 
-1. 保持这个目录独立
-2. 把它单独发布到另一个公开位置
-3. 在 Serve 表单中把那个地址填成 `Source code URL`
+## Config Contract
 
-最方便的做法通常是：
+Workflow JSON files are now backed by a formal schema exported from the package.
+This is the first step toward stable public contracts and backward-compatible workflow upgrades.
 
-1. 建一个公开 GitHub 仓库 `AI-Driven-Spatial-Pathologist`
-2. 把这个目录内容推上去
-3. 让 GitHub Actions 自动生成公开 GHCR 镜像
-4. 把这个 GitHub repo URL 作为 `Source code URL`
+## Repository Layout
 
-## 许可证提醒
+- `src/spatho`  
+  Public-facing Python package and CLI
 
-`HistoSeg` 当前仓库声明的是 `PolyForm Noncommercial 1.0.0`。
+- `src/spatho/organ_packs`  
+  Built-in public organ packs
 
-这意味着：
+- `docs/SPATHO_ROADMAP.md`  
+  Productization and migration plan
 
-- 学术/非商业用途通常没问题
-- 商业用途需要额外许可
+- `docs/COMMERCIALIZATION_PLAN.md`  
+  Academic/community vs commercial edition strategy
 
-如果你的 Serve app 面向科研协作，通常是合理的，但正式公开前仍建议你再确认一次使用场景是否符合许可证要求。
+- `docs/PYPI_RELEASE.md`  
+  Official PyPI publishing checklist for this package
 
-## 下一步建议
+- `examples/workflows`  
+  Public-safe starter workflow templates for `lung` and `breast`
 
-如果你希望真正做到“只上传原始 Xenium 数据，完全不用再准备 clusters.csv”，下一步可以继续扩展这套 app：
+- `main.py`  
+  Existing Gradio/Serve deployment surface kept for backward compatibility
 
-1. 在上传后自动解包 Xenium outs
-2. 自动检查是否已有 `analysis/clustering/gene_expression_graphclust/clusters.csv`
-3. 如果没有，就在 app 内部补跑上游 clustering
-4. 再把聚类结果送进 `HistoSeg` 的 isoline 流程
+## Relationship to HistoSeg
 
-当前这套脚手架已经足够支持第一版上线和共享测试。
+Current implementation model:
+
+- `histoseg` executes the workflow
+- `spatho` wraps and presents it as a product
+
+Target implementation model:
+
+- `histoseg` becomes the geometry/segmentation engine
+- `spatho` owns workflow UX, organ packs, public docs, reports, and deployment surfaces
+
+## Public Release Plan
+
+The next milestones are:
+
+1. expand organ packs beyond `lung` and `breast`
+2. add richer tests and CI for CLI + workflow smoke checks
+3. stabilize config schema and artifact manifest versions
+4. migrate public-safe workflow logic from `histoseg` into `spatho`
+5. add example reports and example datasets
+
+See [docs/SPATHO_ROADMAP.md](docs/SPATHO_ROADMAP.md) and [docs/COMMERCIALIZATION_PLAN.md](docs/COMMERCIALIZATION_PLAN.md).
+
+## Publishing
+
+This repo now includes a PyPI publishing workflow based on GitHub Actions Trusted Publishing.
+See [docs/PYPI_RELEASE.md](docs/PYPI_RELEASE.md) for the exact setup and release steps.
+
+## Existing Serve App
+
+This repo also contains an older Gradio deployment layer in [main.py](main.py).
+
+That app should now be treated as one deployment surface, not the core product definition.
+The package and CLI in `src/spatho` are the preferred direction for public-tool development.
+
+## License
+
+This project is intended for noncommercial research use unless separately licensed.
+Before public release, the license text and commercial boundary should be reviewed together with the underlying `histoseg` dependency.

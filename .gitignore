@@ -7,3 +7,7 @@ __pycache__/
 .mypy_cache/
 project-vol/
 runs/
+build/
+dist/
+*.egg-info/
+chrome-automation-profile/
