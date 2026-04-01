@@ -411,11 +411,13 @@ def directory_size_bytes(root: Path) -> int:
     return total
 
 
-def zip_outputs(output_dir: Path) -> tuple[Path | None, str | None]:
-    archive_base = output_dir / "histoseg_outputs"
+def zip_outputs(output_dir: Path, archive_dir: Path | None = None) -> tuple[Path | None, str | None]:
+    target_dir = archive_dir if archive_dir is not None else output_dir
+    target_dir.mkdir(parents=True, exist_ok=True)
+    archive_base = target_dir / "histoseg_outputs"
     archive_path = Path(f"{archive_base}.zip")
     output_bytes = directory_size_bytes(output_dir)
-    free_bytes = shutil.disk_usage(output_dir).free
+    free_bytes = shutil.disk_usage(target_dir).free
 
     # Creating a zip duplicates the output payload temporarily, so we keep a safety margin.
     required_free = max(output_bytes * 2, 256 * 1024 * 1024)
@@ -1617,11 +1619,12 @@ def emit_status(
     summary: dict[str, object],
     preview_path: str | None = None,
     cophenetic_heatmap_path: str | None = None,
+    archive_path: str | None = None,
     output_files: list[str] | None = None,
-) -> tuple[str, str | None, str | None, dict[str, object], list[str]]:
+) -> tuple[str, str | None, str | None, dict[str, object], str | None, list[str]]:
     status_lines = [f"Phase: {phase}", f"Run directory: {run_dir}"]
     status_lines.extend(lines)
-    return "\n".join(status_lines), preview_path, cophenetic_heatmap_path, summary, output_files or []
+    return "\n".join(status_lines), preview_path, cophenetic_heatmap_path, summary, archive_path, output_files or []
 
 
 def run_analysis(
@@ -1937,15 +1940,14 @@ def run_analysis(
         if cophenetic_heatmap_path is not None:
             output_files.append(str(cophenetic_heatmap_path))
 
-        archive_path, archive_note = zip_outputs(output_dir)
-        if archive_path is not None:
-            output_files.insert(0, str(archive_path))
+        archive_path, archive_note = zip_outputs(output_dir, archive_dir=run_dir)
 
         summary.update(
             {
                 "effective_runtime_seconds": round(time.perf_counter() - start_time, 2),
                 "cophenetic_heatmap_generated": cophenetic_heatmap_path is not None,
                 "cophenetic_heatmap_path": str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
+                "archive_path": str(archive_path) if archive_path is not None else None,
                 "partition_metrics_path": str(params_path),
                 "partitioned_cells_path": str(partitioned_cells_path),
                 "structure_count_table_path": str(structure_counts_path),
@@ -1968,6 +1970,7 @@ def run_analysis(
                 f"Contour paths generated: {total_contours}",
                 f"Elapsed time: {summary['effective_runtime_seconds']} seconds",
             ]
+            + (["A complete ZIP archive of all outputs is available below."] if archive_path is not None else [])
             + (
                 [
                     f"{spec['structure_name']} -> assigned cells: "
@@ -1979,6 +1982,7 @@ def run_analysis(
             summary=summary,
             preview_path=str(preview_path),
             cophenetic_heatmap_path=str(cophenetic_heatmap_path) if cophenetic_heatmap_path is not None else None,
+            archive_path=str(archive_path) if archive_path is not None else None,
             output_files=output_files,
         )
     except Exception as exc:
@@ -2414,6 +2418,7 @@ with gr.Blocks(
             status_text = gr.Textbox(label="Step 2 status", lines=8, elem_id="run-status")
             preview_image = gr.Image(label="Multi-structure contour preview", type="filepath", elem_id="contour-preview")
             summary_json = gr.JSON(label="Run summary")
+            output_archive = gr.File(label="Download all outputs as ZIP", file_count="single")
             output_files = gr.File(label="Download outputs", file_count="multiple")
 
     build_groups_button.click(
@@ -2489,7 +2494,7 @@ with gr.Blocks(
             syn_bg_density,
             use_synth_bg,
         ],
-        outputs=[status_text, preview_image, cophenetic_heatmap_image, summary_json, output_files],
+        outputs=[status_text, preview_image, cophenetic_heatmap_image, summary_json, output_archive, output_files],
     )
 
 
