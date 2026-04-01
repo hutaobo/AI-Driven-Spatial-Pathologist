@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+import uuid
 
 
 def bootstrap_runtime_env() -> None:
@@ -1302,6 +1303,143 @@ def attach_partition_contours(
     return updated
 
 
+def _hex_to_rgb_triplet(hex_color: str) -> list[int]:
+    value = str(hex_color).strip().lstrip("#")
+    if len(value) != 6:
+        raise ValueError(f"Expected a 6-digit hex color, got {hex_color!r}")
+    return [int(value[index : index + 2], 16) for index in (0, 2, 4)]
+
+
+def _selection_base_name(structure_id: int, structure_name: str) -> str:
+    return f"S{int(structure_id)} {str(structure_name).replace('[', '').replace(']', '')}".strip()
+
+
+def _ensure_closed_polygon(vertices: np.ndarray) -> np.ndarray | None:
+    polygon = np.asarray(vertices, dtype=float)
+    if polygon.ndim != 2 or polygon.shape[1] != 2 or polygon.shape[0] < 3:
+        return None
+
+    rounded_polygon = np.round(polygon, 6)
+    dedup_points = [rounded_polygon[0]]
+    for point in rounded_polygon[1:]:
+        if not np.allclose(point, dedup_points[-1]):
+            dedup_points.append(point)
+    polygon = np.asarray(dedup_points, dtype=float)
+    if polygon.shape[0] < 3:
+        return None
+    if not np.allclose(polygon[0], polygon[-1]):
+        polygon = np.vstack([polygon, polygon[0]])
+    if polygon.shape[0] < 4:
+        return None
+    return polygon
+
+
+def write_xenium_explorer_annotation_exports(
+    *,
+    output_dir: Path,
+    structure_contours: dict[int, dict[str, object]],
+    structure_specs: list[dict[str, object]],
+) -> dict[str, str]:
+    features: list[dict[str, object]] = []
+    csv_rows: list[dict[str, object]] = []
+    summary_rows: list[dict[str, object]] = []
+
+    for spec in structure_specs:
+        structure_id = int(spec["structure_id"])
+        structure_name = str(spec["structure_name"])
+        structure_color = str(spec["structure_color"])
+        payload = structure_contours.get(structure_id)
+        if not payload:
+            continue
+
+        contours = payload.get("contours", [])
+        if not contours:
+            continue
+
+        base_name = _selection_base_name(structure_id, structure_name)
+        rgb_color = _hex_to_rgb_triplet(structure_color)
+
+        for polygon_index, contour_vertices in enumerate(contours, start=1):
+            polygon = _ensure_closed_polygon(np.asarray(contour_vertices, dtype=float))
+            if polygon is None:
+                continue
+
+            selection_name = base_name if len(contours) == 1 else f"{base_name} #{polygon_index}"
+            feature = {
+                "type": "Feature",
+                "id": str(uuid.uuid4()),
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[list(map(float, point)) for point in polygon]],
+                },
+                "properties": {
+                    "objectType": "annotation",
+                    "name": selection_name,
+                    "classification": {
+                        "name": selection_name,
+                        "color": rgb_color,
+                    },
+                    "structure_id": structure_id,
+                    "assigned_structure": structure_name,
+                    "component_index": int(polygon_index),
+                    "polygon_index": 1,
+                },
+            }
+            features.append(feature)
+
+            for x_value, y_value in polygon:
+                csv_rows.append(
+                    {
+                        "Selection": selection_name,
+                        "X": float(x_value),
+                        "Y": float(y_value),
+                    }
+                )
+
+            summary_rows.append(
+                {
+                    "Selection": selection_name,
+                    "StructureID": structure_id,
+                    "AssignedStructure": structure_name,
+                    "ComponentIndex": int(polygon_index),
+                    "PolygonIndex": 1,
+                    "VertexCount": int(polygon.shape[0]),
+                }
+            )
+
+    geojson_payload = {
+        "type": "FeatureCollection",
+        "features": features,
+    }
+    geojson_path = output_dir / "xenium_explorer_annotations.geojson"
+    geojson_path.write_text(json.dumps(geojson_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    csv_path = output_dir / "xenium_explorer_annotations.csv"
+    pd.DataFrame(
+        csv_rows,
+        columns=["Selection", "X", "Y"],
+    ).to_csv(csv_path, index=False)
+
+    summary_path = output_dir / "xenium_explorer_annotations_summary.csv"
+    pd.DataFrame(
+        summary_rows,
+        columns=[
+            "Selection",
+            "StructureID",
+            "AssignedStructure",
+            "ComponentIndex",
+            "PolygonIndex",
+            "VertexCount",
+        ],
+    ).to_csv(summary_path, index=False)
+
+    return {
+        "geojson": str(geojson_path),
+        "csv": str(csv_path),
+        "summary": str(summary_path),
+    }
+
+
 def render_multi_structure_preview(
     *,
     assigned_cells: pd.DataFrame,
@@ -1937,6 +2075,19 @@ def run_analysis(
         pd.DataFrame(structure_count_rows).to_csv(structure_counts_path, index=False)
         output_files.append(str(structure_counts_path))
 
+        xenium_annotation_exports = write_xenium_explorer_annotation_exports(
+            output_dir=output_dir,
+            structure_contours=structure_contours,
+            structure_specs=structure_specs,
+        )
+        output_files.extend(
+            [
+                str(xenium_annotation_exports["geojson"]),
+                str(xenium_annotation_exports["csv"]),
+                str(xenium_annotation_exports["summary"]),
+            ]
+        )
+
         if cophenetic_heatmap_path is not None:
             output_files.append(str(cophenetic_heatmap_path))
 
@@ -1951,6 +2102,9 @@ def run_analysis(
                 "partition_metrics_path": str(params_path),
                 "partitioned_cells_path": str(partitioned_cells_path),
                 "structure_count_table_path": str(structure_counts_path),
+                "xenium_explorer_geojson_path": str(xenium_annotation_exports["geojson"]),
+                "xenium_explorer_csv_path": str(xenium_annotation_exports["csv"]),
+                "xenium_explorer_summary_path": str(xenium_annotation_exports["summary"]),
                 "total_contours": total_contours,
                 "valid_structure_ids": sorted(int(key) for key in structure_contours.keys()),
             }
@@ -1968,6 +2122,7 @@ def run_analysis(
                 f"{APP_NAME} finished successfully.",
                 f"Structure partitions generated: {len(structure_contours)}",
                 f"Contour paths generated: {total_contours}",
+                "Xenium Explorer annotations were exported as GeoJSON and CSV.",
                 f"Elapsed time: {summary['effective_runtime_seconds']} seconds",
             ]
             + (["A complete ZIP archive of all outputs is available below."] if archive_path is not None else [])
