@@ -76,7 +76,12 @@ def test_init_workflow_writes_expected_template(tmp_path) -> None:
     assert payload["annotation_taxonomy"] == "breast"
     assert payload["case_name"] == "breast_demo"
     assert payload["openai_model"] == "gpt-5.4"
-    assert payload["differential_expression_csv"].endswith("analysis\\diffexp\\gene_expression_graphclust\\differential_expression.csv")
+    assert Path(payload["differential_expression_csv"]).parts[-4:] == (
+        "analysis",
+        "diffexp",
+        "gene_expression_graphclust",
+        "differential_expression.csv",
+    )
 
 
 def test_list_available_organ_packs_exposes_lung_and_breast() -> None:
