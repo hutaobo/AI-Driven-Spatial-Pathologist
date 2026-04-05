@@ -28,6 +28,8 @@ Today it provides:
 - a wrapper API that runs the existing `histoseg` full-auto workflow
 - a roadmap for gradually migrating product logic out of `histoseg`
 
+For the detailed developer handoff and architecture snapshot, see [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md).
+
 ## Why a Separate Repo?
 
 `histoseg` started as a segmentation and contour-generation toolkit.

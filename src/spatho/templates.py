@@ -31,6 +31,11 @@ def build_workflow_template(
         "base_pipeline_config": str(base_cfg_path),
         "output_root": str(output_path),
         "annotation_taxonomy": pack.annotation_taxonomy,
+        "pathology_review_backend": "openai",
+        "pathology_ai_api_base_url": "http://127.0.0.1:8000",
+        "pathology_ai_top_k": 6,
+        "pathology_ai_answer_language": "en",
+        "pathology_ai_document_ids": [],
         "differential_expression_csv": str(
             dataset_path / "analysis" / "diffexp" / "gene_expression_graphclust" / "differential_expression.csv"
         ),

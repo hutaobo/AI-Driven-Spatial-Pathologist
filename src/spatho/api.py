@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 import os
+import json
+from urllib import error, request
 
 from pydantic import ValidationError
 
@@ -77,6 +79,11 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
             {
                 "case_name": cfg.case_name,
                 "annotation_taxonomy": cfg.annotation_taxonomy,
+                "pathology_review_backend": cfg.pathology_review_backend,
+                "pathology_ai_api_base_url": cfg.pathology_ai_api_base_url,
+                "pathology_ai_top_k": cfg.pathology_ai_top_k,
+                "pathology_ai_answer_language": cfg.pathology_ai_answer_language,
+                "pathology_ai_document_ids": cfg.pathology_ai_document_ids,
                 "schema_valid": True,
                 "organ_pack": pack.to_dict(),
                 "base_pipeline_config": str(cfg.base_pipeline_config),
@@ -90,6 +97,17 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "openai_model": cfg.openai_model,
             }
         )
+        if cfg.pathology_review_backend == "pathology_ai_api":
+            try:
+                req = request.Request(
+                    url=str(cfg.pathology_ai_api_base_url).rstrip("/") + "/health",
+                    headers={"Accept": "application/json"},
+                    method="GET",
+                )
+                with request.urlopen(req, timeout=5) as response:
+                    report["pathology_ai_api_health"] = json.loads(response.read().decode("utf-8"))
+            except (error.URLError, json.JSONDecodeError, TimeoutError) as exc:
+                issues.append(f"pathology-ai API health check failed: {exc}")
     report["issues"] = issues
     report["ready_to_run"] = not issues
     return report

@@ -27,6 +27,12 @@ class WorkflowConfig(BaseModel):
     output_root: Path
     annotation_taxonomy: str = Field(default="lung")
 
+    pathology_review_backend: str = Field(default="openai")
+    pathology_ai_api_base_url: str = "http://127.0.0.1:8000"
+    pathology_ai_top_k: int = Field(default=6, ge=1, le=12)
+    pathology_ai_answer_language: str = Field(default="en", min_length=2, max_length=32)
+    pathology_ai_document_ids: list[str] = Field(default_factory=list, max_length=64)
+
     differential_expression_csv: Path | None = None
     projection_csv: Path | None = None
 
@@ -55,6 +61,15 @@ class WorkflowConfig(BaseModel):
         pack = get_organ_pack(value)
         return pack.annotation_taxonomy
 
+    @field_validator("pathology_review_backend")
+    @classmethod
+    def _validate_pathology_review_backend(cls, value: str) -> str:
+        supported = {"heuristic", "openai", "pathology_ai_api"}
+        normalized = str(value).strip()
+        if normalized not in supported:
+            raise ValueError(f"pathology_review_backend must be one of: {', '.join(sorted(supported))}")
+        return normalized
+
     @classmethod
     def from_json_file(cls, path: str | Path) -> "WorkflowConfig":
         config_path = Path(path).resolve()
@@ -77,6 +92,8 @@ class WorkflowConfig(BaseModel):
         properties = schema.setdefault("properties", {})
         if "annotation_taxonomy" in properties:
             properties["annotation_taxonomy"]["enum"] = supported
+        if "pathology_review_backend" in properties:
+            properties["pathology_review_backend"]["enum"] = ["heuristic", "openai", "pathology_ai_api"]
         return schema
 
     def to_payload(self) -> dict[str, Any]:
