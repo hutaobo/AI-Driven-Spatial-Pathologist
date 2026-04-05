@@ -1,9 +1,9 @@
 name: Publish to PyPI
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types:
+      - released
   workflow_dispatch:
 
 jobs:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5

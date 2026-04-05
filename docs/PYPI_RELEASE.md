@@ -36,18 +36,27 @@ Official references:
 
 1. Bump `spatho.__version__` in [src/spatho/__init__.py](../src/spatho/__init__.py).
 2. Commit the version bump.
-3. Tag the release:
+3. Commit and push the release branch.
+4. Create a Git tag that matches the package version.
+5. Create a GitHub Release from that tag and publish it.
+
+Example:
 
 ```bash
 git tag v0.1.0
-git push origin main --tags
+git push origin main
+git push origin v0.1.0
 ```
 
-4. GitHub Actions will:
+Then publish a GitHub Release for `v0.1.0`.
+
+GitHub Actions will:
 
 - build the sdist and wheel
 - upload them as workflow artifacts
 - publish them to PyPI through Trusted Publishing
+
+The PyPI workflow is now triggered by a formal GitHub Release, not by tag push alone.
 
 ## Local Preflight Checks
 
@@ -75,6 +84,6 @@ You can either:
 
 ## Notes for This Project
 
-- `spatho` currently depends on `histoseg`, so public installation will expect `histoseg` to be resolvable.
-- If `histoseg` itself is not on PyPI, then `spatho` cannot be installed cleanly from PyPI alone yet.
-- Before the first real public release, either publish `histoseg` as a dependency or vendor/migrate the required runtime modules into `spatho`.
+- `spatho` depends on `histoseg`, so releases should be coordinated.
+- When `spatho` begins using new runtime APIs from `histoseg`, publish the required `histoseg` version first and then raise the lower bound in `pyproject.toml`.
+- After updating the `histoseg` lower bound, create and publish a matching GitHub Release for `spatho`.
