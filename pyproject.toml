@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
-    "histoseg>=0.1.9.1",
+    "histoseg>=0.1.9.2",
     "gradio>=5.24,<6.0",
     "pydantic>=2,<3",
 ]
