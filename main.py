@@ -83,7 +83,14 @@ APP_DESCRIPTION = (
     "spatial structures before running the final HistoSeg contour analysis."
 )
 DEFAULT_PATTERN1 = "10,23,19,27,14,20,25,26"
-GROUP_SELECTION_EMPTY = "No structures selected yet. Click one or more colored badges on the dendrogram, or type cluster IDs manually."
+GROUP_SELECTION_EMPTY = (
+    "No structures selected yet. Use the checklist below, or type one structure per line manually."
+)
+SELECTION_NOTES_TEXT = (
+    "Choose one or more structures in the checklist, or type cluster IDs manually below. "
+    "Nothing is rerun while you are choosing. The app reads your final selection only when you click "
+    "'Run multi-structure contour analysis'. If the text box is non-empty, the manual lines take priority."
+)
 XENIUM_PIXEL_SIZE_UM = 0.2125
 GROUP_PALETTE = [
     "#6EF0D4",
@@ -501,20 +508,17 @@ def build_group_table(
 ) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     if not group_state:
-        return pd.DataFrame(rows, columns=["Selected", "Structure", "Cluster count", "Cluster IDs"])
+        return pd.DataFrame(rows, columns=["Structure", "Cluster count", "Cluster IDs"])
 
-    selected_set = set(selected_groups or [])
     for record in group_state.get("group_records", []):
-        choice_label = str(record["choice_label"])
         rows.append(
             {
-                "Selected": "Yes" if choice_label in selected_set else "",
                 "Structure": str(record["group_name"]),
                 "Cluster count": int(record["cluster_count"]),
                 "Cluster IDs": ", ".join(str(item) for item in record["clusters"]),
             }
         )
-    return pd.DataFrame(rows, columns=["Selected", "Structure", "Cluster count", "Cluster IDs"])
+    return pd.DataFrame(rows, columns=["Structure", "Cluster count", "Cluster IDs"])
 
 
 def build_structure_group_state(
@@ -940,7 +944,6 @@ def build_selected_structure_specs(
     selected_groups: list[str] | None,
     group_state: dict[str, object] | None,
 ) -> list[dict[str, object]]:
-    parsed_groups = parse_structure_cluster_groups(raw_groups_text)
     selected_records: list[dict[str, object]] = []
     if group_state:
         record_by_choice = {
@@ -951,6 +954,46 @@ def build_selected_structure_specs(
             record = record_by_choice.get(choice)
             if record is not None:
                 selected_records.append(record)
+
+    raw_groups_text = "" if raw_groups_text is None else str(raw_groups_text)
+    parsed_groups = parse_structure_cluster_groups(raw_groups_text) if raw_groups_text.strip() else []
+
+    if not parsed_groups:
+        if not selected_records:
+            raise ValueError(
+                "Please choose one or more structures in the checklist, or type cluster IDs with one structure per line."
+            )
+
+        specs: list[dict[str, object]] = []
+        seen_clusters: set[str] = set()
+        for index, record in enumerate(selected_records, start=1):
+            normalized_clusters = []
+            for item in record.get("clusters", []):
+                normalized = _normalize_cluster_label(item)
+                if normalized and normalized not in normalized_clusters:
+                    normalized_clusters.append(normalized)
+            if not normalized_clusters:
+                raise ValueError(f"Structure {index} does not contain any valid cluster IDs.")
+
+            overlap = seen_clusters.intersection(normalized_clusters)
+            if overlap:
+                raise ValueError(
+                    "A cluster ID cannot belong to more than one structure in the same run. "
+                    f"Repeated cluster IDs: {', '.join(sorted(overlap))}"
+                )
+            seen_clusters.update(normalized_clusters)
+
+            specs.append(
+                {
+                    "structure_id": int(index),
+                    "structure_name": str(record["group_name"]),
+                    "structure_color": str(record["color"]),
+                    "source_label": str(record["choice_label"]),
+                    "cluster_ids_raw": [str(item) for item in record.get("clusters", [])],
+                    "cluster_ids_normalized": normalized_clusters,
+                }
+            )
+        return specs
 
     specs: list[dict[str, object]] = []
     seen_clusters: set[str] = set()
@@ -1643,7 +1686,8 @@ def build_structure_groups(
     status_lines = [
         f"Built a cophenetic dendrogram for {merged['cluster'].nunique()} clusters.",
         f"Cut the dendrogram into {group_state['n_groups']} candidate structure(s).",
-        "Click one or more colored badges on the interactive dendrogram to choose the structures that should enter the final contour run.",
+        "Choose one or more structures in the checklist below, or type one structure per line manually.",
+        "The final contour analysis starts only after you click the Run button.",
     ]
     if removed_previews:
         status_lines.append(f"Cleaned old dendrogram sessions: {', '.join(removed_previews)}")
@@ -1659,7 +1703,7 @@ def build_structure_groups(
         group_df,
         gr.update(choices=group_state["choices"], value=[]),
         "",
-        GROUP_SELECTION_EMPTY,
+        SELECTION_NOTES_TEXT,
         group_state,
     )
 
@@ -2438,6 +2482,10 @@ body {
   min-height: 112px !important;
 }
 
+#pattern1-clusters textarea {
+  min-height: 210px !important;
+}
+
 @media (max-width: 1120px) {
   .guide-shell {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2557,8 +2605,8 @@ with gr.Blocks(
             gr.HTML(
                 """
                 <div class="micro-guide">
-                  Build the dendrogram first. Then click one or more colored badges on the interactive structure selector.
-                  Each selected structure will be contoured separately. The text box below uses one line per structure as a manual fallback format.
+                  Build the dendrogram first. Then choose structures in the checklist below, or type one structure per line manually.
+                  Each selected structure will be contoured separately. Nothing reruns while you are choosing; the app reads your final selection only when you click Run.
                 </div>
                 """
             )
@@ -2566,19 +2614,22 @@ with gr.Blocks(
                 label="Structures to include in the final contour run",
                 choices=[],
                 value=[],
-                info="You can click the dendrogram badges directly, or use this checklist if you prefer a textual fallback.",
+                info="Choose one or more candidate structures here. This checklist does not trigger a rerun by itself.",
             )
-            clear_selection_button = gr.Button("Clear selected structures", variant="secondary")
             pattern1_clusters = gr.Textbox(
                 label="Cluster IDs for each structure (one structure per line)",
                 value="",
-                info="This field is auto-filled from the selected structures. Manual format: one line per structure, for example '10,23,19' on one line and '27,14,20' on the next.",
+                lines=8,
+                placeholder="10,23,19\n27,14,20",
+                info="Optional manual override. Type one structure per line. If this box is non-empty, these lines will be used for the final run instead of the checklist.",
+                elem_id="pattern1-clusters",
             )
             selection_summary = gr.Textbox(
-                label="Current structure selection",
-                value=GROUP_SELECTION_EMPTY,
-                lines=3,
+                label="How final structure selection works",
+                value=SELECTION_NOTES_TEXT,
+                lines=4,
                 elem_id="selection-summary",
+                interactive=False,
             )
 
             with gr.Accordion("Advanced parameters", open=False):
@@ -2599,16 +2650,16 @@ with gr.Blocks(
         with gr.Column(scale=1, elem_id="right-rail"):
             structure_status = gr.Textbox(label="Step 1 status", lines=6, elem_id="dendrogram-status")
             structure_selector_image = gr.Image(
-                label="Interactive structure selector",
+                label="Structure dendrogram reference",
                 type="filepath",
-                interactive=True,
+                interactive=False,
                 sources=[],
                 elem_id="structure-selector",
             )
             structure_group_table = gr.Dataframe(
                 label="Candidate structures and their cluster IDs",
-                headers=["Selected", "Structure", "Cluster count", "Cluster IDs"],
-                datatype=["str", "str", "number", "str"],
+                headers=["Structure", "Cluster count", "Cluster IDs"],
+                datatype=["str", "number", "str"],
                 interactive=False,
                 wrap=True,
             )
@@ -2636,46 +2687,6 @@ with gr.Blocks(
             selection_summary,
             group_state,
         ],
-    )
-
-    structure_group_selector.change(
-        fn=refresh_structure_selection,
-        inputs=[structure_group_selector, group_state],
-        outputs=[
-            structure_selector_image,
-            structure_group_table,
-            structure_group_selector,
-            pattern1_clusters,
-            selection_summary,
-            group_state,
-        ],
-    )
-
-    clear_selection_button.click(
-        fn=clear_structure_selection,
-        inputs=[group_state],
-        outputs=[
-            structure_selector_image,
-            structure_group_table,
-            structure_group_selector,
-            pattern1_clusters,
-            selection_summary,
-            group_state,
-        ],
-    )
-
-    structure_selector_image.select(
-        fn=toggle_structure_group_from_selector,
-        inputs=[group_state],
-        outputs=[
-            structure_selector_image,
-            structure_group_table,
-            structure_group_selector,
-            pattern1_clusters,
-            selection_summary,
-            group_state,
-        ],
-        show_progress="hidden",
     )
 
     run_button.click(
