@@ -91,6 +91,10 @@ SELECTION_NOTES_TEXT = (
     "Nothing is rerun while you are choosing. The app reads your final selection only when you click "
     "'Run multi-structure contour analysis'. If the text box is non-empty, the manual lines take priority."
 )
+
+
+def structure_selection_help_text() -> str:
+    return f"{GROUP_SELECTION_EMPTY}\n\n{SELECTION_NOTES_TEXT}"
 XENIUM_PIXEL_SIZE_UM = 0.2125
 GROUP_PALETTE = [
     "#6EF0D4",
@@ -668,6 +672,55 @@ def update_clusters_to_outline_from_groups(
         summary_lines.append(f"Structure {idx}: {summarize_clusters([str(item) for item in clusters])}")
     summary = "\n".join(summary_lines)
     return cluster_text, summary
+
+
+def _normalize_non_empty_lines(raw_text: str | None) -> list[str]:
+    if raw_text is None:
+        return []
+    lines: list[str] = []
+    for raw_line in str(raw_text).replace(";", "\n").splitlines():
+        line = raw_line.strip()
+        if line:
+            lines.append(line)
+    return lines
+
+
+def sync_selected_groups_to_text(
+    selected_groups: list[str] | None,
+    current_text: str | None,
+    previous_auto_lines: list[str] | None,
+    group_state: dict[str, object] | None,
+) -> tuple[str, str, list[str]]:
+    normalized_groups = normalize_selected_groups(selected_groups or [], group_state)
+    auto_cluster_text, auto_summary = update_clusters_to_outline_from_groups(normalized_groups, group_state)
+    next_auto_lines = _normalize_non_empty_lines(auto_cluster_text)
+    previous_auto_set = set(_normalize_non_empty_lines("\n".join(previous_auto_lines or [])))
+
+    manual_lines = [line for line in _normalize_non_empty_lines(current_text) if line not in previous_auto_set]
+    merged_lines = list(manual_lines)
+    for line in next_auto_lines:
+        if line not in merged_lines:
+            merged_lines.append(line)
+
+    if normalized_groups:
+        summary_lines = [auto_summary]
+        if manual_lines:
+            summary_lines.append(
+                f"Manual lines kept in the text box: {len(manual_lines)}. You can still edit any line before Run."
+            )
+        else:
+            summary_lines.append("Selected structures were copied into the text box below. You can edit them before Run.")
+        summary = "\n\n".join(summary_lines)
+    elif manual_lines:
+        summary = (
+            "No checklist structures selected right now.\n\n"
+            f"Manual lines still present in the text box: {len(manual_lines)}.\n"
+            "Those manual lines will be used if you click Run."
+        )
+    else:
+        summary = structure_selection_help_text()
+
+    return "\n".join(merged_lines), summary, next_auto_lines
 
 
 def normalize_selected_groups(
@@ -1703,8 +1756,9 @@ def build_structure_groups(
         group_df,
         gr.update(choices=group_state["choices"], value=[]),
         "",
-        SELECTION_NOTES_TEXT,
+        structure_selection_help_text(),
         group_state,
+        [],
     )
 
 
@@ -2313,6 +2367,16 @@ body {
   border: 1px solid #284059 !important;
 }
 
+.gradio-container input[type="checkbox"] {
+  accent-color: var(--accent) !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.gradio-container input[type="checkbox"]:checked {
+  box-shadow: 0 0 0 1px rgba(110, 240, 212, 0.45);
+}
+
 .gradio-container table {
   background: #0c1726 !important;
   color: var(--text-main) !important;
@@ -2567,6 +2631,7 @@ with gr.Blocks(
     )
 
     group_state = gr.State(value={})
+    auto_structure_lines_state = gr.State(value=[])
 
     with gr.Row():
         with gr.Column(scale=1, elem_id="left-rail"):
@@ -2614,19 +2679,19 @@ with gr.Blocks(
                 label="Structures to include in the final contour run",
                 choices=[],
                 value=[],
-                info="Choose one or more candidate structures here. This checklist does not trigger a rerun by itself.",
+                info="Choose one or more candidate structures here. Checked structures are appended as new lines in the text box below, without rerunning the analysis.",
             )
             pattern1_clusters = gr.Textbox(
                 label="Cluster IDs for each structure (one structure per line)",
                 value="",
                 lines=8,
                 placeholder="10,23,19\n27,14,20",
-                info="Optional manual override. Type one structure per line. If this box is non-empty, these lines will be used for the final run instead of the checklist.",
+                info="Checked structures are copied here one line at a time. You can still edit, remove, or add lines manually before the final run.",
                 elem_id="pattern1-clusters",
             )
             selection_summary = gr.Textbox(
                 label="How final structure selection works",
-                value=SELECTION_NOTES_TEXT,
+                value=structure_selection_help_text(),
                 lines=4,
                 elem_id="selection-summary",
                 interactive=False,
@@ -2686,7 +2751,15 @@ with gr.Blocks(
             pattern1_clusters,
             selection_summary,
             group_state,
+            auto_structure_lines_state,
         ],
+    )
+
+    structure_group_selector.change(
+        fn=sync_selected_groups_to_text,
+        inputs=[structure_group_selector, pattern1_clusters, auto_structure_lines_state, group_state],
+        outputs=[pattern1_clusters, selection_summary, auto_structure_lines_state],
+        show_progress="hidden",
     )
 
     run_button.click(
