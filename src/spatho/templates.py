@@ -5,6 +5,12 @@ from typing import Any
 import json
 
 from .organ_packs import get_organ_pack
+from .xenium import (
+    CANONICAL_SPACE_PHYSICAL_UM,
+    DATASET_MODALITY_XENIUM_RNA_PROTEIN,
+    DEFAULT_XENIUM_PIXEL_SIZE_UM,
+    EXPORT_SPACE_XENIUM_EXPLORER_PIXEL,
+)
 
 
 def build_workflow_template(
@@ -42,6 +48,11 @@ def build_workflow_template(
         "projection_csv": str(
             dataset_path / "analysis" / "umap" / "gene_expression_2_components" / "projection.csv"
         ),
+        "dataset_modality": DATASET_MODALITY_XENIUM_RNA_PROTEIN,
+        "canonical_space": CANONICAL_SPACE_PHYSICAL_UM,
+        "export_space": EXPORT_SPACE_XENIUM_EXPLORER_PIXEL,
+        "xenium_pixel_size_um": DEFAULT_XENIUM_PIXEL_SIZE_UM,
+        "segmentation_source": "ranger_default",
         "openai_enabled": True,
         "openai_api_key_env": "OPENAI_API_KEY",
         "openai_model": openai_model,

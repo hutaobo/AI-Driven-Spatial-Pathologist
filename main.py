@@ -1412,6 +1412,28 @@ def _selection_base_name(structure_id: int, structure_name: str) -> str:
     return f"S{int(structure_id)} {str(structure_name).replace('[', '').replace(']', '')}".strip()
 
 
+def _resolve_xenium_pixel_size_um(
+    partition_data: dict[str, Any],
+    *,
+    pixel_size_um: float | None = None,
+) -> float:
+    metadata = partition_data.get("metadata", {})
+    candidates = (
+        pixel_size_um,
+        partition_data.get("pixel_size_um"),
+        metadata.get("pixel_size_um") if isinstance(metadata, dict) else None,
+        XENIUM_PIXEL_SIZE_UM,
+    )
+    for candidate in candidates:
+        if candidate is None:
+            continue
+        numeric = float(candidate)
+        if numeric <= 0:
+            raise ValueError(f"Xenium pixel size must be positive, got {candidate!r}")
+        return numeric
+    raise ValueError("Could not resolve a Xenium pixel size for polygon export.")
+
+
 def _component_mask_to_polygons_xenium(
     component_mask: np.ndarray,
     *,
@@ -1472,13 +1494,19 @@ def write_xenium_explorer_annotation_exports(
     output_dir: Path,
     partition_data: dict[str, np.ndarray],
     structure_specs: list[dict[str, object]],
+    pixel_size_um: float | None = None,
 ) -> dict[str, str]:
     features: list[dict[str, object]] = []
     csv_rows: list[dict[str, object]] = []
     summary_rows: list[dict[str, object]] = []
     partition_labels = np.asarray(partition_data["partition_labels"], dtype=np.int32)
-    x_edges = np.asarray(partition_data["x_edges"], dtype=float) / float(XENIUM_PIXEL_SIZE_UM)
-    y_edges = np.asarray(partition_data["y_edges"], dtype=float) / float(XENIUM_PIXEL_SIZE_UM)
+    resolved_pixel_size_um = _resolve_xenium_pixel_size_um(
+        partition_data,
+        pixel_size_um=pixel_size_um,
+    )
+    # Internal geometry lives in micron space; Xenium Explorer expects pixel-space polygons.
+    x_edges = np.asarray(partition_data["x_edges"], dtype=float) / resolved_pixel_size_um
+    y_edges = np.asarray(partition_data["y_edges"], dtype=float) / resolved_pixel_size_um
 
     for spec in structure_specs:
         structure_id = int(spec["structure_id"])

@@ -68,6 +68,8 @@ def build_artifact_manifest(
         ("pipeline.run_summary_json", "Structure assignment summary", "pipeline", output_root / "pipeline" / "structure_assignment" / "run_summary.json"),
         ("pipeline.structure_assignments_csv", "Structure assignments", "pipeline", output_root / "pipeline" / "structure_assignment" / "structure_assignments.csv"),
         ("pipeline.overlay_summary_csv", "Explorer annotation summary", "pipeline", output_root / "pipeline" / "validation" / "xenium_explorer_annotations_summary.csv"),
+        ("pipeline.xenium_alignment_note_md", "Xenium RNA+protein alignment note", "pipeline", output_root / "pipeline" / "validation" / "xenium_rna_protein_alignment_note.md"),
+        ("pipeline.xenium_alignment_fixture_manifest_json", "Xenium RNA+protein fixture manifest", "pipeline", output_root / "pipeline" / "validation" / "xenium_rna_protein_fixture_manifest.json"),
     ]
 
     artifacts = [
@@ -104,6 +106,13 @@ def build_artifact_manifest(
             "openai_model": workflow_config.openai_model,
             "openai_reasoning_effort": workflow_config.openai_reasoning_effort,
             "openai_store": workflow_config.openai_store,
+        },
+        "dataset": {
+            "modality": workflow_config.dataset_modality,
+            "canonical_space": workflow_config.canonical_space,
+            "export_space": workflow_config.export_space,
+            "xenium_pixel_size_um": workflow_config.xenium_pixel_size_um,
+            "segmentation_source": workflow_config.segmentation_source,
         },
         "artifact_counts": {
             "total": len(artifacts),

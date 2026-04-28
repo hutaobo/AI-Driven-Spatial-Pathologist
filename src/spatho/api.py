@@ -17,6 +17,7 @@ from .manifest import write_artifact_manifest
 from .organ_packs import get_organ_pack, list_organ_packs
 from .schema import export_workflow_schema, validate_workflow_config
 from .templates import write_workflow_template
+from .xenium import DEFAULT_XENIUM_PIXEL_SIZE_UM, write_xenium_rna_protein_alignment_bundle
 
 
 def run_workflow(config_path: str | Path, *, heuristic_only: bool = False) -> dict[str, str]:
@@ -93,6 +94,11 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "projection_csv": str(projection_csv) if projection_csv else None,
                 "projection_csv_exists": projection_csv.exists() if projection_csv else None,
                 "output_root": str(cfg.output_root),
+                "dataset_modality": cfg.dataset_modality,
+                "canonical_space": cfg.canonical_space,
+                "export_space": cfg.export_space,
+                "xenium_pixel_size_um": cfg.xenium_pixel_size_um,
+                "segmentation_source": cfg.segmentation_source,
                 "openai_enabled": bool(cfg.openai_enabled),
                 "openai_model": cfg.openai_model,
             }
@@ -162,3 +168,19 @@ def build_manifest(
         "workflow_summary_json": str(summary_path),
         "artifact_manifest_json": str(manifest_path),
     }
+
+
+def write_xenium_alignment_fixtures(
+    output_dir: str | Path,
+    *,
+    metadata_pixel_size_um: float | int | str | None = None,
+    fallback_pixel_size_um: float | int | str | None = None,
+    segmentation_source: str = "ranger_default",
+) -> dict[str, str]:
+    bundle = write_xenium_rna_protein_alignment_bundle(
+        output_dir,
+        metadata_pixel_size_um=metadata_pixel_size_um,
+        fallback_pixel_size_um=fallback_pixel_size_um if fallback_pixel_size_um is not None else DEFAULT_XENIUM_PIXEL_SIZE_UM,
+        segmentation_source=segmentation_source,
+    )
+    return bundle

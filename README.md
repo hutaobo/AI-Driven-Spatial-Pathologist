@@ -1,5 +1,10 @@
 # SPatho
 
+> Legacy standalone surface: the canonical product-layer implementation now lives inside
+> [`ASTRO`](https://github.com/hutaobo/ASTRO) under
+> `app/src/xenium_ai_discovery/pathology_app/`.
+> This repository is being retained as a compatibility and deployment-oriented shell.
+
 `spatho` is the public-facing product layer for an AI-driven spatial pathologist workflow built around Xenium-scale spatial transcriptomics.
 
 It is designed to sit above the lower-level `histoseg` engine and expose a cleaner public experience:
@@ -10,14 +15,15 @@ It is designed to sit above the lower-level `histoseg` engine and expose a clean
 - structure-level pathology review
 - HTML reporting for human-in-the-loop interpretation
 
-This repo is where the public product experience should live.  
+Historically this repo was the primary home for that product layer.
 The underlying geometry and segmentation engine still comes from `histoseg`.
+The canonical implementation is now being integrated into ASTRO, while this repository remains useful as a legacy standalone surface.
 
 ## Current Status
 
-This is the first public product-layer scaffold.
+This is now the legacy standalone scaffold for the pathology product layer.
 
-Today it provides:
+Today it still provides:
 
 - a package name: `spatho`
 - a user-facing CLI
@@ -29,6 +35,7 @@ Today it provides:
 - a roadmap for gradually migrating product logic out of `histoseg`
 
 For the detailed developer handoff and architecture snapshot, see [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md).
+For the canonical integrated engineering home, use [ASTRO](https://github.com/hutaobo/ASTRO).
 
 ## Why a Separate Repo?
 
@@ -106,6 +113,20 @@ spatho config-schema --output /path/to/workflow.schema.json
 spatho build-manifest --config /path/to/workflow.json
 ```
 
+### Write Xenium RNA+protein + H&E alignment fixtures
+
+```bash
+spatho write-xenium-alignment-fixtures \
+  --output-dir /path/to/output/pipeline/validation \
+  --segmentation-source ranger_protein_assisted
+```
+
+This writes:
+
+- a Xenium RNA+protein alignment note
+- a fixture manifest
+- five transform cases covering identity, `um -> pixel`, translation, axis order, and composed polygon export
+
 ## Python Usage
 
 ```python
@@ -162,6 +183,16 @@ These packs live in [src/spatho/organ_packs](src/spatho/organ_packs).
 
 Workflow JSON files are now backed by a formal schema exported from the package.
 This is the first step toward stable public contracts and backward-compatible workflow upgrades.
+
+For Xenium RNA+protein workflows, the config template now also records:
+
+- `dataset_modality = xenium_rna_protein`
+- `canonical_space = physical_um`
+- `export_space = xenium_explorer_pixel`
+- `xenium_pixel_size_um`
+- `segmentation_source`
+
+See [docs/XENIUM_RNA_PROTEIN_ALIGNMENT.md](docs/XENIUM_RNA_PROTEIN_ALIGNMENT.md) for the rationale and the polygon-level analysis model.
 
 ## Repository Layout
 

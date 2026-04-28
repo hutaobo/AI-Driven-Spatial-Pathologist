@@ -7,6 +7,14 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .organ_packs import get_organ_pack, list_organ_packs
+from .xenium import (
+    CANONICAL_SPACE_PHYSICAL_UM,
+    DATASET_MODALITY_XENIUM_RNA_PROTEIN,
+    DEFAULT_XENIUM_PIXEL_SIZE_UM,
+    EXPORT_SPACE_XENIUM_EXPLORER_PIXEL,
+    VALID_SEGMENTATION_SOURCES,
+    validate_segmentation_source,
+)
 
 
 def _resolve_path(value: str | Path | None, *, base_dir: Path) -> Path | None:
@@ -35,6 +43,12 @@ class WorkflowConfig(BaseModel):
 
     differential_expression_csv: Path | None = None
     projection_csv: Path | None = None
+
+    dataset_modality: str = Field(default=DATASET_MODALITY_XENIUM_RNA_PROTEIN)
+    canonical_space: str = Field(default=CANONICAL_SPACE_PHYSICAL_UM)
+    export_space: str = Field(default=EXPORT_SPACE_XENIUM_EXPLORER_PIXEL)
+    xenium_pixel_size_um: float = Field(default=DEFAULT_XENIUM_PIXEL_SIZE_UM, gt=0.0)
+    segmentation_source: str = Field(default="ranger_default")
 
     openai_enabled: bool = True
     openai_api_key_env: str = "OPENAI_API_KEY"
@@ -70,6 +84,35 @@ class WorkflowConfig(BaseModel):
             raise ValueError(f"pathology_review_backend must be one of: {', '.join(sorted(supported))}")
         return normalized
 
+    @field_validator("dataset_modality")
+    @classmethod
+    def _validate_dataset_modality(cls, value: str) -> str:
+        normalized = str(value).strip()
+        if normalized != DATASET_MODALITY_XENIUM_RNA_PROTEIN:
+            raise ValueError(f"dataset_modality must be '{DATASET_MODALITY_XENIUM_RNA_PROTEIN}'")
+        return normalized
+
+    @field_validator("canonical_space")
+    @classmethod
+    def _validate_canonical_space(cls, value: str) -> str:
+        normalized = str(value).strip()
+        if normalized != CANONICAL_SPACE_PHYSICAL_UM:
+            raise ValueError(f"canonical_space must be '{CANONICAL_SPACE_PHYSICAL_UM}'")
+        return normalized
+
+    @field_validator("export_space")
+    @classmethod
+    def _validate_export_space(cls, value: str) -> str:
+        normalized = str(value).strip()
+        if normalized != EXPORT_SPACE_XENIUM_EXPLORER_PIXEL:
+            raise ValueError(f"export_space must be '{EXPORT_SPACE_XENIUM_EXPLORER_PIXEL}'")
+        return normalized
+
+    @field_validator("segmentation_source")
+    @classmethod
+    def _validate_segmentation_source(cls, value: str) -> str:
+        return validate_segmentation_source(value)
+
     @classmethod
     def from_json_file(cls, path: str | Path) -> "WorkflowConfig":
         config_path = Path(path).resolve()
@@ -94,6 +137,14 @@ class WorkflowConfig(BaseModel):
             properties["annotation_taxonomy"]["enum"] = supported
         if "pathology_review_backend" in properties:
             properties["pathology_review_backend"]["enum"] = ["heuristic", "openai", "pathology_ai_api"]
+        if "dataset_modality" in properties:
+            properties["dataset_modality"]["enum"] = [DATASET_MODALITY_XENIUM_RNA_PROTEIN]
+        if "canonical_space" in properties:
+            properties["canonical_space"]["enum"] = [CANONICAL_SPACE_PHYSICAL_UM]
+        if "export_space" in properties:
+            properties["export_space"]["enum"] = [EXPORT_SPACE_XENIUM_EXPLORER_PIXEL]
+        if "segmentation_source" in properties:
+            properties["segmentation_source"]["enum"] = list(VALID_SEGMENTATION_SOURCES)
         return schema
 
     def to_payload(self) -> dict[str, Any]:

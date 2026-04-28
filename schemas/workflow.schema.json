@@ -30,6 +30,43 @@
         "lung"
       ]
     },
+    "pathology_review_backend": {
+      "default": "openai",
+      "title": "Pathology Review Backend",
+      "type": "string",
+      "enum": [
+        "heuristic",
+        "openai",
+        "pathology_ai_api"
+      ]
+    },
+    "pathology_ai_api_base_url": {
+      "default": "http://127.0.0.1:8000",
+      "title": "Pathology Ai Api Base Url",
+      "type": "string"
+    },
+    "pathology_ai_top_k": {
+      "default": 6,
+      "maximum": 12,
+      "minimum": 1,
+      "title": "Pathology Ai Top K",
+      "type": "integer"
+    },
+    "pathology_ai_answer_language": {
+      "default": "en",
+      "maxLength": 32,
+      "minLength": 2,
+      "title": "Pathology Ai Answer Language",
+      "type": "string"
+    },
+    "pathology_ai_document_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Pathology Ai Document Ids",
+      "type": "array"
+    },
     "differential_expression_csv": {
       "anyOf": [
         {
@@ -55,6 +92,46 @@
       ],
       "default": null,
       "title": "Projection Csv"
+    },
+    "dataset_modality": {
+      "default": "xenium_rna_protein",
+      "title": "Dataset Modality",
+      "type": "string",
+      "enum": [
+        "xenium_rna_protein"
+      ]
+    },
+    "canonical_space": {
+      "default": "physical_um",
+      "title": "Canonical Space",
+      "type": "string",
+      "enum": [
+        "physical_um"
+      ]
+    },
+    "export_space": {
+      "default": "xenium_explorer_pixel",
+      "title": "Export Space",
+      "type": "string",
+      "enum": [
+        "xenium_explorer_pixel"
+      ]
+    },
+    "xenium_pixel_size_um": {
+      "default": 0.2125,
+      "exclusiveMinimum": 0.0,
+      "title": "Xenium Pixel Size Um",
+      "type": "number"
+    },
+    "segmentation_source": {
+      "default": "ranger_default",
+      "title": "Segmentation Source",
+      "type": "string",
+      "enum": [
+        "ranger_protein_assisted",
+        "ranger_default",
+        "third_party_import"
+      ]
     },
     "openai_enabled": {
       "default": true,

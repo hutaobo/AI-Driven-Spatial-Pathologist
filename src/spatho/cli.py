@@ -10,6 +10,7 @@ from .api import (
     run_workflow,
     workflow_doctor_report,
     write_schema,
+    write_xenium_alignment_fixtures,
 )
 
 
@@ -71,6 +72,28 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     manifest_parser.add_argument("--config", required=True, help="Workflow JSON used for the run.")
     manifest_parser.add_argument("--output", help="Optional explicit manifest output path.")
+
+    xenium_parser = subparsers.add_parser(
+        "write-xenium-alignment-fixtures",
+        help="Write Xenium RNA+protein + H&E alignment fixtures and a method note.",
+    )
+    xenium_parser.add_argument("--output-dir", required=True, help="Where to write the fixture bundle.")
+    xenium_parser.add_argument(
+        "--metadata-pixel-size-um",
+        type=float,
+        help="Optional pixel size from dataset metadata. Takes precedence over the fallback value.",
+    )
+    xenium_parser.add_argument(
+        "--fallback-pixel-size-um",
+        type=float,
+        help="Optional fallback pixel size when metadata is absent. Defaults to 0.2125.",
+    )
+    xenium_parser.add_argument(
+        "--segmentation-source",
+        default="ranger_default",
+        choices=["ranger_protein_assisted", "ranger_default", "third_party_import"],
+        help="Segmentation provenance to record in the bundle.",
+    )
     return parser
 
 
@@ -113,6 +136,16 @@ def main() -> None:
 
     if args.command == "build-manifest":
         result = build_manifest(args.config, output_path=getattr(args, "output", None))
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return
+
+    if args.command == "write-xenium-alignment-fixtures":
+        result = write_xenium_alignment_fixtures(
+            args.output_dir,
+            metadata_pixel_size_um=getattr(args, "metadata_pixel_size_um", None),
+            fallback_pixel_size_um=getattr(args, "fallback_pixel_size_um", None),
+            segmentation_source=args.segmentation_source,
+        )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
 

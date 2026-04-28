@@ -3,7 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from spatho.api import build_manifest, init_workflow, list_available_organ_packs, workflow_doctor_report, write_schema
+from spatho.api import (
+    build_manifest,
+    init_workflow,
+    list_available_organ_packs,
+    workflow_doctor_report,
+    write_schema,
+)
 from spatho.manifest import build_artifact_manifest
 from spatho.schema import validate_workflow_config
 
@@ -75,6 +81,10 @@ def test_init_workflow_writes_expected_template(tmp_path) -> None:
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["annotation_taxonomy"] == "breast"
     assert payload["case_name"] == "breast_demo"
+    assert payload["dataset_modality"] == "xenium_rna_protein"
+    assert payload["canonical_space"] == "physical_um"
+    assert payload["export_space"] == "xenium_explorer_pixel"
+    assert payload["segmentation_source"] == "ranger_default"
     assert payload["openai_model"] == "gpt-5.4"
     assert Path(payload["differential_expression_csv"]).parts[-4:] == (
         "analysis",
@@ -100,6 +110,9 @@ def test_write_schema_exports_json_schema(tmp_path) -> None:
     assert "annotation_taxonomy" in schema["properties"]
     assert "lung" in schema["properties"]["annotation_taxonomy"]["enum"]
     assert "breast" in schema["properties"]["annotation_taxonomy"]["enum"]
+    assert schema["properties"]["dataset_modality"]["enum"] == ["xenium_rna_protein"]
+    assert schema["properties"]["canonical_space"]["enum"] == ["physical_um"]
+    assert schema["properties"]["export_space"]["enum"] == ["xenium_explorer_pixel"]
 
 
 def test_build_artifact_manifest_tracks_required_outputs(tmp_path) -> None:
@@ -184,6 +197,10 @@ def test_build_artifact_manifest_tracks_required_outputs(tmp_path) -> None:
     )
 
     assert manifest["organ_pack"]["id"] == "breast"
+    assert manifest["dataset"]["modality"] == "xenium_rna_protein"
+    assert manifest["dataset"]["canonical_space"] == "physical_um"
+    assert manifest["dataset"]["export_space"] == "xenium_explorer_pixel"
+    assert manifest["dataset"]["segmentation_source"] == "ranger_default"
     assert manifest["artifact_counts"]["missing_required"] == 0
     assert manifest["artifact_counts"]["existing"] >= 10
     artifact_ids = {artifact["id"] for artifact in manifest["artifacts"]}
