@@ -49,7 +49,8 @@ load_apptainer() {
   fi
   module load apptainer/1.4.4 >/dev/null 2>&1 && return 0
   module load PDC/25.03 >/dev/null 2>&1 && module load apptainer/1.4.4 >/dev/null 2>&1 && return 0
-  die "Could not load apptainer/1.4.4 on this gpugh node."
+  module load PDC/24.11 >/dev/null 2>&1 && module load apptainer/1.4.0-cpeGNU-24.11 >/dev/null 2>&1 && return 0
+  die "Could not load apptainer. Tried apptainer/1.4.4 and apptainer/1.4.0-cpeGNU-24.11."
 }
 
 require_file_or_dir() {
