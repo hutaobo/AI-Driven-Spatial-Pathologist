@@ -1,8 +1,15 @@
-# SPatho Documentation
+# AI-Driven Spatial Pathologist Documentation
 
-`spatho` is a Python package and CLI for AI-driven spatial pathology workflows around Xenium-scale spatial transcriptomics.
+AI-Driven Spatial Pathologist is a workflow layer for AI-driven spatial pathology around Xenium-scale spatial transcriptomics. The public Python package and CLI remain named `spatho`.
 
 The documentation starts with deployment because that is the most important operational path for local workstations and PDC/HPC environments.
+
+```{toctree}
+:maxdepth: 1
+:caption: Tutorials
+
+ATERA_WTA_BREAST_PDC_TUTORIAL
+```
 
 ```{toctree}
 :maxdepth: 2

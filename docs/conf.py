@@ -6,7 +6,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
-project = "SPatho"
+project = "AI-Driven Spatial Pathologist"
 author = "Taobo Hu"
 copyright = "2026, Taobo Hu"
 
@@ -34,7 +34,7 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
-html_title = "SPatho Documentation"
+html_title = "AI-Driven Spatial Pathologist Documentation"
 html_static_path = ["_static"]
 
 myst_heading_anchors = 3

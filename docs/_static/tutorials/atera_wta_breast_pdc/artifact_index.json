@@ -1,0 +1,30 @@
+{
+  "run_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429",
+  "files": {
+    "workflow_summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/workflow_summary.json",
+    "artifact_manifest_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/artifact_manifest.json",
+    "pathology_report_html": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/index.html",
+    "pipeline/validation/he_structure_isoline_overlay.png": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/he_structure_isoline_overlay.png",
+    "pipeline/validation/spatial_structure_isoline_overlay.png": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/spatial_structure_isoline_overlay.png",
+    "pipeline/validation/structure_isoline_metrics.json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/structure_isoline_metrics.json",
+    "pipeline/structure_assignment/structure_assignments.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/structure_assignments.csv",
+    "topology/ligand_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/ligand_to_cell.csv",
+    "topology/lr_component_diagnostics.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/lr_component_diagnostics.csv",
+    "topology/lr_sender_receiver_scores.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/lr_sender_receiver_scores.csv",
+    "topology/pathway_activity_structuremap.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_activity_structuremap.csv",
+    "topology/pathway_activity_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_activity_to_cell.csv",
+    "topology/pathway_mode_comparison.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_mode_comparison.csv",
+    "topology/pathway_structuremap.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_structuremap.csv",
+    "topology/pathway_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_to_cell.csv",
+    "topology/receptor_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/receptor_to_cell.csv",
+    "topology/report.md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/report.md",
+    "topology/summary.json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/summary.json",
+    "mechanostress/axis_strength_by_radius.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/axis_strength_by_radius.csv",
+    "mechanostress/distance_expression_coupling.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/distance_expression_coupling.csv",
+    "mechanostress/orientation_summary.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/orientation_summary.csv",
+    "mechanostress/polarity_summary.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/polarity_summary.csv",
+    "mechanostress/report.md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/report.md",
+    "mechanostress/summary.json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/summary.json",
+    "mechanostress/tumor_growth_summary.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/tumor_growth_summary.csv"
+  }
+}

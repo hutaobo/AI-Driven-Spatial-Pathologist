@@ -1,0 +1,2 @@
+sample_id,n_tumor,n_infiltrative,n_expanding,n_tumor_valid,infiltrative_proportion,mean_infil_dist_to_stromal,mean_expand_dist_to_stromal
+atera_wta_breast_pdc_20260429,13028,4363,8665,13028,0.3348940743015045,19.380232683447925,55.236329202190774

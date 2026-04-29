@@ -1,0 +1,538 @@
+{
+  "sample_id": "atera_wta_breast_pdc_20260429",
+  "dataset_root": "/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs",
+  "tbc_results": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/tbc_anchor_placeholder",
+  "output_dir": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology",
+  "n_cells": 170057,
+  "n_rna_features": 18028,
+  "cluster_count": 20,
+  "topology_celltype_count": 20,
+  "unassigned_cells": 12,
+  "cluster_cell_counts": [
+    {
+      "cluster": "11q13 Invasive Tumor Cells",
+      "n_cells": 64036
+    },
+    {
+      "cluster": "CAFs, DCIS Associated",
+      "n_cells": 24442
+    },
+    {
+      "cluster": "Luminal-like Amorphous DCIS Cells",
+      "n_cells": 13028
+    },
+    {
+      "cluster": "Basal-like Structured DCIS Cells",
+      "n_cells": 8760
+    },
+    {
+      "cluster": "Endothelial Cells",
+      "n_cells": 8624
+    },
+    {
+      "cluster": "Myoepithelial Cells",
+      "n_cells": 8438
+    },
+    {
+      "cluster": "Pericytes",
+      "n_cells": 8087
+    },
+    {
+      "cluster": "T Lymphocytes",
+      "n_cells": 8018
+    },
+    {
+      "cluster": "CXCL14+ Fibroblasts",
+      "n_cells": 4936
+    },
+    {
+      "cluster": "Dendritic Cells",
+      "n_cells": 4008
+    },
+    {
+      "cluster": "CAFs, Invasive Associated",
+      "n_cells": 4001
+    },
+    {
+      "cluster": "Macrophages",
+      "n_cells": 3861
+    },
+    {
+      "cluster": "B Cells",
+      "n_cells": 2512
+    },
+    {
+      "cluster": "11q13 Invasive Tumor Cells (Mitotic)",
+      "n_cells": 2462
+    },
+    {
+      "cluster": "11q13 Invasive Tumor Cells (G1/S)",
+      "n_cells": 2374
+    },
+    {
+      "cluster": "Plasma Cells",
+      "n_cells": 873
+    },
+    {
+      "cluster": "Myeloid Cells",
+      "n_cells": 813
+    },
+    {
+      "cluster": "Apocrine Cells",
+      "n_cells": 403
+    },
+    {
+      "cluster": "Mast Cells",
+      "n_cells": 369
+    },
+    {
+      "cluster": "Unassigned",
+      "n_cells": 12
+    }
+  ],
+  "metrics_summary": {
+    "num_cells_detected": 170057,
+    "median_transcripts_per_cell": 2116,
+    "median_genes_per_cell": 1543
+  },
+  "experiment_metadata": {
+    "panel_num_targets_predesigned": 18028,
+    "panel_num_targets_custom": 0,
+    "pixel_size": 0.2125,
+    "panel_name": "Human WTA (pre-release)",
+    "analysis_sw_version": "xenium-9.9.9.9"
+  },
+  "lr_smoke_panel": [
+    {
+      "ligand": "CSF1",
+      "receptor": "CSF1R",
+      "evidence_weight": 1.0
+    },
+    {
+      "ligand": "CXCL12",
+      "receptor": "CXCR4",
+      "evidence_weight": 1.0
+    },
+    {
+      "ligand": "TGFB1",
+      "receptor": "TGFBR2",
+      "evidence_weight": 1.0
+    },
+    {
+      "ligand": "JAG1",
+      "receptor": "NOTCH1",
+      "evidence_weight": 1.0
+    },
+    {
+      "ligand": "DLL4",
+      "receptor": "NOTCH3",
+      "evidence_weight": 1.0
+    }
+  ],
+  "pathway_smoke_panel": [
+    {
+      "pathway": "MacrophageProgram",
+      "genes": [
+        "C1QA",
+        "CD163",
+        "CSF1R",
+        "SIGLEC1",
+        "C3"
+      ]
+    },
+    {
+      "pathway": "PlasmaProgram",
+      "genes": [
+        "IGHA1",
+        "IGHA2",
+        "JCHAIN",
+        "IGHM"
+      ]
+    },
+    {
+      "pathway": "VascularProgram",
+      "genes": [
+        "CDH5",
+        "MMRN2",
+        "EPAS1",
+        "KDR",
+        "FLT1"
+      ]
+    },
+    {
+      "pathway": "BasalDCISProgram",
+      "genes": [
+        "SOSTDC1",
+        "KLK5",
+        "ITGB6",
+        "DSC3",
+        "KRT23"
+      ]
+    },
+    {
+      "pathway": "ApocrineProgram",
+      "genes": [
+        "TAT",
+        "MYBPC1"
+      ]
+    },
+    {
+      "pathway": "LuminalAmorphousProgram",
+      "genes": [
+        "HSPB8",
+        "CLIC6",
+        "PIP",
+        "ESR1",
+        "PGR"
+      ]
+    }
+  ],
+  "lr_pair_summaries": [
+    {
+      "ligand": "CSF1",
+      "receptor": "CSF1R",
+      "best_sender_celltype": "CAFs, DCIS Associated",
+      "best_receiver_celltype": "Macrophages",
+      "best_score": 0.5299631021292543,
+      "top_rows": [
+        {
+          "sender_celltype": "CAFs, DCIS Associated",
+          "receiver_celltype": "Macrophages",
+          "LR_score": 0.5299631021292543
+        },
+        {
+          "sender_celltype": "CAFs, DCIS Associated",
+          "receiver_celltype": "Dendritic Cells",
+          "LR_score": 0.39041832592089076
+        },
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "Macrophages",
+          "LR_score": 0.35943069754848705
+        },
+        {
+          "sender_celltype": "Pericytes",
+          "receiver_celltype": "Macrophages",
+          "LR_score": 0.34386103852381456
+        },
+        {
+          "sender_celltype": "Mast Cells",
+          "receiver_celltype": "Macrophages",
+          "LR_score": 0.2821257455530014
+        }
+      ]
+    },
+    {
+      "ligand": "CXCL12",
+      "receptor": "CXCR4",
+      "best_sender_celltype": "CAFs, DCIS Associated",
+      "best_receiver_celltype": "T Lymphocytes",
+      "best_score": 0.6616803690861207,
+      "top_rows": [
+        {
+          "sender_celltype": "CAFs, DCIS Associated",
+          "receiver_celltype": "T Lymphocytes",
+          "LR_score": 0.6616803690861207
+        },
+        {
+          "sender_celltype": "CAFs, DCIS Associated",
+          "receiver_celltype": "Dendritic Cells",
+          "LR_score": 0.414447570421636
+        },
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "T Lymphocytes",
+          "LR_score": 0.3136762384599398
+        },
+        {
+          "sender_celltype": "CAFs, DCIS Associated",
+          "receiver_celltype": "Macrophages",
+          "LR_score": 0.30505044615184107
+        },
+        {
+          "sender_celltype": "Pericytes",
+          "receiver_celltype": "T Lymphocytes",
+          "LR_score": 0.2770305337845712
+        }
+      ]
+    },
+    {
+      "ligand": "TGFB1",
+      "receptor": "TGFBR2",
+      "best_sender_celltype": "Endothelial Cells",
+      "best_receiver_celltype": "Endothelial Cells",
+      "best_score": 0.5413400493078342,
+      "top_rows": [
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.5413400493078342
+        },
+        {
+          "sender_celltype": "T Lymphocytes",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.4952889073038039
+        },
+        {
+          "sender_celltype": "CAFs, Invasive Associated",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.4675161430815234
+        },
+        {
+          "sender_celltype": "Dendritic Cells",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.43312104303015586
+        },
+        {
+          "sender_celltype": "Pericytes",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.42180850638414885
+        }
+      ]
+    },
+    {
+      "ligand": "JAG1",
+      "receptor": "NOTCH1",
+      "best_sender_celltype": "11q13 Invasive Tumor Cells",
+      "best_receiver_celltype": "Basal-like Structured DCIS Cells",
+      "best_score": 0.5195079467384197,
+      "top_rows": [
+        {
+          "sender_celltype": "11q13 Invasive Tumor Cells",
+          "receiver_celltype": "Basal-like Structured DCIS Cells",
+          "LR_score": 0.5195079467384197
+        },
+        {
+          "sender_celltype": "11q13 Invasive Tumor Cells",
+          "receiver_celltype": "11q13 Invasive Tumor Cells",
+          "LR_score": 0.48730507700623305
+        },
+        {
+          "sender_celltype": "11q13 Invasive Tumor Cells",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.43565812319890196
+        },
+        {
+          "sender_celltype": "11q13 Invasive Tumor Cells",
+          "receiver_celltype": "Pericytes",
+          "LR_score": 0.31457895911413425
+        },
+        {
+          "sender_celltype": "11q13 Invasive Tumor Cells",
+          "receiver_celltype": "11q13 Invasive Tumor Cells (Mitotic)",
+          "LR_score": 0.304322345631402
+        }
+      ]
+    },
+    {
+      "ligand": "DLL4",
+      "receptor": "NOTCH3",
+      "best_sender_celltype": "Endothelial Cells",
+      "best_receiver_celltype": "Pericytes",
+      "best_score": 0.6695148471220083,
+      "top_rows": [
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "Pericytes",
+          "LR_score": 0.6695148471220083
+        },
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "Endothelial Cells",
+          "LR_score": 0.4765155601675771
+        },
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "11q13 Invasive Tumor Cells",
+          "LR_score": 0.44663139943507835
+        },
+        {
+          "sender_celltype": "Pericytes",
+          "receiver_celltype": "Pericytes",
+          "LR_score": 0.35115285322855
+        },
+        {
+          "sender_celltype": "Endothelial Cells",
+          "receiver_celltype": "CAFs, Invasive Associated",
+          "LR_score": 0.3500032016279152
+        }
+      ]
+    }
+  ],
+  "lr_acceptance": [
+    {
+      "check": "CSF1-CSF1R top sender should not be Mast Cells",
+      "ligand": "CSF1",
+      "receptor": "CSF1R",
+      "observed_top_sender": "CAFs, DCIS Associated",
+      "pass": true
+    },
+    {
+      "check": "CXCL12-CXCR4 should keep CAFs, DCIS Associated -> T Lymphocytes high-ranking",
+      "ligand": "CXCL12",
+      "receptor": "CXCR4",
+      "observed_rank": 1,
+      "pass": true
+    },
+    {
+      "check": "DLL4-NOTCH3 top hit should be Endothelial Cells -> Pericytes",
+      "ligand": "DLL4",
+      "receptor": "NOTCH3",
+      "observed_top_sender": "Endothelial Cells",
+      "observed_top_receiver": "Pericytes",
+      "pass": true
+    }
+  ],
+  "pathway_primary_best": [
+    {
+      "pathway": "MacrophageProgram",
+      "best_celltype": "Macrophages",
+      "best_distance": 0.04304335075803993
+    },
+    {
+      "pathway": "PlasmaProgram",
+      "best_celltype": "Plasma Cells",
+      "best_distance": 0.06843093463899122
+    },
+    {
+      "pathway": "VascularProgram",
+      "best_celltype": "Endothelial Cells",
+      "best_distance": 0.04573965492893923
+    },
+    {
+      "pathway": "BasalDCISProgram",
+      "best_celltype": "Basal-like Structured DCIS Cells",
+      "best_distance": 0.04301495094979466
+    },
+    {
+      "pathway": "ApocrineProgram",
+      "best_celltype": "Apocrine Cells",
+      "best_distance": 0.07370204456856003
+    },
+    {
+      "pathway": "LuminalAmorphousProgram",
+      "best_celltype": "Luminal-like Amorphous DCIS Cells",
+      "best_distance": 0.19669641570449653
+    }
+  ],
+  "pathway_activity_best": [
+    {
+      "pathway": "MacrophageProgram",
+      "best_celltype": "Macrophages",
+      "best_distance": 0.0488802065880854
+    },
+    {
+      "pathway": "PlasmaProgram",
+      "best_celltype": "Plasma Cells",
+      "best_distance": 0.04923212293963461
+    },
+    {
+      "pathway": "VascularProgram",
+      "best_celltype": "Macrophages",
+      "best_distance": 0.07905083139212797
+    },
+    {
+      "pathway": "BasalDCISProgram",
+      "best_celltype": "Basal-like Structured DCIS Cells",
+      "best_distance": 0.12722387937014984
+    },
+    {
+      "pathway": "ApocrineProgram",
+      "best_celltype": "Apocrine Cells",
+      "best_distance": 0.27273128997346546
+    },
+    {
+      "pathway": "LuminalAmorphousProgram",
+      "best_celltype": "CAFs, DCIS Associated",
+      "best_distance": 0.186382802174398
+    }
+  ],
+  "pathway_acceptance": [
+    {
+      "pathway": "MacrophageProgram",
+      "expected_best_celltypes": [
+        "Macrophages"
+      ],
+      "observed_best_celltype": "Macrophages",
+      "pass": true
+    },
+    {
+      "pathway": "PlasmaProgram",
+      "expected_best_celltypes": [
+        "Plasma Cells"
+      ],
+      "observed_best_celltype": "Plasma Cells",
+      "pass": true
+    },
+    {
+      "pathway": "VascularProgram",
+      "expected_best_celltypes": [
+        "Endothelial Cells",
+        "Pericytes"
+      ],
+      "observed_best_celltype": "Endothelial Cells",
+      "pass": true
+    },
+    {
+      "pathway": "BasalDCISProgram",
+      "expected_best_celltypes": [
+        "Basal-like Structured DCIS Cells"
+      ],
+      "observed_best_celltype": "Basal-like Structured DCIS Cells",
+      "pass": true
+    },
+    {
+      "pathway": "ApocrineProgram",
+      "expected_best_celltypes": [
+        "Apocrine Cells"
+      ],
+      "observed_best_celltype": "Apocrine Cells",
+      "pass": true
+    },
+    {
+      "pathway": "LuminalAmorphousProgram",
+      "expected_best_celltypes": [
+        "Luminal-like Amorphous DCIS Cells"
+      ],
+      "observed_best_celltype": "Luminal-like Amorphous DCIS Cells",
+      "pass": true
+    }
+  ],
+  "runtime_seconds": 180.26921628415585,
+  "files": {
+    "ligand_to_cell": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/ligand_to_cell.csv",
+    "receptor_to_cell": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/receptor_to_cell.csv",
+    "lr_sender_receiver_scores": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/lr_sender_receiver_scores.csv",
+    "lr_component_diagnostics": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/lr_component_diagnostics.csv",
+    "lr_summary_heatmap": [
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/lr_summary_heatmap.png",
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/lr_summary_heatmap.pdf"
+    ],
+    "lr_hotspot_cells_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/lr_hotspot_cells.csv",
+    "lr_hotspot_cells_parquet": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/lr_hotspot_cells.parquet",
+    "lr_hotspot_overlay": [
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/lr_hotspot_overlay.png",
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/lr_hotspot_overlay.pdf"
+    ],
+    "pathway_to_cell": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/pathway_to_cell.csv",
+    "pathway_structuremap": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/pathway_structuremap.csv",
+    "pathway_activity_to_cell": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/pathway_activity_to_cell.csv",
+    "pathway_activity_structuremap": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/pathway_activity_structuremap.csv",
+    "pathway_mode_comparison": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/pathway_mode_comparison.csv",
+    "pathway_to_cell_heatmap": [
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_to_cell_heatmap.png",
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_to_cell_heatmap.pdf"
+    ],
+    "pathway_activity_to_cell_heatmap": [
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_activity_to_cell_heatmap.png",
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_activity_to_cell_heatmap.pdf"
+    ],
+    "pathway_hotspot_cells_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_hotspot_cells.csv",
+    "pathway_hotspot_overlay": [
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_hotspot_overlay.png",
+      "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/figures/pathway_hotspot_overlay.pdf"
+    ],
+    "summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/summary.json",
+    "report_md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/report.md"
+  }
+}

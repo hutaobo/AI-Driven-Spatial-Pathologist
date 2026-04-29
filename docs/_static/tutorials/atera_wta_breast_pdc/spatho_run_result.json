@@ -1,0 +1,9 @@
+{
+  "output_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho",
+  "annotation_report_html": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/annotation_review.html",
+  "annotation_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_celltype_annotation.csv",
+  "runtime_base_pipeline_config": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/runtime_configs/generated_runtime_config.json",
+  "pathology_report_html": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/index.html",
+  "workflow_summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/workflow_summary.json",
+  "artifact_manifest_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/artifact_manifest.json"
+}

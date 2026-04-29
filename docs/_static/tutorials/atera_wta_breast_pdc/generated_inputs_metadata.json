@@ -1,0 +1,53 @@
+{
+  "cluster_source": "/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs/analysis/analysis/clustering/gene_expression_graphclust/clusters.csv",
+  "cluster_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/analysis/clustering/gene_expression_graphclust/clusters.csv",
+  "projection": {
+    "projection_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/analysis/umap/gene_expression_2_components/projection.csv",
+    "source": "cell_centroids",
+    "rows": 170045,
+    "matched_fraction": 1.0
+  },
+  "differential_expression": {
+    "differential_expression_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/analysis/diffexp/gene_expression_graphclust/differential_expression.csv",
+    "genes": 27104,
+    "clusters": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34"
+    ],
+    "matched_barcodes": 170045,
+    "total_barcodes": 170057,
+    "method": "cluster_pseudobulk_log2fc_with_thresholded_p_values"
+  }
+}

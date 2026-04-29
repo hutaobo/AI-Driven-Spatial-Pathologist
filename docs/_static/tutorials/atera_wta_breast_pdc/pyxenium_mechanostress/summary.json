@@ -1,0 +1,71 @@
+{
+  "summary": {
+    "sample_id": "atera_wta_breast_pdc_20260429",
+    "n_axes": 168335,
+    "n_axis_strength_rows": 80,
+    "n_orientation_summary_rows": 20,
+    "n_tumor_growth_cells": 170057,
+    "n_distance_expression_coupling_rows": 5,
+    "n_polarity_cells": 168335,
+    "tumor_growth": {
+      "sample_id": "atera_wta_breast_pdc_20260429",
+      "n_tumor": 13028,
+      "n_infiltrative": 4363,
+      "n_expanding": 8665,
+      "n_tumor_valid": 13028,
+      "infiltrative_proportion": 0.3348940743015045,
+      "mean_infil_dist_to_stromal": 19.380232683447925,
+      "mean_expand_dist_to_stromal": 55.236329202190774
+    }
+  },
+  "config": {
+    "axis": {
+      "er_threshold": 2.0,
+      "radii_um": [
+        25.0,
+        50.0,
+        100.0,
+        200.0
+      ],
+      "groupby": [
+        "group"
+      ],
+      "local_k": 15,
+      "angle_col": "axis_angle_radians",
+      "x_col": "centroid_x",
+      "y_col": "centroid_y",
+      "cell_query": null
+    },
+    "tumor_stroma": {
+      "annotation_col": "group",
+      "tumor_label": "Luminal-like Amorphous DCIS Cells",
+      "stroma_label": "CAFs, DCIS Associated",
+      "x_col": "x_centroid",
+      "y_col": "y_centroid",
+      "cell_id_col": "cell_id",
+      "method": "delaunay_hop"
+    },
+    "polarity": {
+      "offset_norm_threshold": 0.3,
+      "cell_id_col": "cell_id"
+    },
+    "coupling_genes": [
+      "COL1A1",
+      "COL3A1",
+      "MMP11",
+      "TGFB1",
+      "CXCL12"
+    ],
+    "sample_id": "atera_wta_breast_pdc_20260429"
+  },
+  "files": {
+    "cell_axes": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/cell_axes.csv",
+    "axis_strength_by_radius": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/axis_strength_by_radius.csv",
+    "orientation_summary": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/orientation_summary.csv",
+    "tumor_growth_cells": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/tumor_growth_cells.csv",
+    "tumor_growth_summary": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/tumor_growth_summary.csv",
+    "distance_expression_coupling": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/distance_expression_coupling.csv",
+    "cell_polarity": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/cell_polarity.csv",
+    "polarity_summary": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/polarity_summary.csv"
+  }
+}

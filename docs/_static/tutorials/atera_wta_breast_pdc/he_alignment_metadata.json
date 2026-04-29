@@ -1,0 +1,18 @@
+{
+  "he_image_tif": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/he/atera_wta_breast_pdc_20260429_registered_he_level6.tif",
+  "he_alignment_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/he/atera_wta_breast_pdc_20260429_he_alignment_level6.csv",
+  "source": "spatialdata.zarr/images/he",
+  "zarr_level": 6,
+  "level_shape": [
+    3,
+    739,
+    1412
+  ],
+  "alignment_direction": "level_image_pixel_xy_to_xenium_pixel_xy",
+  "keypoints_validation": {
+    "n_keypoints": 12,
+    "mean_residual": 12.23742644241935,
+    "median_residual": 14.423144130807218,
+    "max_residual": 21.77399672477011
+  }
+}

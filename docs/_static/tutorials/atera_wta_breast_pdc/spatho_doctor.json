@@ -1,0 +1,104 @@
+{
+  "openai_api_key_present": false,
+  "openai_api_key_length": 0,
+  "config_path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/workflows/atera_wta_breast_pdc_20260429_pathology_ai.json",
+  "config_exists": true,
+  "case_name": "atera_wta_breast_pdc_20260429",
+  "annotation_taxonomy": "breast",
+  "pathology_review_backend": "pathology_ai_api",
+  "pathology_ai_api_base_url": "http://127.0.0.1:8000",
+  "pathology_ai_top_k": 6,
+  "pathology_ai_answer_language": "en",
+  "pathology_ai_document_ids": [],
+  "schema_valid": true,
+  "organ_pack": {
+    "id": "breast",
+    "display_name": "Breast Cancer Xenium",
+    "annotation_taxonomy": "breast",
+    "description": "Built-in organ pack for breast Xenium cases with breast-specific cluster annotation defaults, public workflow template defaults, and expected artifact groups.",
+    "default_study_context": "Human breast cancer Xenium case. Run breast-specific OpenAI-driven cluster annotation from graph-based differential expression evidence, then propagate the generated labels through structure discovery, H&E overlay, and AI spatial pathology review. Treat this as pathology decision support, not an autonomous diagnosis.",
+    "supported_input_layout": "Xenium outs directory with analysis/diffexp/gene_expression_graphclust and analysis/umap/gene_expression_2_components.",
+    "workflow_defaults": {
+      "top_positive_markers": 15,
+      "top_negative_markers": 6,
+      "min_log2fc": 0.5,
+      "max_adjusted_p_value": 0.05,
+      "top_neighbors": 5,
+      "low_confidence_threshold": 0.65,
+      "ambiguity_margin_threshold": 0.08,
+      "top_clusters_per_structure": 8,
+      "openai_model": "gpt-5.4",
+      "openai_reasoning_effort": "medium",
+      "openai_store": false
+    },
+    "artifact_contract": {
+      "required": [
+        "annotation.cluster_evidence_json",
+        "annotation.cluster_annotations_json",
+        "annotation.compatibility_csv",
+        "annotation.report_html",
+        "pathology.report_html",
+        "pathology.structure_reviews_json",
+        "pathology.case_summary_json",
+        "pipeline.structure_clustermap_pdf",
+        "pipeline.cluster_structure_lookup_csv",
+        "workflow.workflow_summary_json"
+      ]
+    }
+  },
+  "base_pipeline_config": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/configs/atera_wta_breast_pdc_20260429_base_pipeline.json",
+  "base_pipeline_config_exists": true,
+  "differential_expression_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/analysis/diffexp/gene_expression_graphclust/differential_expression.csv",
+  "differential_expression_csv_exists": true,
+  "projection_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/analysis/umap/gene_expression_2_components/projection.csv",
+  "projection_csv_exists": true,
+  "output_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho",
+  "dataset_modality": "xenium_rna_protein",
+  "canonical_space": "physical_um",
+  "export_space": "xenium_explorer_pixel",
+  "xenium_pixel_size_um": 0.2125,
+  "segmentation_source": "ranger_default",
+  "openai_enabled": false,
+  "openai_model": "gpt-5.4",
+  "pathology_ai_api_health": {
+    "service": "pathology-ai",
+    "ready": true,
+    "settings": {
+      "host": "0.0.0.0",
+      "port": 8000,
+      "llm_base_url": "http://127.0.0.1:8001/v1",
+      "llm_model": "openai/gpt-oss-120b",
+      "embed_base_url": "http://127.0.0.1:8002",
+      "embed_model": "BAAI/bge-m3",
+      "rerank_base_url": "http://127.0.0.1:8003",
+      "rerank_model": "BAAI/bge-reranker-v2-m3",
+      "vector_db": "qdrant",
+      "qdrant_base_url": "http://127.0.0.1:6333",
+      "qdrant_collection": "pathology_reference",
+      "default_top_k": 6,
+      "strict_json": true,
+      "max_chunk_chars": 1200,
+      "chunk_overlap_chars": 120
+    },
+    "components": {
+      "llm": {
+        "ok": true,
+        "models": [
+          "openai/gpt-oss-120b"
+        ]
+      },
+      "embedder": {
+        "ok": true
+      },
+      "reranker": {
+        "ok": true
+      },
+      "vector_store": {
+        "ok": true,
+        "collections": []
+      }
+    }
+  },
+  "issues": [],
+  "ready_to_run": true
+}

@@ -1,0 +1,34 @@
+{
+  "case_name": "atera_wta_breast_pdc_20260429",
+  "study_context": "10x Xenium WTA Preview FFPE Breast Cancer sample on PDC. Graph-based clusters are annotated with breast taxonomy, reviewed through the local pathology-ai API, and paired with pyXenium topology and mechanostress outputs.",
+  "output_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho",
+  "annotation_outputs": {
+    "output_dir": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation",
+    "cluster_evidence_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_evidence.json",
+    "cluster_annotations_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_annotations_openai.json",
+    "cluster_annotations_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_annotations_openai.csv",
+    "compatibility_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_celltype_annotation.csv",
+    "case_review_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/annotation_case_review.json",
+    "report_html": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/annotation_review.html"
+  },
+  "runtime_base_pipeline_config": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/runtime_configs/generated_runtime_config.json",
+  "pathology_outputs": {
+    "output_dir": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review",
+    "report_html": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/index.html",
+    "cluster_reviews_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/cluster_reviews.json",
+    "structure_reviews_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/structure_reviews.json",
+    "case_summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/case_summary.json"
+  },
+  "responses_api_ready": true,
+  "annotation_taxonomy": "breast",
+  "pathology_review_backend": "pathology_ai_api",
+  "pathology_ai_api_base_url": "http://127.0.0.1:8000",
+  "pathology_ai_top_k": 6,
+  "pathology_ai_answer_language": "en",
+  "pathology_ai_document_ids": [],
+  "pipeline_recomputed": true,
+  "openai_api_key_env": "OPENAI_API_KEY",
+  "openai_model": "gpt-5.4",
+  "openai_reasoning_effort": "medium",
+  "openai_store": false
+}

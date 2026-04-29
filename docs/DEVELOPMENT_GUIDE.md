@@ -1,4 +1,4 @@
-# SPatho Development Guide
+# AI-Driven Spatial Pathologist Development Guide
 
 This document is the detailed handoff for `spatho` as it exists today.
 It is written for future development work: new contributors should be able to read this file and understand what the project currently owns, what is still delegated to `histoseg`, how the major interfaces fit together, and where the next sensible development seams are.

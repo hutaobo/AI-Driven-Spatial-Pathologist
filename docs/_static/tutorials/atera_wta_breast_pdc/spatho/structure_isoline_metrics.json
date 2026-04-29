@@ -1,0 +1,39 @@
+{
+  "valid_structures": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "grid_shape": [
+    700,
+    900
+  ],
+  "tissue_threshold": 0.012158204492343321,
+  "overlap_pixels_after": 0,
+  "occupied_pixels": 146845,
+  "partition_pixels_total": 569838,
+  "structure_pixels": {
+    "1": 191798,
+    "2": 354190,
+    "3": 21880,
+    "4": 1970
+  },
+  "seed_pixels": {
+    "1": 190684,
+    "2": 350114,
+    "3": 21678,
+    "4": 1140
+  },
+  "cell_assignment": {
+    "cell_count": 170045,
+    "assigned_cell_count": 170045,
+    "assigned_cell_fraction": 1.0,
+    "structure_cell_counts": {
+      "1": 93670,
+      "2": 63285,
+      "3": 11258,
+      "4": 1832
+    }
+  }
+}

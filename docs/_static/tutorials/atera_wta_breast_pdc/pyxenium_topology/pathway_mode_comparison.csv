@@ -1,0 +1,7 @@
+pathway,gene_topology_best_celltype,gene_topology_best_distance,activity_point_cloud_best_celltype,activity_point_cloud_best_distance,retained_cell_count,retained_quantile,activity_mode
+ApocrineProgram,Apocrine Cells,0.07370204456856003,Apocrine Cells,0.27273128997346546,1896,0.95,intrinsic
+BasalDCISProgram,Basal-like Structured DCIS Cells,0.04301495094979466,Basal-like Structured DCIS Cells,0.12722387937014984,1876,0.95,intrinsic
+LuminalAmorphousProgram,Luminal-like Amorphous DCIS Cells,0.19669641570449653,"CAFs, DCIS Associated",0.186382802174398,4724,0.95,intrinsic
+MacrophageProgram,Macrophages,0.04304335075803993,Macrophages,0.0488802065880854,2164,0.95,intrinsic
+PlasmaProgram,Plasma Cells,0.06843093463899122,Plasma Cells,0.04923212293963461,1808,0.95,intrinsic
+VascularProgram,Endothelial Cells,0.04573965492893923,Macrophages,0.07905083139212797,3186,0.95,intrinsic

@@ -1,0 +1,242 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-04-29T12:20:39.929773+00:00",
+  "case_name": "atera_wta_breast_pdc_20260429",
+  "output_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho",
+  "organ_pack": {
+    "id": "breast",
+    "display_name": "Breast Cancer Xenium",
+    "annotation_taxonomy": "breast"
+  },
+  "provider": {
+    "openai_enabled": false,
+    "openai_api_key_env": "OPENAI_API_KEY",
+    "openai_model": "gpt-5.4",
+    "openai_reasoning_effort": "medium",
+    "openai_store": false
+  },
+  "dataset": {
+    "modality": "xenium_rna_protein",
+    "canonical_space": "physical_um",
+    "export_space": "xenium_explorer_pixel",
+    "xenium_pixel_size_um": 0.2125,
+    "segmentation_source": "ranger_default"
+  },
+  "artifact_counts": {
+    "total": 19,
+    "existing": 17,
+    "missing_required": 0
+  },
+  "missing_required_artifacts": [],
+  "artifacts": [
+    {
+      "id": "workflow.workflow_summary_json",
+      "label": "Workflow summary",
+      "category": "workflow",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/workflow_summary.json",
+      "relative_path": "workflow_summary.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 4375,
+      "sha256": "b60a7d285b1c29f219f0b45bac31d170bbe4db75878e355aba29e677e10f9859"
+    },
+    {
+      "id": "workflow.runtime_config_json",
+      "label": "Generated runtime config",
+      "category": "workflow",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/runtime_configs/generated_runtime_config.json",
+      "relative_path": "runtime_configs/generated_runtime_config.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 3824,
+      "sha256": "610f68e39ad027fecd034539b8631a3561b129c201c7607b1f441b64b6359ee2"
+    },
+    {
+      "id": "annotation.cluster_evidence_json",
+      "label": "Cluster evidence",
+      "category": "annotation",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_evidence.json",
+      "relative_path": "annotation/cluster_evidence.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 158947,
+      "sha256": "2a09cb636ca32b2527779361bb66e386171dd2a76d7867a1fb48ed027ed45815"
+    },
+    {
+      "id": "annotation.cluster_annotations_json",
+      "label": "Cluster annotations JSON",
+      "category": "annotation",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_annotations_openai.json",
+      "relative_path": "annotation/cluster_annotations_openai.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 28462,
+      "sha256": "2774c4db035f486fe0defe68d4676052d6d3f3d58442b5c9e3dfab02a793f127"
+    },
+    {
+      "id": "annotation.cluster_annotations_csv",
+      "label": "Cluster annotations CSV",
+      "category": "annotation",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_annotations_openai.csv",
+      "relative_path": "annotation/cluster_annotations_openai.csv",
+      "exists": true,
+      "media_type": "text/x-comma-separated-values",
+      "size_bytes": 11950,
+      "sha256": "2f51069e6c12e3793802834b05c1bdfd8b50788f5f00848c6a3d778433fd4714"
+    },
+    {
+      "id": "annotation.compatibility_csv",
+      "label": "Compatibility annotation CSV",
+      "category": "annotation",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/cluster_celltype_annotation.csv",
+      "relative_path": "annotation/cluster_celltype_annotation.csv",
+      "exists": true,
+      "media_type": "text/x-comma-separated-values",
+      "size_bytes": 1009,
+      "sha256": "7fd84673a2f479c8f987031d9b1742e134aae8f5cc8ce8895a683ab77eeae6f8"
+    },
+    {
+      "id": "annotation.case_review_json",
+      "label": "Annotation case review",
+      "category": "annotation",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/annotation_case_review.json",
+      "relative_path": "annotation/annotation_case_review.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 563,
+      "sha256": "c4e35f30b1b84877de598b30f3cb647c4af8fb42d0e06d0bf60ff6bc6d8666e7"
+    },
+    {
+      "id": "annotation.report_html",
+      "label": "Annotation report",
+      "category": "annotation",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/annotation/annotation_review.html",
+      "relative_path": "annotation/annotation_review.html",
+      "exists": true,
+      "media_type": "text/html",
+      "size_bytes": 20699,
+      "sha256": "7ce7f8dd1d583ce7a204cefd7657d9a87be7bd46a9bec53bfe250fbfe96ec273"
+    },
+    {
+      "id": "pathology.report_html",
+      "label": "Pathology review report",
+      "category": "pathology",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/index.html",
+      "relative_path": "pathology_review/index.html",
+      "exists": true,
+      "media_type": "text/html",
+      "size_bytes": 24240,
+      "sha256": "c764107e0b500c34871e77ca73598a0843439f9f2143e2ab7707695eacf238b6"
+    },
+    {
+      "id": "pathology.cluster_reviews_json",
+      "label": "Cluster pathology reviews",
+      "category": "pathology",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/cluster_reviews.json",
+      "relative_path": "pathology_review/cluster_reviews.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 20083,
+      "sha256": "d99e58a25e57f27357d401c1c75e29f0889a104671c9919a2aac45744d0a73f4"
+    },
+    {
+      "id": "pathology.structure_reviews_json",
+      "label": "Structure pathology reviews",
+      "category": "pathology",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/structure_reviews.json",
+      "relative_path": "pathology_review/structure_reviews.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 6867,
+      "sha256": "55dffb3f47f35700916991a810867c4cca418335ec815e75c65c2613b400ae43"
+    },
+    {
+      "id": "pathology.case_summary_json",
+      "label": "Case summary",
+      "category": "pathology",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/case_summary.json",
+      "relative_path": "pathology_review/case_summary.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 1096,
+      "sha256": "992de9d005ff8dc6dcdcae8e6303527a3bfb952929a3dc3574eb0ec9c61728c0"
+    },
+    {
+      "id": "pipeline.structure_clustermap_pdf",
+      "label": "Structure clustermap",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/structure_assignment/structure_clustermap.pdf",
+      "relative_path": "pipeline/structure_assignment/structure_clustermap.pdf",
+      "exists": true,
+      "media_type": "application/pdf",
+      "size_bytes": 41553,
+      "sha256": "499ced4d70f0219237f0b8d673e31d5682af700f8250cea3c250c7402ac0cd05"
+    },
+    {
+      "id": "pipeline.cluster_structure_lookup_csv",
+      "label": "Cluster to structure lookup",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/structure_assignment/cluster_structure_lookup.csv",
+      "relative_path": "pipeline/structure_assignment/cluster_structure_lookup.csv",
+      "exists": true,
+      "media_type": "text/x-comma-separated-values",
+      "size_bytes": 2310,
+      "sha256": "b938507d0f128d591facb3ef8964b0de3a8288fccbe26f1c64b5cc315bd1fbdf"
+    },
+    {
+      "id": "pipeline.run_summary_json",
+      "label": "Structure assignment summary",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/structure_assignment/run_summary.json",
+      "relative_path": "pipeline/structure_assignment/run_summary.json",
+      "exists": true,
+      "media_type": "application/json",
+      "size_bytes": 878,
+      "sha256": "581028e16d6e4f8beebd62acaaca3763c20089c9d75e8f31f964ec56021be0fa"
+    },
+    {
+      "id": "pipeline.structure_assignments_csv",
+      "label": "Structure assignments",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/structure_assignment/structure_assignments.csv",
+      "relative_path": "pipeline/structure_assignment/structure_assignments.csv",
+      "exists": true,
+      "media_type": "text/x-comma-separated-values",
+      "size_bytes": 36380,
+      "sha256": "a65291b1910be99e9ffe42142dcc7a945fc443c7e9ce2baf085c948ed5e005a1"
+    },
+    {
+      "id": "pipeline.overlay_summary_csv",
+      "label": "Explorer annotation summary",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/validation/xenium_explorer_annotations_summary.csv",
+      "relative_path": "pipeline/validation/xenium_explorer_annotations_summary.csv",
+      "exists": true,
+      "media_type": "text/x-comma-separated-values",
+      "size_bytes": 22639,
+      "sha256": "a720f37cfc182766ade3c95ff635b58b2621fd4be2b238c76a58d556ae097fad"
+    },
+    {
+      "id": "pipeline.xenium_alignment_note_md",
+      "label": "Xenium RNA+protein alignment note",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/validation/xenium_rna_protein_alignment_note.md",
+      "relative_path": "pipeline/validation/xenium_rna_protein_alignment_note.md",
+      "exists": false,
+      "media_type": "application/x-genesis-rom",
+      "size_bytes": null,
+      "sha256": null
+    },
+    {
+      "id": "pipeline.xenium_alignment_fixture_manifest_json",
+      "label": "Xenium RNA+protein fixture manifest",
+      "category": "pipeline",
+      "path": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pipeline/validation/xenium_rna_protein_fixture_manifest.json",
+      "relative_path": "pipeline/validation/xenium_rna_protein_fixture_manifest.json",
+      "exists": false,
+      "media_type": "application/json",
+      "size_bytes": null,
+      "sha256": null
+    }
+  ]
+}

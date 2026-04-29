@@ -1,0 +1,27 @@
+{
+  "case_name": "atera_wta_breast_pdc_20260429",
+  "dataset_root": "/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs",
+  "local_windows_dataset": "Y:\\long\\10X_datasets\\Xenium\\Atera\\WTA_Preview_FFPE_Breast_Cancer_outs",
+  "run_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429",
+  "pathology_ai_base_url": "http://127.0.0.1:8000",
+  "base_pipeline_config": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/configs/atera_wta_breast_pdc_20260429_base_pipeline.json",
+  "workflow_config": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/workflows/atera_wta_breast_pdc_20260429_pathology_ai.json",
+  "he": {
+    "he_image_tif": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/he/atera_wta_breast_pdc_20260429_registered_he_level6.tif",
+    "he_alignment_csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/inputs/he/atera_wta_breast_pdc_20260429_he_alignment_level6.csv",
+    "source": "spatialdata.zarr/images/he",
+    "zarr_level": 6,
+    "level_shape": [
+      3,
+      739,
+      1412
+    ],
+    "alignment_direction": "level_image_pixel_xy_to_xenium_pixel_xy",
+    "keypoints_validation": {
+      "n_keypoints": 12,
+      "mean_residual": 12.23742644241935,
+      "median_residual": 14.423144130807218,
+      "max_residual": 21.77399672477011
+    }
+  }
+}

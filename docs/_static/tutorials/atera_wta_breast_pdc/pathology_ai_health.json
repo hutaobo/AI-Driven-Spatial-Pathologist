@@ -1,0 +1,39 @@
+{
+  "service": "pathology-ai",
+  "ready": true,
+  "settings": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "llm_base_url": "http://127.0.0.1:8001/v1",
+    "llm_model": "openai/gpt-oss-120b",
+    "embed_base_url": "http://127.0.0.1:8002",
+    "embed_model": "BAAI/bge-m3",
+    "rerank_base_url": "http://127.0.0.1:8003",
+    "rerank_model": "BAAI/bge-reranker-v2-m3",
+    "vector_db": "qdrant",
+    "qdrant_base_url": "http://127.0.0.1:6333",
+    "qdrant_collection": "pathology_reference",
+    "default_top_k": 6,
+    "strict_json": true,
+    "max_chunk_chars": 1200,
+    "chunk_overlap_chars": 120
+  },
+  "components": {
+    "llm": {
+      "ok": true,
+      "models": [
+        "openai/gpt-oss-120b"
+      ]
+    },
+    "embedder": {
+      "ok": true
+    },
+    "reranker": {
+      "ok": true
+    },
+    "vector_store": {
+      "ok": true,
+      "collections": []
+    }
+  }
+}

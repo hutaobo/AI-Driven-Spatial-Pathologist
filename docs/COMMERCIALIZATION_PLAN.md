@@ -1,4 +1,4 @@
-# SPatho Commercialization Plan
+# AI-Driven Spatial Pathologist Commercialization Plan
 
 This document outlines a practical way to commercialize `spatho` while keeping a strong academic and non-commercial entry point.
 
@@ -18,7 +18,7 @@ Reference:
 
 - [CyteType documentation](https://www.nygen.io/docs/cytetype)
 
-## Recommended SPatho Edition Split
+## Recommended Spatial Pathologist Edition Split
 
 ### 1. Academic Community Edition
 
@@ -89,7 +89,7 @@ Pricing model:
 - implementation / deployment fee
 - optional premium support SLA
 
-## Why This Split Fits SPatho
+## Why This Split Fits Spatial Pathologist
 
 Unlike a purely algorithmic library, `spatho` has a real marginal cost when users rely on managed LLM inference.
 That means a good product split is:

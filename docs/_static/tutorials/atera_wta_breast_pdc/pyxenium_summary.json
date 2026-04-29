@@ -1,0 +1,25 @@
+{
+  "topology_summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/summary.json",
+  "topology_report_md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/topology/report.md",
+  "mechanostress_summary": {
+    "sample_id": "atera_wta_breast_pdc_20260429",
+    "n_axes": 168335,
+    "n_axis_strength_rows": 80,
+    "n_orientation_summary_rows": 20,
+    "n_tumor_growth_cells": 170057,
+    "n_distance_expression_coupling_rows": 5,
+    "n_polarity_cells": 168335,
+    "tumor_growth": {
+      "sample_id": "atera_wta_breast_pdc_20260429",
+      "n_tumor": 13028,
+      "n_infiltrative": 4363,
+      "n_expanding": 8665,
+      "n_tumor_valid": 13028,
+      "infiltrative_proportion": 0.3348940743015045,
+      "mean_infil_dist_to_stromal": 19.380232683447925,
+      "mean_expand_dist_to_stromal": 55.236329202190774
+    }
+  },
+  "mechanostress_summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/summary.json",
+  "mechanostress_report_md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/pyxenium/mechanostress/report.md"
+}
