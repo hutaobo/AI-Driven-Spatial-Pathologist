@@ -230,6 +230,14 @@ mkdir -p \
   "$TRITON_CACHE_DIR" \
   "$VLLM_CACHE_ROOT"
 
+if [ -z "${HF_TOKEN:-}" ] && [ -r "$HF_HOME/token" ]; then
+  HF_TOKEN="$(tr -d '\r\n' < "$HF_HOME/token")"
+  export HF_TOKEN
+fi
+if [ -z "${HUGGING_FACE_HUB_TOKEN:-}" ] && [ -n "${HF_TOKEN:-}" ]; then
+  export HUGGING_FACE_HUB_TOKEN="$HF_TOKEN"
+fi
+
 export_runtime_env
 
 PIDS=()
