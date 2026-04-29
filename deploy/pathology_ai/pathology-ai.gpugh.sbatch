@@ -14,8 +14,14 @@ set -euo pipefail
 
 DEFAULT_ROOT="/cfs/klemming/projects/supr/naiss2023-23-563/pathology-ai"
 PDC_PATHOLOGY_AI_ROOT="${PDC_PATHOLOGY_AI_ROOT:-$DEFAULT_ROOT}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+if [ -n "${PATHOLOGY_AI_REPO_ROOT:-}" ]; then
+  REPO_ROOT="$PATHOLOGY_AI_REPO_ROOT"
+elif [ -n "${SLURM_SUBMIT_DIR:-}" ] && [ -d "$SLURM_SUBMIT_DIR/deploy/pathology_ai" ]; then
+  REPO_ROOT="$SLURM_SUBMIT_DIR"
+else
+  REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+fi
+SCRIPT_DIR="$REPO_ROOT/deploy/pathology_ai"
 ENV_FILE="${PATHOLOGY_AI_ENV_FILE:-$SCRIPT_DIR/pathology-ai.gpugh.env}"
 if [ ! -f "$ENV_FILE" ]; then
   ENV_FILE="$SCRIPT_DIR/pathology-ai.gpugh.env.example"
