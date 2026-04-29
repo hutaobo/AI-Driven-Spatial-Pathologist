@@ -9,5 +9,6 @@ project-vol/
 runs/
 build/
 dist/
+docs/_build/
 *.egg-info/
 chrome-automation-profile/

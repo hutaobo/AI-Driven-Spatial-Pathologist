@@ -7,6 +7,7 @@
 [![Python Package](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/python-package.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/python-package.yml)
 [![Publish to PyPI](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/publish-pypi.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/publish-pypi.yml)
 [![Docker image](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml)
+[![Documentation Status](https://app.readthedocs.org/projects/ai-driven-spatial-pathologist/badge/?version=latest)](https://ai-driven-spatial-pathologist.readthedocs.io/en/latest/?badge=latest)
 [![GitHub release](https://img.shields.io/github/v/release/hutaobo/AI-Driven-Spatial-Pathologist?include_prereleases)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/releases)
 [![Last commit](https://img.shields.io/github/last-commit/hutaobo/AI-Driven-Spatial-Pathologist.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/commits/main)
 [![Issues](https://img.shields.io/github/issues/hutaobo/AI-Driven-Spatial-Pathologist.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/issues)
