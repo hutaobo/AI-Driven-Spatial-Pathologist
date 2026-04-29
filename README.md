@@ -1,119 +1,145 @@
 # SPatho
 
-> Legacy standalone surface: the canonical product-layer implementation now lives inside
+[![PyPI version](https://img.shields.io/pypi/v/spatho.svg)](https://pypi.org/project/spatho/)
+[![Python versions](https://img.shields.io/pypi/pyversions/spatho.svg)](https://pypi.org/project/spatho/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/spatho.svg)](https://pypi.org/project/spatho/)
+[![License](https://img.shields.io/pypi/l/spatho.svg)](LICENSE)
+[![Python Package](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/python-package.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/python-package.yml)
+[![Publish to PyPI](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/publish-pypi.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/publish-pypi.yml)
+[![Docker image](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml)
+[![GitHub release](https://img.shields.io/github/v/release/hutaobo/AI-Driven-Spatial-Pathologist?include_prereleases)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/releases)
+[![Last commit](https://img.shields.io/github/last-commit/hutaobo/AI-Driven-Spatial-Pathologist.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/commits/main)
+[![Issues](https://img.shields.io/github/issues/hutaobo/AI-Driven-Spatial-Pathologist.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/issues)
+
+`spatho` is a Python package and CLI for AI-driven spatial pathology workflows around Xenium-scale spatial transcriptomics. It wraps the lower-level `histoseg` engine with workflow configuration, organ packs, artifact manifests, H&E overlays, structure review, and report generation.
+
+> Legacy standalone surface: the canonical product-layer implementation is being integrated into
 > [`ASTRO`](https://github.com/hutaobo/ASTRO) under
 > `app/src/xenium_ai_discovery/pathology_app/`.
-> This repository is being retained as a compatibility and deployment-oriented shell.
+> This repository remains the compatibility, packaging, and deployment-oriented shell for `spatho`.
 
-`spatho` is the public-facing product layer for an AI-driven spatial pathologist workflow built around Xenium-scale spatial transcriptomics.
+## Two Parallel AI Backends
 
-It is designed to sit above the lower-level `histoseg` engine and expose a cleaner public experience:
+`spatho` now supports two parallel AI review paths. The paid OpenAI API route remains available and unchanged, while the local `pathology-ai` route adds a self-hosted option for private or cluster deployments.
 
-- OpenAI-driven cluster annotation
-- dendrogram-guided structure discovery
-- H&E overlay generation
-- structure-level pathology review
-- HTML reporting for human-in-the-loop interpretation
+| Backend | How it runs | Best for | Key settings |
+| --- | --- | --- | --- |
+| `openai` | Calls the paid OpenAI API with your `OPENAI_API_KEY`. | Fast setup, managed models, lightweight local machine. | `pathology_review_backend="openai"` |
+| `pathology_ai_api` | Calls a local HTTP service backed by vLLM, embeddings, reranking, and Qdrant. | PDC/HPC, private data, cost control, local model operations. | `pathology_review_backend="pathology_ai_api"` and `pathology_ai_api_base_url` |
 
-Historically this repo was the primary home for that product layer.
-The underlying geometry and segmentation engine still comes from `histoseg`.
-The canonical implementation is now being integrated into ASTRO, while this repository remains useful as a legacy standalone surface.
-
-## Current Status
-
-This is now the legacy standalone scaffold for the pathology product layer.
-
-Today it still provides:
-
-- a package name: `spatho`
-- a user-facing CLI
-- a starter-workflow generator
-- built-in `lung` and `breast` organ packs
-- a formal workflow config schema
-- automatic artifact manifest generation
-- a wrapper API that runs the existing `histoseg` full-auto workflow
-- a roadmap for gradually migrating product logic out of `histoseg`
-
-For the detailed developer handoff and architecture snapshot, see [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md).
-For the canonical integrated engineering home, use [ASTRO](https://github.com/hutaobo/ASTRO).
-
-## Why a Separate Repo?
-
-`histoseg` started as a segmentation and contour-generation toolkit.
-
-The full pathology workflow now has a different audience and a different contract:
-
-- users care about complete case analysis, not just contour extraction
-- users want reports, review priorities, and organ-specific workflows
-- public documentation should focus on pathology workflows, not internal engine history
-
-This repo creates that separation.
+The two paths are intentionally independent: enabling the local service does not remove or disable the OpenAI backend.
 
 ## Quick Start
 
-### Install for local development
+### Install from PyPI
+
+```bash
+python -m pip install -U spatho
+```
+
+For local development:
 
 ```bash
 git clone https://github.com/hutaobo/AI-Driven-Spatial-Pathologist.git
 cd AI-Driven-Spatial-Pathologist
-pip install -U pip
-pip install -e .
+python -m pip install -U pip
+python -m pip install -e .[dev]
 ```
 
-If you are actively developing against a local `histoseg` checkout, also install that editable copy first:
+If you are actively developing against a local `histoseg` checkout, install that editable copy first:
 
 ```bash
-pip install -e ../HistoSeg
+python -m pip install -e ../HistoSeg
 ```
 
-### Check your environment
+### Path A: paid OpenAI API
+
+Use this path when you want the simplest managed-model setup.
 
 ```bash
-spatho doctor --config /path/to/workflow.json
-```
-
-### List built-in organ packs
-
-```bash
-spatho list-organ-packs
-```
-
-### Generate a starter workflow
-
-```bash
+export OPENAI_API_KEY=sk-...
 spatho init-workflow \
   --organ breast \
   --case-name breast_case_01 \
   --dataset-root /path/to/Xenium_outs \
   --base-pipeline-config /path/to/project/configs/breast_case_01.json \
-  --output /path/to/workflows/breast_case_01_full_auto_openai.json
+  --output /path/to/workflows/breast_case_01_openai.json
+
+spatho run --config /path/to/workflows/breast_case_01_openai.json
 ```
 
-### Run a full workflow
+The generated workflow can keep:
 
-```bash
-spatho run --config /path/to/workflow.json
+```json
+{
+  "pathology_review_backend": "openai"
+}
 ```
 
-Disable OpenAI and force heuristic mode:
+Disable OpenAI and force heuristic mode when needed:
 
 ```bash
 spatho run --config /path/to/workflow.json --heuristic-only
 ```
 
-### Export the workflow JSON schema
+### Path B: local pathology-ai service
+
+Use this path when you want pathology review to call a self-hosted service instead of the paid OpenAI API.
+
+```json
+{
+  "pathology_review_backend": "pathology_ai_api",
+  "pathology_ai_api_base_url": "http://localhost:8000"
+}
+```
+
+For PDC/Dardel deployment, see [docs/PDC_LOCAL_PATHOLOGY_AI.md](docs/PDC_LOCAL_PATHOLOGY_AI.md). The local stack is:
+
+- `pathology-ai`: lightweight HTTP orchestration from this repo
+- `vllm`: OpenAI-compatible local LLM endpoint
+- `embedder`: TEI-compatible Python embedding service for `BAAI/bge-m3`
+- `reranker`: TEI-compatible Python reranking service for `BAAI/bge-reranker-v2-m3`
+- `qdrant`: local vector storage
+
+Default local model configuration:
+
+```text
+LLM_BASE_URL=http://127.0.0.1:8001/v1
+LLM_MODEL=openai/gpt-oss-120b
+EMBED_MODEL=BAAI/bge-m3
+RERANK_MODEL=BAAI/bge-reranker-v2-m3
+VECTOR_DB=qdrant
+DEFAULT_TOP_K=6
+STRICT_JSON=true
+```
+
+## Common CLI Tasks
+
+Check an environment and workflow config:
+
+```bash
+spatho doctor --config /path/to/workflow.json
+```
+
+List built-in organ packs:
+
+```bash
+spatho list-organ-packs
+```
+
+Export the workflow JSON schema:
 
 ```bash
 spatho config-schema --output /path/to/workflow.schema.json
 ```
 
-### Build or refresh an artifact manifest
+Build or refresh an artifact manifest:
 
 ```bash
 spatho build-manifest --config /path/to/workflow.json
 ```
 
-### Write Xenium RNA+protein + H&E alignment fixtures
+Write Xenium RNA+protein + H&E alignment fixtures:
 
 ```bash
 spatho write-xenium-alignment-fixtures \
@@ -121,32 +147,28 @@ spatho write-xenium-alignment-fixtures \
   --segmentation-source ranger_protein_assisted
 ```
 
-This writes:
-
-- a Xenium RNA+protein alignment note
-- a fixture manifest
-- five transform cases covering identity, `um -> pixel`, translation, axis order, and composed polygon export
+This writes a Xenium RNA+protein alignment note, a fixture manifest, and transform cases covering identity, `um -> pixel`, translation, axis order, and composed polygon export.
 
 ## Python Usage
 
 ```python
 from spatho import run_workflow
 
-result = run_workflow(r"D:\GitHub\HistoSeg\workflows\breast_s1_top_graphclust_full_auto_openai.json")
+result = run_workflow("/path/to/workflows/breast_case_01_openai.json")
 print(result["pathology_report_html"])
 ```
 
-You can also generate the starter config from Python:
+Generate a starter config from Python:
 
 ```python
 from spatho import init_workflow
 
 result = init_workflow(
-    r"D:\GitHub\HistoSeg\workflows\breast_case_01_full_auto_openai.json",
+    "/path/to/workflows/breast_case_01_openai.json",
     organ="breast",
     case_name="breast_case_01",
-    dataset_root=r"Y:\long\10X_datasets\Xenium\Xenium_Breast_Cancer\Human_Breast_Biomarkers_S1_Top_outs",
-    base_pipeline_config=r"D:\GitHub\sfplot\segmentation_methods\projects\breast_s1_top_graphclust\configs\breast_s1_top_graphclust.json",
+    dataset_root="/path/to/Xenium_outs",
+    base_pipeline_config="/path/to/project/configs/breast_case_01.json",
 )
 print(result["workflow_config"])
 ```
@@ -156,23 +178,18 @@ print(result["workflow_config"])
 A typical full run produces:
 
 - cluster evidence bundles
-- OpenAI or heuristic cluster annotations
-- structure assignments
-- clustermap and overlay artifacts
+- OpenAI, local pathology-ai, or heuristic cluster annotations
+- dendrogram-guided structure assignments
+- clustermap and H&E overlay artifacts
 - structure-level pathology reviews
 - case-level HTML report
-- a machine-readable artifact manifest
+- machine-readable artifact manifest
 
 ## Organ Packs
 
-`spatho` now ships with built-in organ packs that define:
+`spatho` ships with built-in organ packs that define the annotation taxonomy, default study context, workflow parameter defaults, and expected artifact contract.
 
-- the annotation taxonomy
-- default study context
-- workflow parameter defaults
-- the expected artifact contract for completed runs
-
-The first built-in packs are:
+Built-in packs:
 
 - `lung`
 - `breast`
@@ -181,10 +198,7 @@ These packs live in [src/spatho/organ_packs](src/spatho/organ_packs).
 
 ## Config Contract
 
-Workflow JSON files are now backed by a formal schema exported from the package.
-This is the first step toward stable public contracts and backward-compatible workflow upgrades.
-
-For Xenium RNA+protein workflows, the config template now also records:
+Workflow JSON files are backed by a formal schema exported from the package. For Xenium RNA+protein workflows, the config template records:
 
 - `dataset_modality = xenium_rna_protein`
 - `canonical_space = physical_um`
@@ -192,68 +206,35 @@ For Xenium RNA+protein workflows, the config template now also records:
 - `xenium_pixel_size_um`
 - `segmentation_source`
 
-See [docs/XENIUM_RNA_PROTEIN_ALIGNMENT.md](docs/XENIUM_RNA_PROTEIN_ALIGNMENT.md) for the rationale and the polygon-level analysis model.
+See [docs/XENIUM_RNA_PROTEIN_ALIGNMENT.md](docs/XENIUM_RNA_PROTEIN_ALIGNMENT.md) for the rationale and polygon-level analysis model.
 
 ## Repository Layout
 
-- `src/spatho`  
-  Public-facing Python package and CLI
+- `src/spatho`: public-facing Python package and CLI
+- `src/pathology_ai_service`: local pathology AI HTTP service
+- `deploy/pathology_ai`: Docker Compose and PDC Slurm/Apptainer deployment assets
+- `docs/PDC_LOCAL_PATHOLOGY_AI.md`: local/PDC pathology-ai deployment guide
+- `docs/PYPI_RELEASE.md`: PyPI publishing checklist
+- `examples/workflows`: public-safe starter workflow templates
+- `main.py`: older Gradio/Serve deployment surface kept for compatibility
 
-- `src/spatho/organ_packs`  
-  Built-in public organ packs
-
-- `docs/SPATHO_ROADMAP.md`  
-  Productization and migration plan
-
-- `docs/COMMERCIALIZATION_PLAN.md`  
-  Academic/community vs commercial edition strategy
-
-- `docs/PYPI_RELEASE.md`  
-  Official PyPI publishing checklist for this package
-
-- `examples/workflows`  
-  Public-safe starter workflow templates for `lung` and `breast`
-
-- `main.py`  
-  Existing Gradio/Serve deployment surface kept for backward compatibility
-
-## Relationship to HistoSeg
+## Relationship to HistoSeg and ASTRO
 
 Current implementation model:
 
-- `histoseg` executes the workflow
-- `spatho` wraps and presents it as a product
+- `histoseg` executes the geometry, segmentation, and workflow internals
+- `spatho` wraps and presents the workflow as a product-facing package
 
 Target implementation model:
 
-- `histoseg` becomes the geometry/segmentation engine
+- `histoseg` remains the geometry/segmentation engine
 - `spatho` owns workflow UX, organ packs, public docs, reports, and deployment surfaces
-
-## Public Release Plan
-
-The next milestones are:
-
-1. expand organ packs beyond `lung` and `breast`
-2. add richer tests and CI for CLI + workflow smoke checks
-3. stabilize config schema and artifact manifest versions
-4. migrate public-safe workflow logic from `histoseg` into `spatho`
-5. add example reports and example datasets
-
-See [docs/SPATHO_ROADMAP.md](docs/SPATHO_ROADMAP.md) and [docs/COMMERCIALIZATION_PLAN.md](docs/COMMERCIALIZATION_PLAN.md).
+- the canonical integrated product implementation continues to move into [ASTRO](https://github.com/hutaobo/ASTRO)
 
 ## Publishing
 
-This repo now includes a PyPI publishing workflow based on GitHub Actions Trusted Publishing.
-See [docs/PYPI_RELEASE.md](docs/PYPI_RELEASE.md) for the exact setup and release steps.
-
-## Existing Serve App
-
-This repo also contains an older Gradio deployment layer in [main.py](main.py).
-
-That app should now be treated as one deployment surface, not the core product definition.
-The package and CLI in `src/spatho` are the preferred direction for public-tool development.
+This repo includes a PyPI publishing workflow based on GitHub Actions Trusted Publishing. See [docs/PYPI_RELEASE.md](docs/PYPI_RELEASE.md) for setup and release steps.
 
 ## License
 
-This project is intended for noncommercial research use unless separately licensed.
-Before public release, the license text and commercial boundary should be reviewed together with the underlying `histoseg` dependency.
+This project is intended for noncommercial research use unless separately licensed. Before public release or commercial use, review the license text and commercial boundary together with the underlying `histoseg` dependency.
