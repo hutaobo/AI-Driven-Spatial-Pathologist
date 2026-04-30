@@ -4,7 +4,9 @@
 AI-driven spatial pathology workflows for Xenium-scale spatial transcriptomics.
 ::::
 
-AI-Driven Spatial Pathologist is a workflow layer for building, running, and reviewing pathology-aware Xenium analyses. The public Python package and CLI remain named `spatho`.
+AI-Driven Spatial Pathologist is an evidence-generating workbench for building, running, and reviewing pathology-aware Xenium analyses. The public Python package and CLI remain named `spatho`.
+
+The platform narrative is: stGPT learns the morpho-molecular tissue representation; spatho turns it into auditable spatial pathology evidence.
 
 The documentation focuses on practical deployment paths first, from local workstations to PDC/HPC environments with a self-hosted pathology AI backend.
 
@@ -47,6 +49,20 @@ Understand the repository layout, development workflow, and compatibility layer.
 Review the roadmap and package release notes for the `spatho` distribution.
 :::
 
+:::{grid-item-card} stGPT Upgrade
+:link: STGPT_UPGRADE_PLAN
+:link-type: doc
+
+Plan the optional stGPT foundation-model runtime and evidence loop for spatial transcriptomics evidence.
+:::
+
+:::{grid-item-card} Foundation Evidence
+:link: FOUNDATION_EVIDENCE_LAYER
+:link-type: doc
+
+Use stGPT embeddings, scGPT-like RNA mapping, pathway activity, PLIP morphology, and lightweight niche fusion as auditable evidence.
+:::
+
 :::{grid-item-card} Project Notes
 :link: XENIUM_RNA_PROTEIN_ALIGNMENT
 :link-type: doc
@@ -79,6 +95,8 @@ PDC_LOCAL_PATHOLOGY_AI
 :caption: Project Notes
 
 DEVELOPMENT_GUIDE
+STGPT_UPGRADE_PLAN
+FOUNDATION_EVIDENCE_LAYER
 XENIUM_RNA_PROTEIN_ALIGNMENT
 PYPI_RELEASE
 SPATHO_ROADMAP

@@ -58,6 +58,25 @@ class WorkflowConfig(BaseModel):
     he_visual_override_min_llm_confidence: float = Field(default=0.70, ge=0.0, le=1.0)
     he_visual_override_min_foundation_score: float = Field(default=0.35, ge=0.0, le=1.0)
 
+    rna_foundation_enabled: bool = False
+    rna_foundation_backend: str = "precomputed_scgpt"
+    rna_foundation_cell_mapping_path: Path | None = None
+    rna_foundation_cluster_summary_path: Path | None = None
+    pathway_activity_enabled: bool = False
+    pathway_activity_csv: Path | None = None
+    niche_fusion_enabled: bool = False
+    niche_fusion_backend: str = "lightweight"
+    stgpt_enabled: bool = False
+    stgpt_backend: str = "precomputed_artifacts"
+    stgpt_artifact_dir: Path | None = None
+    stgpt_cell_embeddings_path: Path | None = None
+    stgpt_structure_summary_path: Path | None = None
+    stgpt_qc_report_path: Path | None = None
+    stgpt_model_path: Path | None = None
+    stgpt_config_path: Path | None = None
+    stgpt_min_cell_coverage: float = Field(default=0.95, ge=0.0, le=1.0)
+    stgpt_require_qc_pass: bool = True
+
     differential_expression_csv: Path | None = None
     projection_csv: Path | None = None
 
@@ -110,6 +129,33 @@ class WorkflowConfig(BaseModel):
             raise ValueError(f"cluster_annotation_backend must be one of: {', '.join(sorted(supported))}")
         return normalized
 
+    @field_validator("rna_foundation_backend")
+    @classmethod
+    def _validate_rna_foundation_backend(cls, value: str) -> str:
+        supported = {"precomputed_scgpt"}
+        normalized = str(value).strip()
+        if normalized not in supported:
+            raise ValueError(f"rna_foundation_backend must be one of: {', '.join(sorted(supported))}")
+        return normalized
+
+    @field_validator("niche_fusion_backend")
+    @classmethod
+    def _validate_niche_fusion_backend(cls, value: str) -> str:
+        supported = {"lightweight"}
+        normalized = str(value).strip()
+        if normalized not in supported:
+            raise ValueError(f"niche_fusion_backend must be one of: {', '.join(sorted(supported))}")
+        return normalized
+
+    @field_validator("stgpt_backend")
+    @classmethod
+    def _validate_stgpt_backend(cls, value: str) -> str:
+        supported = {"precomputed_artifacts", "local_stgpt"}
+        normalized = str(value).strip()
+        if normalized not in supported:
+            raise ValueError(f"stgpt_backend must be one of: {', '.join(sorted(supported))}")
+        return normalized
+
     @field_validator("dataset_modality")
     @classmethod
     def _validate_dataset_modality(cls, value: str) -> str:
@@ -149,6 +195,15 @@ class WorkflowConfig(BaseModel):
             "differential_expression_csv",
             "projection_csv",
             "he_contour_geojson",
+            "rna_foundation_cell_mapping_path",
+            "rna_foundation_cluster_summary_path",
+            "pathway_activity_csv",
+            "stgpt_artifact_dir",
+            "stgpt_cell_embeddings_path",
+            "stgpt_structure_summary_path",
+            "stgpt_qc_report_path",
+            "stgpt_model_path",
+            "stgpt_config_path",
         }
         for field_name in path_fields:
             if field_name in payload:
@@ -170,6 +225,12 @@ class WorkflowConfig(BaseModel):
             properties["he_foundation_model_id"]["enum"] = ["vinid/plip"]
         if "he_foundation_prompt_set" in properties:
             properties["he_foundation_prompt_set"]["enum"] = ["breast_contour_v1"]
+        if "rna_foundation_backend" in properties:
+            properties["rna_foundation_backend"]["enum"] = ["precomputed_scgpt"]
+        if "niche_fusion_backend" in properties:
+            properties["niche_fusion_backend"]["enum"] = ["lightweight"]
+        if "stgpt_backend" in properties:
+            properties["stgpt_backend"]["enum"] = ["precomputed_artifacts", "local_stgpt"]
         if "dataset_modality" in properties:
             properties["dataset_modality"]["enum"] = [DATASET_MODALITY_XENIUM_RNA_PROTEIN]
         if "canonical_space" in properties:

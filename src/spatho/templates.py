@@ -57,6 +57,14 @@ def build_workflow_template(
         "he_visual_override_enabled": True,
         "he_visual_override_min_llm_confidence": 0.70,
         "he_visual_override_min_foundation_score": 0.35,
+        "rna_foundation_enabled": False,
+        "rna_foundation_backend": "precomputed_scgpt",
+        "rna_foundation_cell_mapping_path": None,
+        "rna_foundation_cluster_summary_path": None,
+        "pathway_activity_enabled": False,
+        "pathway_activity_csv": None,
+        "niche_fusion_enabled": False,
+        "niche_fusion_backend": "lightweight",
         "differential_expression_csv": str(
             dataset_path / "analysis" / "diffexp" / "gene_expression_graphclust" / "differential_expression.csv"
         ),

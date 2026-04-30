@@ -14,6 +14,10 @@
 
 `spatho` is a Python package and CLI for AI-driven spatial pathology workflows around Xenium-scale spatial transcriptomics. It wraps the lower-level `histoseg` engine with workflow configuration, organ packs, artifact manifests, H&E overlays, structure review, and report generation.
 
+The platform framing is:
+
+> stGPT learns the morpho-molecular tissue representation; spatho turns it into auditable spatial pathology evidence.
+
 > Legacy standalone surface: the canonical product-layer implementation is being integrated into
 > [`ASTRO`](https://github.com/hutaobo/ASTRO) under
 > `app/src/xenium_ai_discovery/pathology_app/`.
@@ -29,6 +33,24 @@
 | `pathology_ai_api` | Calls a local HTTP service backed by vLLM, embeddings, reranking, and Qdrant. | PDC/HPC, private data, cost control, local model operations. | `pathology_review_backend="pathology_ai_api"` and `pathology_ai_api_base_url` |
 
 The two paths are intentionally independent: enabling the local service does not remove or disable the OpenAI backend.
+
+## Foundation Evidence Workbench
+
+`spatho` is the agentic spatial pathology workbench layer. It can consume precomputed stGPT artifacts without importing `stgpt`, or call a local stGPT install when `stgpt_backend="local_stgpt"` is configured. stGPT evidence is guarded before biological review: missing required artifacts make `spatho doctor` not ready, fatal QC blocks a run, and warning-only QC is shown as cautionary model-derived evidence.
+
+Workflow fields default to disabled:
+
+```json
+{
+  "stgpt_enabled": true,
+  "stgpt_backend": "precomputed_artifacts",
+  "stgpt_artifact_dir": "/path/to/stgpt/spatho_export",
+  "stgpt_min_cell_coverage": 0.95,
+  "stgpt_require_qc_pass": true
+}
+```
+
+Expected stGPT artifacts are `cell_embeddings.parquet`, `structure_embedding_summary.csv` or `structure_summary.parquet`, and `qc_report.json`. The workbench writes `stgpt_evidence_summary.csv/json`, updates the artifact manifest, and inserts a report section that labels the evidence as model-derived rather than measured expression.
 
 ## Quick Start
 
@@ -153,10 +175,12 @@ This writes a Xenium RNA+protein alignment note, a fixture manifest, and transfo
 ## Python Usage
 
 ```python
-from spatho import run_workflow
+from spatho import run_evidence_workbench, run_workflow
 
 result = run_workflow("/path/to/workflows/breast_case_01_openai.json")
 print(result["pathology_report_html"])
+
+workbench_result = run_evidence_workbench("/path/to/workflows/breast_case_01_openai.json")
 ```
 
 Generate a starter config from Python:

@@ -648,12 +648,56 @@ def _write_structure_summary(output_dir: Path, summaries: list[dict[str, Any]]) 
     return {"structure_summary_json": str(summary_json), "structure_summary_csv": str(summary_csv)}
 
 
+def _foundation_structure_id(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return int(float(str(value)))
+    except ValueError:
+        return None
+
+
+def _load_foundation_evidence_by_structure(workflow_summary: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    foundation_outputs = workflow_summary.get("foundation_outputs", {})
+    niche_path = foundation_outputs.get("niche_fusion_summary_json")
+    if not niche_path or not Path(niche_path).exists():
+        return {}
+    try:
+        rows = json.loads(Path(niche_path).read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(rows, list):
+        return {}
+    evidence_by_structure: dict[int, dict[str, Any]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        structure_id = _foundation_structure_id(row.get("structure_id"))
+        if structure_id is None:
+            continue
+        evidence: dict[str, Any] = {}
+        evidence_payload = row.get("evidence_json")
+        if isinstance(evidence_payload, str) and evidence_payload.strip():
+            try:
+                parsed = json.loads(evidence_payload)
+                if isinstance(parsed, dict):
+                    evidence = parsed
+            except json.JSONDecodeError:
+                evidence = {}
+        evidence_by_structure[structure_id] = {
+            "niche_fusion": {key: value for key, value in row.items() if key != "evidence_json"},
+            **evidence,
+        }
+    return evidence_by_structure
+
+
 def _call_structure_naming(
     *,
     cfg: WorkflowConfig,
     structure: dict[str, Any],
     current_review: dict[str, Any],
     he_summary: dict[str, Any],
+    foundation_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     payload = {
         "case_name": cfg.case_name,
@@ -667,6 +711,7 @@ def _call_structure_naming(
             "harmonized_composition": structure.get("harmonized_composition", {}),
             "raw_empirical_composition": structure.get("raw_empirical_composition", {}),
             "top_candidates": structure.get("top_candidates", []),
+            "foundation_evidence": foundation_evidence or {},
         },
         "override_policy": {
             "he_visual_override_enabled": cfg.he_visual_override_enabled,
@@ -688,6 +733,7 @@ def _apply_multimodal_names(
     pathology_outputs: dict[str, Any],
     structure_summaries: list[dict[str, Any]],
     output_dir: Path,
+    foundation_evidence_by_structure: dict[int, dict[str, Any]] | None = None,
 ) -> dict[str, str]:
     structure_by_id = {int(item["structure_id"]): item for item in case_bundle["structures"]}
     summary_by_id = {
@@ -727,6 +773,7 @@ def _apply_multimodal_names(
                 structure=structure,
                 current_review=review,
                 he_summary=he_summary,
+                foundation_evidence=(foundation_evidence_by_structure or {}).get(structure_id),
             )
         except Exception as exc:
             naming = {
@@ -784,6 +831,7 @@ def _apply_multimodal_names(
                 "confidence": naming.get("confidence"),
                 "foundation_top_label": he_summary.get("top_label"),
                 "foundation_top_score": top_score,
+                "foundation_evidence_used": bool((foundation_evidence_by_structure or {}).get(structure_id)),
                 "reasoning_summary": naming.get("reasoning_summary"),
                 "error": naming.get("error"),
             }
@@ -869,12 +917,14 @@ def apply_he_contour_foundation(
         top_clusters_per_structure=cfg.top_clusters_per_structure,
     )
     case_bundle = build_case_bundle(spatial_cfg)
+    foundation_evidence_by_structure = _load_foundation_evidence_by_structure(workflow_summary)
     naming_outputs = _apply_multimodal_names(
         cfg=cfg,
         case_bundle=case_bundle,
         pathology_outputs=workflow_summary["pathology_outputs"],
         structure_summaries=structure_summaries,
         output_dir=he_output_dir,
+        foundation_evidence_by_structure=foundation_evidence_by_structure,
     )
     metadata = {
         "enabled": True,

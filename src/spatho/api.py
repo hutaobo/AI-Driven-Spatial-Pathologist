@@ -13,17 +13,21 @@ from histoseg.spatial_pathologist.full_auto import (
     run_full_auto_spatial_pathologist,
 )
 
+from .foundation import apply_foundation_evidence, foundation_evidence_requested
 from .he_foundation import apply_he_contour_foundation, resolve_contour_geojson
 from .local_annotation import run_workflow_with_local_cluster_annotation
 from .manifest import write_artifact_manifest
 from .organ_packs import get_organ_pack, list_organ_packs
 from .schema import export_workflow_schema, validate_workflow_config
+from .stgpt import apply_stgpt_evidence, inspect_stgpt_evidence, prepare_stgpt_evidence, stgpt_evidence_requested
 from .templates import write_workflow_template
 from .xenium import DEFAULT_XENIUM_PIXEL_SIZE_UM, write_xenium_rna_protein_alignment_bundle
 
 
 def run_workflow(config_path: str | Path, *, heuristic_only: bool = False) -> dict[str, str]:
     config_model = validate_workflow_config(config_path)
+    if stgpt_evidence_requested(config_model):
+        prepare_stgpt_evidence(config_model)
     if heuristic_only:
         config_model = config_model.model_copy(
             update={
@@ -44,8 +48,14 @@ def run_workflow(config_path: str | Path, *, heuristic_only: bool = False) -> di
                 }
             )
         result = run_full_auto_spatial_pathologist(cfg)
+    if foundation_evidence_requested(config_model):
+        result = apply_foundation_evidence(config_model, result)
     if config_model.he_contour_foundation_enabled:
         result = apply_he_contour_foundation(config_model, result)
+    if foundation_evidence_requested(config_model):
+        result = apply_foundation_evidence(config_model, result)
+    if stgpt_evidence_requested(config_model):
+        result = apply_stgpt_evidence(config_model, result)
     manifest_path = write_artifact_manifest(
         workflow_config=config_model,
         workflow_summary_path=result["workflow_summary_json"],
@@ -132,6 +142,27 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "he_visual_override_enabled": cfg.he_visual_override_enabled,
                 "he_visual_override_min_llm_confidence": cfg.he_visual_override_min_llm_confidence,
                 "he_visual_override_min_foundation_score": cfg.he_visual_override_min_foundation_score,
+                "rna_foundation_enabled": cfg.rna_foundation_enabled,
+                "rna_foundation_backend": cfg.rna_foundation_backend,
+                "rna_foundation_cell_mapping_path": str(cfg.rna_foundation_cell_mapping_path) if cfg.rna_foundation_cell_mapping_path else None,
+                "rna_foundation_cell_mapping_path_exists": cfg.rna_foundation_cell_mapping_path.exists() if cfg.rna_foundation_cell_mapping_path else None,
+                "rna_foundation_cluster_summary_path": str(cfg.rna_foundation_cluster_summary_path) if cfg.rna_foundation_cluster_summary_path else None,
+                "rna_foundation_cluster_summary_path_exists": cfg.rna_foundation_cluster_summary_path.exists() if cfg.rna_foundation_cluster_summary_path else None,
+                "pathway_activity_enabled": cfg.pathway_activity_enabled,
+                "pathway_activity_csv": str(cfg.pathway_activity_csv) if cfg.pathway_activity_csv else None,
+                "pathway_activity_csv_exists": cfg.pathway_activity_csv.exists() if cfg.pathway_activity_csv else None,
+                "niche_fusion_enabled": cfg.niche_fusion_enabled,
+                "niche_fusion_backend": cfg.niche_fusion_backend,
+                "stgpt_enabled": cfg.stgpt_enabled,
+                "stgpt_backend": cfg.stgpt_backend,
+                "stgpt_artifact_dir": str(cfg.stgpt_artifact_dir) if cfg.stgpt_artifact_dir else None,
+                "stgpt_cell_embeddings_path": str(cfg.stgpt_cell_embeddings_path) if cfg.stgpt_cell_embeddings_path else None,
+                "stgpt_structure_summary_path": str(cfg.stgpt_structure_summary_path) if cfg.stgpt_structure_summary_path else None,
+                "stgpt_qc_report_path": str(cfg.stgpt_qc_report_path) if cfg.stgpt_qc_report_path else None,
+                "stgpt_model_path": str(cfg.stgpt_model_path) if cfg.stgpt_model_path else None,
+                "stgpt_config_path": str(cfg.stgpt_config_path) if cfg.stgpt_config_path else None,
+                "stgpt_min_cell_coverage": cfg.stgpt_min_cell_coverage,
+                "stgpt_require_qc_pass": cfg.stgpt_require_qc_pass,
                 "schema_valid": True,
                 "organ_pack": pack.to_dict(),
                 "base_pipeline_config": str(cfg.base_pipeline_config),
@@ -150,6 +181,30 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "openai_model": cfg.openai_model,
             }
         )
+        if cfg.rna_foundation_enabled:
+            has_cell_mapping = bool(cfg.rna_foundation_cell_mapping_path and cfg.rna_foundation_cell_mapping_path.exists())
+            has_cluster_summary = bool(
+                cfg.rna_foundation_cluster_summary_path and cfg.rna_foundation_cluster_summary_path.exists()
+            )
+            if not has_cell_mapping and not has_cluster_summary:
+                issues.append(
+                    "RNA foundation evidence is enabled but neither rna_foundation_cell_mapping_path "
+                    "nor rna_foundation_cluster_summary_path exists."
+                )
+        if cfg.pathway_activity_enabled:
+            has_pathway_csv = bool(cfg.pathway_activity_csv and cfg.pathway_activity_csv.exists())
+            has_diffexp = bool(differential_expression_csv and differential_expression_csv.exists())
+            if not has_pathway_csv and not has_diffexp:
+                issues.append(
+                    "Pathway activity is enabled but neither pathway_activity_csv nor differential_expression_csv exists."
+                )
+        if cfg.stgpt_enabled:
+            stgpt_report = inspect_stgpt_evidence(cfg, allow_local_pending=True)
+            report["stgpt_evidence"] = {
+                **stgpt_report,
+                "paths": {key: str(value) for key, value in stgpt_report["paths"].items()},
+            }
+            issues.extend(stgpt_report["errors"])
         if cfg.pathology_review_backend == "pathology_ai_api":
             try:
                 health = _pathology_ai_health_report(str(cfg.pathology_ai_api_base_url))

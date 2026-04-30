@@ -256,6 +256,45 @@ def prepare_spatho_inputs(dataset_root: Path, run_root: Path) -> dict[str, Any]:
     return summary
 
 
+def prepare_rna_foundation_smoke_mapping(input_summary: dict[str, Any], run_root: Path) -> dict[str, Any]:
+    foundation_dir = run_root / "inputs" / "foundation"
+    foundation_dir.mkdir(parents=True, exist_ok=True)
+    mapping_csv = foundation_dir / "scgpt_cell_mapping.csv"
+    metadata_json = foundation_dir / "scgpt_cell_mapping_metadata.json"
+    if mapping_csv.exists():
+        summary = {
+            "rna_foundation_cell_mapping_path": str(mapping_csv),
+            "smoke_test_only": False,
+            "source": "preexisting_mapping_csv",
+        }
+        write_json(metadata_json, summary)
+        return summary
+
+    cluster_csv = Path(input_summary["cluster_csv"])
+    cluster_df = pd.read_csv(cluster_csv)
+    barcode_col = pick_column(cluster_df.columns.tolist(), ["Barcode", "barcode", "cell_id"], "cluster barcode")
+    cluster_col = pick_column(cluster_df.columns.tolist(), ["Cluster", "cluster"], "cluster id")
+    smoke = cluster_df[[barcode_col, cluster_col]].copy()
+    smoke.columns = ["cell_id", "cluster_id"]
+    smoke["predicted_label"] = "unknown_precomputed_scgpt_mapping_not_available"
+    smoke["confidence"] = 0.0
+    smoke["source"] = "smoke_interface_mapping"
+    smoke.to_csv(mapping_csv, index=False)
+    summary = {
+        "rna_foundation_cell_mapping_path": str(mapping_csv),
+        "rows": int(len(smoke)),
+        "smoke_test_only": True,
+        "source": "generated_from_cluster_csv_to_validate_foundation_interface",
+        "note": (
+            "This file validates the RNA foundation evidence interface when a real scGPT/scGPT-spatial "
+            "reference mapping is not yet available. Replace it with a precomputed mapping for biological interpretation."
+        ),
+    }
+    write_json(metadata_json, summary)
+    write_json(run_root / "tutorial_assets" / "rna_foundation_mapping_metadata.json", summary)
+    return summary
+
+
 def prepare_registered_he_asset(dataset_root: Path, run_root: Path, *, zarr_level: int = 6) -> dict[str, Any]:
     assets_dir = run_root / "inputs" / "he"
     assets_dir.mkdir(parents=True, exist_ok=True)
@@ -462,6 +501,7 @@ def write_workflow_config(
     runtime_root: Path,
     base_pipeline_config: Path,
     input_summary: dict[str, Any],
+    rna_foundation_summary: dict[str, Any],
     pathology_ai_base_url: str,
 ) -> Path:
     project_root = runtime_root / "projects" / CASE_NAME
@@ -496,6 +536,14 @@ def write_workflow_config(
         "he_visual_override_enabled": True,
         "he_visual_override_min_llm_confidence": 0.70,
         "he_visual_override_min_foundation_score": 0.35,
+        "rna_foundation_enabled": True,
+        "rna_foundation_backend": "precomputed_scgpt",
+        "rna_foundation_cell_mapping_path": rna_foundation_summary["rna_foundation_cell_mapping_path"],
+        "rna_foundation_cluster_summary_path": None,
+        "pathway_activity_enabled": True,
+        "pathway_activity_csv": None,
+        "niche_fusion_enabled": True,
+        "niche_fusion_backend": "lightweight",
         "differential_expression_csv": input_summary["differential_expression"]["differential_expression_csv"],
         "projection_csv": input_summary["projection"]["projection_csv"],
         "openai_enabled": False,
@@ -708,6 +756,7 @@ def main() -> None:
     log(f"pathology-ai ready with components: {sorted(health.get('components', {}))}")
 
     input_summary = prepare_spatho_inputs(dataset_root, run_root)
+    rna_foundation_summary = prepare_rna_foundation_smoke_mapping(input_summary, run_root)
     he_summary = prepare_registered_he_asset(dataset_root, run_root, zarr_level=args.he_zarr_level)
     write_json(run_root / "tutorial_assets" / "he_alignment_metadata.json", he_summary)
     runtime_root = prepare_segmentation_runtime(sfplot_root, run_root)
@@ -724,6 +773,7 @@ def main() -> None:
         runtime_root=runtime_root,
         base_pipeline_config=base_config,
         input_summary=input_summary,
+        rna_foundation_summary=rna_foundation_summary,
         pathology_ai_base_url=args.pathology_ai_base_url,
     )
     write_json(
@@ -737,6 +787,7 @@ def main() -> None:
             "base_pipeline_config": str(base_config),
             "workflow_config": str(workflow_config),
             "he": he_summary,
+            "rna_foundation": rna_foundation_summary,
         },
     )
 

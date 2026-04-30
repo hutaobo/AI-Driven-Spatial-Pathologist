@@ -98,6 +98,35 @@ def build_artifact_manifest(
     for artifact_id, label, category, key in optional_he_artifacts:
         if key in he_outputs:
             candidates.append((artifact_id, label, category, Path(he_outputs[key]).resolve()))
+    foundation_outputs = summary.get("foundation_outputs", {})
+    optional_foundation_artifacts = [
+        ("foundation.rna_cluster_summary_json", "RNA foundation cluster summary JSON", "foundation", "rna_foundation_cluster_summary_json"),
+        ("foundation.rna_cluster_summary_csv", "RNA foundation cluster summary CSV", "foundation", "rna_foundation_cluster_summary_csv"),
+        ("foundation.rna_structure_summary_json", "RNA foundation structure summary JSON", "foundation", "rna_foundation_structure_summary_json"),
+        ("foundation.rna_structure_summary_csv", "RNA foundation structure summary CSV", "foundation", "rna_foundation_structure_summary_csv"),
+        ("foundation.pathway_cluster_summary_json", "Pathway activity cluster summary JSON", "foundation", "pathway_activity_cluster_summary_json"),
+        ("foundation.pathway_cluster_summary_csv", "Pathway activity cluster summary CSV", "foundation", "pathway_activity_cluster_summary_csv"),
+        ("foundation.pathway_structure_summary_json", "Pathway activity structure summary JSON", "foundation", "pathway_activity_structure_summary_json"),
+        ("foundation.pathway_structure_summary_csv", "Pathway activity structure summary CSV", "foundation", "pathway_activity_structure_summary_csv"),
+        ("foundation.he_morphology_summary_json", "H&E morphology feature summary JSON", "foundation", "he_morphology_feature_summary_json"),
+        ("foundation.he_morphology_summary_csv", "H&E morphology feature summary CSV", "foundation", "he_morphology_feature_summary_csv"),
+        ("foundation.niche_fusion_summary_json", "Lightweight niche fusion summary JSON", "foundation", "niche_fusion_summary_json"),
+        ("foundation.niche_fusion_summary_csv", "Lightweight niche fusion summary CSV", "foundation", "niche_fusion_summary_csv"),
+        ("foundation.stgpt_cell_embeddings_parquet", "stGPT cell embeddings", "foundation", "stgpt_cell_embeddings_parquet"),
+        (
+            "foundation.stgpt_structure_embedding_summary_csv",
+            "stGPT structure embedding summary",
+            "foundation",
+            "stgpt_structure_embedding_summary_csv",
+        ),
+        ("foundation.stgpt_qc_report_json", "stGPT QC report", "foundation", "stgpt_qc_report_json"),
+        ("foundation.stgpt_evidence_summary_json", "stGPT evidence summary JSON", "foundation", "stgpt_evidence_summary_json"),
+        ("foundation.stgpt_evidence_summary_csv", "stGPT evidence summary CSV", "foundation", "stgpt_evidence_summary_csv"),
+        ("foundation.metadata_json", "Foundation evidence metadata", "foundation", "metadata_json"),
+    ]
+    for artifact_id, label, category, key in optional_foundation_artifacts:
+        if key in foundation_outputs:
+            candidates.append((artifact_id, label, category, Path(foundation_outputs[key]).resolve()))
 
     artifacts = [
         _artifact_record(
@@ -142,6 +171,14 @@ def build_artifact_manifest(
             "he_foundation_model_id": workflow_config.he_foundation_model_id,
             "he_foundation_prompt_set": workflow_config.he_foundation_prompt_set,
             "he_visual_override_enabled": workflow_config.he_visual_override_enabled,
+            "rna_foundation_enabled": workflow_config.rna_foundation_enabled,
+            "rna_foundation_backend": workflow_config.rna_foundation_backend,
+            "pathway_activity_enabled": workflow_config.pathway_activity_enabled,
+            "niche_fusion_enabled": workflow_config.niche_fusion_enabled,
+            "niche_fusion_backend": workflow_config.niche_fusion_backend,
+            "stgpt_enabled": workflow_config.stgpt_enabled,
+            "stgpt_backend": workflow_config.stgpt_backend,
+            "stgpt_require_qc_pass": workflow_config.stgpt_require_qc_pass,
         },
         "dataset": {
             "modality": workflow_config.dataset_modality,

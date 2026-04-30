@@ -80,6 +80,13 @@ The current workflow config uses the local backend and keeps OpenAI disabled:
   "he_foundation_model_id": "vinid/plip",
   "he_foundation_prompt_set": "breast_contour_v1",
   "he_visual_override_enabled": true,
+  "rna_foundation_enabled": true,
+  "rna_foundation_backend": "precomputed_scgpt",
+  "rna_foundation_cell_mapping_path": "inputs/foundation/scgpt_cell_mapping.csv",
+  "pathway_activity_enabled": true,
+  "pathway_activity_csv": null,
+  "niche_fusion_enabled": true,
+  "niche_fusion_backend": "lightweight",
   "openai_enabled": false
 }
 ```
@@ -103,6 +110,36 @@ The captured doctor output and workflow summary are included here:
 ```{literalinclude} _static/tutorials/atera_wta_breast_pdc/spatho/workflow_summary.json
 :language: json
 ```
+
+## scGPT/SpatialFusion-Inspired Evidence Layer
+
+The upgraded workflow can add a foundation evidence layer between cluster annotation and structure-level pathology review. This layer is opt-in and does not change the OpenAI API path or the local `pathology-ai` path.
+
+For this Atera breast run, the intended PDC configuration is:
+
+- `rna_foundation_enabled=true` when a precomputed scGPT/scGPT-spatial cell mapping is available;
+- `pathway_activity_enabled=true`, using the generated differential-expression CSV when no pathway activity table is supplied;
+- `niche_fusion_enabled=true`, using lightweight fusion of RNA reference evidence, pathway scores, PLIP H&E morphology signals, and spatial structure metadata.
+
+If a real scGPT/scGPT-spatial mapping has not been generated yet, the PDC tutorial driver writes a zero-confidence smoke mapping at `inputs/foundation/scgpt_cell_mapping.csv`. That file validates the data interface and report plumbing only; replace it with a real reference-mapping table before interpreting RNA foundation labels biologically.
+
+The layer writes:
+
+- `foundation/rna_foundation_cluster_summary.csv`
+- `foundation/rna_foundation_structure_summary.csv`
+- `foundation/pathway_activity_structure_summary.csv`
+- `foundation/he_morphology_feature_summary.csv`
+- `foundation/niche_fusion_summary.csv`
+- `foundation/foundation_evidence_metadata.json`
+
+The method is inspired by scGPT and SpatialFusion, but it remains an auditable workflow layer: frozen/precomputed RNA evidence and H&E foundation-model scores are summarized into standard tables, then the local LLM records whether modalities agree, conflict, or complement each other. It does not train a new joint embedding model in this tutorial pass.
+
+Interpretation policy:
+
+- RNA/cell-type and marker evidence preserve the primary biological identity of each structure.
+- PLIP H&E contour evidence contributes morphology, inflammation, tumor, stroma, and artifact signals.
+- Pathway activity contributes molecular program context, for example epithelial tumor, proliferation, stromal, immune, or hypoxia programs.
+- The local LLM adjudicates consistency: visual evidence can support, qualify, or challenge a label, but conservative thresholds prevent silent replacement.
 
 Selected overlays:
 

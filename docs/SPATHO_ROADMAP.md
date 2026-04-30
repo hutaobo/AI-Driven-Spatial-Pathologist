@@ -63,6 +63,36 @@ Before broad public release:
 3. document license boundaries clearly
 4. add issue templates and contribution guide
 
+## Phase 5: stGPT Foundation Model -> Evidence Workbench
+
+The next AI upgrade should add an optional spatial transcriptomics foundation-model layer rather than replacing the existing workflow. The narrative is:
+
+> stGPT learns the morpho-molecular tissue representation; spatho turns it into auditable spatial pathology evidence.
+
+The product should be described as a closed loop:
+
+```text
+Model -> Evidence -> Agent -> Human Review -> Better Model
+```
+
+Planned moves:
+
+1. define `stGPT Foundation`: training, model architecture, checkpoint loading, embedding, and model packaging
+2. define `stGPT Evidence Suite`: QC, deterministic splits, benchmark tables, ablations, domain-shift checks, and failure analysis
+3. define `stGPT Runtime / Tool API`: `embed_cells`, `evaluate_checkpoint`, `package_model`, and `export_spatho_artifacts` first; retrieval, imputation, niche scoring, region comparison, and structure explanation only after tested outputs exist
+4. define `spatho Agentic Workbench`: guardrailed workflow orchestration that checks QC before biological conclusions
+5. define `spatho Reports`: report sections that separate measured expression, model-derived evidence, warnings, and human review
+
+Implementation guardrails:
+
+- precomputed stGPT artifacts must work without importing `stgpt`
+- `local_stgpt` is optional and should fail clearly when the package or model paths are missing
+- fatal stGPT QC blocks a run when `stgpt_require_qc_pass=true`
+- warning-only stGPT QC becomes cautionary report language, not a hard failure
+- imputation, reconstruction, or embeddings must never be described as measured expression
+
+See [stGPT Upgrade Plan](STGPT_UPGRADE_PLAN.md) for the detailed implementation route.
+
 ## Repository Roles
 
 - `spatho`: public product and user experience layer
