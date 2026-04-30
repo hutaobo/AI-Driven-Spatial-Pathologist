@@ -154,8 +154,6 @@ def test_stgpt_runtime_import_error_message(tmp_path: Path) -> None:
     for key in stgpt_modules:
         sys.modules.pop(key, None)
 
-    original_import = __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
-
     import builtins
 
     real_import = builtins.__import__

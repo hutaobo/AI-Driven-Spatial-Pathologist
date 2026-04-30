@@ -249,10 +249,12 @@ def test_doctor_reports_schema_version(tmp_path: Path) -> None:
 
 def test_doctor_detects_stale_execution_plan(tmp_path: Path) -> None:
     from spatho.api import workflow_doctor_report
+    from spatho.schema import validate_workflow_config
 
     cfg_path = _basic_config(tmp_path)
+    cfg = validate_workflow_config(cfg_path)
     # Write an execution_plan.json with an old schema version
-    stale_plan = tmp_path / "out" / "workbench" / "execution_plan.json"
+    stale_plan = cfg.output_root / "workbench" / "execution_plan.json"
     stale_plan.parent.mkdir(parents=True, exist_ok=True)
     stale_plan.write_text(json.dumps({"schema_version": "0.0.1", "plan_id": "old"}), encoding="utf-8")
 

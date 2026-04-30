@@ -130,8 +130,14 @@ class ToolCallMeta(BaseModel):
 
     @classmethod
     def meta_path_for(cls, artifact_path: Path) -> Path:
-        """Return the companion ``.meta.json`` path for *artifact_path*."""
-        return artifact_path.with_suffix("").with_suffix(artifact_path.suffix + ".meta.json")
+        """Return the companion ``.meta.json`` path for *artifact_path*.
+
+        The strategy is to append ``.meta.json`` to the full filename so that,
+        e.g., ``cell_embeddings.parquet`` becomes
+        ``cell_embeddings.parquet.meta.json``.  This avoids ambiguity for files
+        whose stem already contains a dot (e.g. ``v1.0.parquet``).
+        """
+        return artifact_path.parent / (artifact_path.name + ".meta.json")
 
 
 # ---------------------------------------------------------------------------

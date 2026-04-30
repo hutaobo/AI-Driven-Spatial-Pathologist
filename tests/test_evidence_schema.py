@@ -104,6 +104,7 @@ def test_tool_call_meta_round_trip(tmp_path: Path) -> None:
 def test_tool_call_meta_path_convention(tmp_path: Path) -> None:
     artifact = tmp_path / "stgpt" / "cell_embeddings.parquet"
     meta_path = ToolCallMeta.meta_path_for(artifact)
+    # The companion file appends .meta.json to the full filename
     assert meta_path.name == "cell_embeddings.parquet.meta.json"
     assert meta_path.parent == artifact.parent
 

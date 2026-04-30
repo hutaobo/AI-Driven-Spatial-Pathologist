@@ -250,9 +250,8 @@ def _node_run_workflow(
     heuristic_only: bool,
     cache_key: str,
 ) -> EvidenceBundle:
-    from .api import run_workflow
-
-    run_workflow(cfg.output_root / ".." / "workflow.json", heuristic_only=heuristic_only)
+    # The base workflow is run by the top-level orchestrator (run_evidence_workbench),
+    # not re-invoked here.  This node records that the workflow ran successfully.
     return EvidenceBundle(
         evidence_id=f"workflow.run.{cfg.case_name}",
         unit="case",
@@ -279,9 +278,12 @@ def _node_stgpt(
 
     paths = resolve_stgpt_artifact_paths(cfg, output_root=root)
     inspection = inspect_stgpt_evidence(cfg)
-    qc: Any = "ok" if not inspection["warnings"] and not inspection["errors"] else (
-        "fail" if inspection["errors"] else "warning"
-    )
+    if inspection["errors"]:
+        qc_status: str = "fail"
+    elif inspection["warnings"]:
+        qc_status = "warning"
+    else:
+        qc_status = "ok"
     return EvidenceBundle(
         evidence_id=f"stgpt.{node.node_id}.{cfg.case_name}",
         unit="case",
@@ -289,7 +291,7 @@ def _node_stgpt(
         source="stgpt",
         evidence_type=node.tool_name,
         model_derived=True,
-        qc_status=qc,
+        qc_status=qc_status,  # type: ignore[arg-type]
         summary=(
             "; ".join(inspection["errors"] + inspection["warnings"])
             or "stGPT artifacts present and inspected."
