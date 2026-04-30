@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 import json
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -15,6 +15,40 @@ from .xenium import (
     VALID_SEGMENTATION_SOURCES,
     validate_segmentation_source,
 )
+
+
+class HumanReviewPolicy(BaseModel):
+    """Configurable thresholds for the Critic's human-review handoff logic.
+
+    Fields
+    ------
+    min_qc_status:
+        The minimum acceptable QC status.  Evidence bundles with a QC
+        status *worse* than this value are flagged for human review.
+        ``"warning"`` means that only ``"fail"`` bundles are flagged;
+        ``"ok"`` means that both ``"warning"`` and ``"fail"`` bundles are
+        flagged.
+    required_evidence_channels:
+        List of source names (e.g. ``"stgpt"``, ``"plip"``) that must be
+        present for every run.  Missing channels are reported as coverage
+        gaps and may block the Reporter depending on ``conflict_resolution``.
+    conflict_resolution:
+        Strategy when the Critic detects cross-modal conflicts.
+
+        ``"auto_skip"``  — skip conflicting bundles silently.
+        ``"block"``      — raise an error and halt the workflow.
+        ``"flag_only"``  — flag for human review but do not block.
+    finetuning_threshold:
+        Number of ``flag_for_finetuning`` correction records that must
+        accumulate before a fine-tuning training split is triggered.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    min_qc_status: Literal["ok", "warning", "fail"] = "warning"
+    required_evidence_channels: list[str] = Field(default_factory=list)
+    conflict_resolution: Literal["auto_skip", "block", "flag_only"] = "flag_only"
+    finetuning_threshold: int = Field(default=50, ge=1)
 
 
 def _resolve_path(value: str | Path | None, *, base_dir: Path) -> Path | None:
@@ -76,6 +110,8 @@ class WorkflowConfig(BaseModel):
     stgpt_config_path: Path | None = None
     stgpt_min_cell_coverage: float = Field(default=0.95, ge=0.0, le=1.0)
     stgpt_require_qc_pass: bool = True
+
+    human_review_policy: HumanReviewPolicy = Field(default_factory=HumanReviewPolicy)
 
     differential_expression_csv: Path | None = None
     projection_csv: Path | None = None
