@@ -22,6 +22,7 @@ version = release
 
 extensions = [
     "myst_parser",
+    "sphinx_design",
     "sphinxcontrib.mermaid",
 ]
 
@@ -33,9 +34,21 @@ source_suffix = {
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-html_theme = "sphinx_rtd_theme"
-html_title = "AI-Driven Spatial Pathologist Documentation"
+html_theme = "sphinx_book_theme"
+html_title = "AI-Driven Spatial Pathologist"
 html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
+html_theme_options = {
+    "repository_url": "https://github.com/hutaobo/AI-Driven-Spatial-Pathologist",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "path_to_docs": "docs",
+    "navigation_with_keys": True,
+    "show_navbar_depth": 2,
+    "show_toc_level": 2,
+    "home_page_in_toc": True,
+}
 
 myst_heading_anchors = 3
+myst_enable_extensions = ["colon_fence"]
 myst_fence_as_directive = ["mermaid"]
