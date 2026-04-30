@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 import math
+from pathlib import Path
 import re
 from typing import Any, Callable, Protocol
 from urllib import error, parse, request
@@ -10,15 +11,27 @@ from urllib import error, parse, request
 from .config import ServiceSettings
 from .models import (
     Citation,
+    ClusterAnnotationRequest,
+    ClusterAnnotationResponse,
     DocumentUpsertRequest,
     DocumentUpsertResponse,
     DocumentUpsertResult,
+    HEContourClass,
+    HEContourClassification,
+    HEContourClassifyRequest,
+    HEContourClassifyResponse,
     RetrievalStats,
     ReviewModelResponse,
     ReviewRequest,
     ReviewResponse,
+    StructureMultimodalNamingRequest,
+    StructureMultimodalNamingResponse,
 )
-from .prompts import build_review_messages
+from .prompts import (
+    build_cluster_annotation_messages,
+    build_review_messages,
+    build_structure_multimodal_naming_messages,
+)
 
 
 class ServiceError(RuntimeError):
@@ -78,6 +91,51 @@ def _extract_json_object(raw: str) -> dict[str, Any]:
     if start == -1 or end == -1 or end < start:
         raise ValueError("No JSON object found in model response.")
     return json.loads(normalized[start : end + 1])
+
+
+def _stringify_list_item(value: Any) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (dict, list, tuple)):
+        return json.dumps(value, ensure_ascii=False, default=str)
+    return str(value).strip()
+
+
+def _coerce_text_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        text = value.strip()
+        return [text] if text else []
+    if isinstance(value, dict):
+        rows = []
+        for key, item in value.items():
+            text = _stringify_list_item(item)
+            if text:
+                rows.append(f"{key}: {text}")
+        return rows
+    if isinstance(value, (list, tuple)):
+        rows = []
+        for item in value:
+            text = _stringify_list_item(item)
+            if text:
+                rows.append(text)
+        return rows
+    text = _stringify_list_item(value)
+    return [text] if text else []
+
+
+def _normalize_structure_multimodal_payload(
+    parsed: dict[str, Any],
+    *,
+    fallback_structure_id: Any = None,
+) -> dict[str, Any]:
+    normalized = dict(parsed)
+    if normalized.get("structure_id") is None and fallback_structure_id is not None:
+        normalized["structure_id"] = fallback_structure_id
+    for key in ("visual_evidence", "molecular_evidence", "conflicts", "recommended_checks"):
+        normalized[key] = _coerce_text_list(normalized.get(key))
+    return normalized
 
 
 def _chunk_text(text: str, *, chunk_size_chars: int, chunk_overlap_chars: int) -> list[tuple[int, int, str]]:
@@ -144,6 +202,14 @@ class RerankerClient(Protocol):
 
 
 class LanguageModelClient(Protocol):
+    def generate_cluster_annotation(self, *, payload: ClusterAnnotationRequest) -> ClusterAnnotationResponse: ...
+
+    def generate_structure_multimodal_name(
+        self,
+        *,
+        payload: StructureMultimodalNamingRequest,
+    ) -> StructureMultimodalNamingResponse: ...
+
     def generate_review(
         self,
         *,
@@ -286,6 +352,87 @@ class OpenAICompatibleLLMClient:
             raise ServiceError(f"LLM did not return valid JSON: {content[:240]}", status_code=502) from exc
         return ReviewModelResponse.model_validate(parsed)
 
+    def generate_cluster_annotation(self, *, payload: ClusterAnnotationRequest) -> ClusterAnnotationResponse:
+        vocabulary = [item.model_dump() for item in payload.controlled_vocabulary]
+        request_payload: dict[str, Any] = {
+            "model": self._model,
+            "messages": build_cluster_annotation_messages(
+                case_name=payload.case_name,
+                study_context=payload.study_context,
+                annotation_taxonomy=payload.annotation_taxonomy,
+                controlled_vocabulary=vocabulary,
+                cluster_evidence=payload.cluster_evidence,
+                heuristic_annotation=payload.heuristic_annotation,
+            ),
+            "temperature": 0.0,
+            "top_p": 1.0,
+        }
+        if self._strict_json:
+            request_payload["response_format"] = {"type": "json_object"}
+        response = _json_request(
+            url=f"{self._base_url}/chat/completions",
+            method="POST",
+            timeout=self._timeout,
+            payload=request_payload,
+        )
+        try:
+            choice = response["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise ServiceError("Unexpected LLM response format.", status_code=502) from exc
+        if isinstance(choice, list):
+            content = "".join(part.get("text", "") for part in choice if isinstance(part, dict))
+        else:
+            content = str(choice)
+        try:
+            parsed = _extract_json_object(content)
+        except (ValueError, json.JSONDecodeError) as exc:
+            raise ServiceError(f"LLM did not return valid JSON: {content[:240]}", status_code=502) from exc
+        return ClusterAnnotationResponse.model_validate(parsed)
+
+    def generate_structure_multimodal_name(
+        self,
+        *,
+        payload: StructureMultimodalNamingRequest,
+    ) -> StructureMultimodalNamingResponse:
+        request_payload: dict[str, Any] = {
+            "model": self._model,
+            "messages": build_structure_multimodal_naming_messages(
+                case_name=payload.case_name,
+                study_context=payload.study_context,
+                annotation_taxonomy=payload.annotation_taxonomy,
+                structure=payload.structure,
+                current_review=payload.current_review,
+                he_visual_summary=payload.he_visual_summary,
+                multimodal_evidence=payload.multimodal_evidence,
+                override_policy=payload.override_policy,
+            ),
+            "temperature": 0.0,
+            "top_p": 1.0,
+        }
+        if self._strict_json:
+            request_payload["response_format"] = {"type": "json_object"}
+        response = _json_request(
+            url=f"{self._base_url}/chat/completions",
+            method="POST",
+            timeout=self._timeout,
+            payload=request_payload,
+        )
+        try:
+            choice = response["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise ServiceError("Unexpected LLM response format.", status_code=502) from exc
+        if isinstance(choice, list):
+            content = "".join(part.get("text", "") for part in choice if isinstance(part, dict))
+        else:
+            content = str(choice)
+        try:
+            parsed = _extract_json_object(content)
+        except (ValueError, json.JSONDecodeError) as exc:
+            raise ServiceError(f"LLM did not return valid JSON: {content[:240]}", status_code=502) from exc
+        fallback_structure_id = payload.structure.get("structure_id")
+        parsed = _normalize_structure_multimodal_payload(parsed, fallback_structure_id=fallback_structure_id)
+        return StructureMultimodalNamingResponse.model_validate(parsed)
+
     def health(self) -> dict[str, Any]:
         try:
             response = _json_request(url=f"{self._base_url}/models", method="GET", timeout=self._timeout)
@@ -426,6 +573,188 @@ class QdrantVectorStore:
             return {"ok": False, "error": str(exc)}
 
 
+BREAST_CONTOUR_PROMPTS: list[dict[str, str]] = [
+    {
+        "label_id": "invasive_tumor_epithelium",
+        "label": "Invasive tumor epithelium",
+        "prompt": "H&E histopathology patch showing invasive breast carcinoma tumor epithelium",
+    },
+    {
+        "label_id": "dcis_or_ductal_tumor",
+        "label": "Ductal carcinoma in situ or ductal tumor",
+        "prompt": "H&E histopathology patch showing ductal carcinoma in situ or duct-like tumor epithelium",
+    },
+    {
+        "label_id": "benign_luminal_epithelium",
+        "label": "Benign or luminal glandular epithelium",
+        "prompt": "H&E histopathology patch showing benign or luminal glandular breast epithelium",
+    },
+    {
+        "label_id": "fibrocollagenous_stroma",
+        "label": "Fibrocollagenous or desmoplastic stroma",
+        "prompt": "H&E histopathology patch showing fibrocollagenous desmoplastic breast stroma",
+    },
+    {
+        "label_id": "immune_rich_infiltrate",
+        "label": "Immune-rich lymphoid infiltrate",
+        "prompt": "H&E histopathology patch showing dense lymphoid immune infiltrate",
+    },
+    {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "prompt": "H&E histopathology patch showing macrophage-rich inflammatory tissue",
+    },
+    {
+        "label_id": "vascular_region",
+        "label": "Vascular or endothelial region",
+        "prompt": "H&E histopathology patch showing blood vessels and endothelial-rich tissue",
+    },
+    {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "prompt": "H&E histopathology patch showing adipose low-cellularity breast tissue",
+    },
+    {
+        "label_id": "necrosis_debris",
+        "label": "Necrosis or debris",
+        "prompt": "H&E histopathology patch showing necrosis debris or degenerated tissue",
+    },
+    {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "prompt": "H&E histopathology patch showing tissue artifact blur folds or low-quality staining",
+    },
+]
+
+
+def _prompt_specs(prompt_set: str) -> list[dict[str, str]]:
+    normalized = str(prompt_set or "breast_contour_v1").strip()
+    if normalized != "breast_contour_v1":
+        raise ServiceError(f"Unsupported H&E foundation prompt_set: {prompt_set}", status_code=400)
+    return BREAST_CONTOUR_PROMPTS
+
+
+class PLIPZeroShotContourClassifier:
+    def __init__(self) -> None:
+        self._pipelines: dict[str, Any] = {}
+
+    def _pipeline(self, model_id: str) -> Any:
+        if model_id not in self._pipelines:
+            try:
+                from transformers import pipeline
+            except Exception as exc:  # pragma: no cover - depends on optional runtime
+                raise ServiceError(
+                    "H&E contour classification requires transformers inside the pathology-ai runtime.",
+                    status_code=503,
+                ) from exc
+            try:
+                self._pipelines[model_id] = pipeline(
+                    "zero-shot-image-classification",
+                    model=model_id,
+                )
+            except Exception as exc:  # pragma: no cover - model loading is integration-tested on PDC
+                raise ServiceError(f"Could not load H&E foundation model {model_id!r}: {exc}", status_code=503) from exc
+        return self._pipelines[model_id]
+
+    def _patch_quality(self, image: Any, path: Path) -> dict[str, Any]:
+        try:
+            width, height = image.size
+            gray = image.convert("L")
+            hist = gray.histogram()
+            total = max(sum(hist), 1)
+            mean = sum(value * count for value, count in enumerate(hist)) / total
+            nonzero = sum(count for value, count in enumerate(hist) if value > 3) / total
+            return {
+                "width": int(width),
+                "height": int(height),
+                "mean_intensity": float(mean),
+                "nonzero_fraction": float(nonzero),
+                "size_bytes": path.stat().st_size if path.exists() else None,
+            }
+        except Exception:
+            return {"size_bytes": path.stat().st_size if path.exists() else None}
+
+    def classify(self, payload: HEContourClassifyRequest) -> HEContourClassifyResponse:
+        specs = _prompt_specs(payload.prompt_set)
+        prompt_to_spec = {spec["prompt"]: spec for spec in specs}
+        prompts = [spec["prompt"] for spec in specs]
+        classifier = self._pipeline(payload.model_id)
+
+        classifications: list[HEContourClassification] = []
+        warnings: list[str] = []
+        for contour in payload.contours:
+            path = Path(contour.image_path)
+            if not path.exists():
+                message = f"Image path does not exist: {path}"
+                warnings.append(f"{contour.contour_id}: {message}")
+                classifications.append(
+                    HEContourClassification(
+                        contour_id=contour.contour_id,
+                        image_path=str(path),
+                        structure_id=contour.structure_id,
+                        structure_name=contour.structure_name,
+                        error=message,
+                    )
+                )
+                continue
+            try:
+                from PIL import Image
+
+                with Image.open(path) as handle:
+                    image = handle.convert("RGB")
+                    quality = self._patch_quality(image, path)
+                    raw = classifier(image, candidate_labels=prompts)
+            except ServiceError:
+                raise
+            except Exception as exc:
+                message = f"Could not classify contour patch: {exc}"
+                warnings.append(f"{contour.contour_id}: {message}")
+                classifications.append(
+                    HEContourClassification(
+                        contour_id=contour.contour_id,
+                        image_path=str(path),
+                        structure_id=contour.structure_id,
+                        structure_name=contour.structure_name,
+                        error=message,
+                    )
+                )
+                continue
+            if isinstance(raw, dict):
+                raw_items = [raw]
+            else:
+                raw_items = list(raw or [])
+            top_classes: list[HEContourClass] = []
+            for item in raw_items[: payload.top_k]:
+                prompt = str(item.get("label", ""))
+                spec = prompt_to_spec.get(prompt, {"label_id": prompt, "label": prompt, "prompt": prompt})
+                top_classes.append(
+                    HEContourClass(
+                        label_id=spec["label_id"],
+                        label=spec["label"],
+                        prompt=spec["prompt"],
+                        score=float(item.get("score", 0.0)),
+                    )
+                )
+            classifications.append(
+                HEContourClassification(
+                    contour_id=contour.contour_id,
+                    image_path=str(path),
+                    structure_id=contour.structure_id,
+                    structure_name=contour.structure_name,
+                    top_classes=top_classes,
+                    patch_quality=quality,
+                )
+            )
+
+        return HEContourClassifyResponse(
+            case_name=payload.case_name,
+            model_id=payload.model_id,
+            prompt_set=payload.prompt_set,
+            classifications=classifications,
+            warnings=warnings,
+        )
+
+
 class PathologyAIService:
     def __init__(
         self,
@@ -441,6 +770,7 @@ class PathologyAIService:
         self._reranker_client = reranker_client
         self._llm_client = llm_client
         self._vector_store = vector_store
+        self._he_classifier = PLIPZeroShotContourClassifier()
 
     @property
     def settings(self) -> ServiceSettings:
@@ -514,6 +844,49 @@ class PathologyAIService:
             documents=per_document,
             chunk_count=len(all_chunks),
         )
+
+    def annotate_cluster(self, payload: ClusterAnnotationRequest) -> ClusterAnnotationResponse:
+        label_ids = {item.id for item in payload.controlled_vocabulary}
+        if not label_ids:
+            raise ServiceError("controlled_vocabulary must contain at least one label.", status_code=400)
+        try:
+            result = self._llm_client.generate_cluster_annotation(payload=payload)
+        except ServiceError:
+            raise
+        except Exception as exc:
+            raise ServiceError(f"LLM annotation request failed: {exc}", status_code=503) from exc
+        if result.label_id not in label_ids:
+            raise ServiceError(
+                f"LLM returned label_id {result.label_id!r}, which is not in the controlled vocabulary.",
+                status_code=422,
+            )
+        invalid_alternatives = [label_id for label_id in result.alternative_label_ids if label_id not in label_ids]
+        if invalid_alternatives:
+            raise ServiceError(
+                f"LLM returned alternative label ids outside the controlled vocabulary: {invalid_alternatives}",
+                status_code=422,
+            )
+        return result
+
+    def classify_he_contours(self, payload: HEContourClassifyRequest) -> HEContourClassifyResponse:
+        if payload.model_id.strip() != "vinid/plip":
+            raise ServiceError(
+                "Only model_id='vinid/plip' is currently supported for local H&E zero-shot classification.",
+                status_code=400,
+            )
+        return self._he_classifier.classify(payload)
+
+    def name_structure_multimodal(
+        self,
+        payload: StructureMultimodalNamingRequest,
+    ) -> StructureMultimodalNamingResponse:
+        try:
+            result = self._llm_client.generate_structure_multimodal_name(payload=payload)
+        except ServiceError:
+            raise
+        except Exception as exc:
+            raise ServiceError(f"LLM multimodal naming request failed: {exc}", status_code=503) from exc
+        return result
 
     def review(self, *, review_type: str, payload: ReviewRequest) -> ReviewResponse:
         top_k = payload.top_k or self._settings.default_top_k

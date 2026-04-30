@@ -457,6 +457,7 @@ def write_base_pipeline_config(
 
 def write_workflow_config(
     *,
+    dataset_root: Path,
     run_root: Path,
     runtime_root: Path,
     base_pipeline_config: Path,
@@ -480,6 +481,21 @@ def write_workflow_config(
         "pathology_ai_top_k": 6,
         "pathology_ai_answer_language": "en",
         "pathology_ai_document_ids": [],
+        "cluster_annotation_backend": "pathology_ai_api",
+        "cluster_annotation_llm_base_url": pathology_ai_base_url.rstrip("/"),
+        "cluster_annotation_min_llm_confidence": 0.60,
+        "cluster_annotation_override_margin": 0.15,
+        "cluster_annotation_require_marker_overlap": True,
+        "he_contour_foundation_enabled": True,
+        "he_contour_geojson": str(dataset_root / "xenium_explorer_annotations.generated.geojson"),
+        "he_contour_key": "atera_wta_breast_he_contours",
+        "he_foundation_model_id": "vinid/plip",
+        "he_foundation_prompt_set": "breast_contour_v1",
+        "he_foundation_top_k": 5,
+        "he_foundation_max_patch_side_px": 1024,
+        "he_visual_override_enabled": True,
+        "he_visual_override_min_llm_confidence": 0.70,
+        "he_visual_override_min_foundation_score": 0.35,
         "differential_expression_csv": input_summary["differential_expression"]["differential_expression_csv"],
         "projection_csv": input_summary["projection"]["projection_csv"],
         "openai_enabled": False,
@@ -639,6 +655,10 @@ def collect_tutorial_assets(run_root: Path, spatho_result: dict[str, Any] | None
         "pipeline/validation/spatial_structure_isoline_overlay.png",
         "pipeline/validation/structure_isoline_metrics.json",
         "pipeline/structure_assignment/structure_assignments.csv",
+        "he_foundation/he_contour_classification.csv",
+        "he_foundation/he_contour_to_structure_summary.csv",
+        "he_foundation/structure_multimodal_names.csv",
+        "he_foundation/he_foundation_metadata.json",
     ):
         source = project_outputs / name
         copied = copy_if_exists(source, assets_root / "spatho" / source.name)
@@ -699,6 +719,7 @@ def main() -> None:
         he_summary=he_summary,
     )
     workflow_config = write_workflow_config(
+        dataset_root=dataset_root,
         run_root=run_root,
         runtime_root=runtime_root,
         base_pipeline_config=base_config,

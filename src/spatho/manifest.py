@@ -71,6 +71,33 @@ def build_artifact_manifest(
         ("pipeline.xenium_alignment_note_md", "Xenium RNA+protein alignment note", "pipeline", output_root / "pipeline" / "validation" / "xenium_rna_protein_alignment_note.md"),
         ("pipeline.xenium_alignment_fixture_manifest_json", "Xenium RNA+protein fixture manifest", "pipeline", output_root / "pipeline" / "validation" / "xenium_rna_protein_fixture_manifest.json"),
     ]
+    optional_annotation_artifacts = [
+        ("annotation.heuristic_annotations_json", "Heuristic cluster annotations JSON", "annotation", "heuristic_annotations_json"),
+        ("annotation.heuristic_annotations_csv", "Heuristic cluster annotations CSV", "annotation", "heuristic_annotations_csv"),
+        ("annotation.pathology_ai_annotations_json", "Local pathology-ai cluster annotations JSON", "annotation", "pathology_ai_annotations_json"),
+        ("annotation.pathology_ai_annotations_csv", "Local pathology-ai cluster annotations CSV", "annotation", "pathology_ai_annotations_csv"),
+        ("annotation.consensus_annotations_json", "Consensus cluster annotations JSON", "annotation", "consensus_annotations_json"),
+        ("annotation.consensus_annotations_csv", "Consensus cluster annotations CSV", "annotation", "consensus_annotations_csv"),
+        ("annotation.refinement_metadata_json", "Annotation refinement metadata", "annotation", "annotation_refinement_metadata_json"),
+    ]
+    annotation_outputs = summary.get("annotation_outputs", {})
+    for artifact_id, label, category, key in optional_annotation_artifacts:
+        if key in annotation_outputs:
+            candidates.append((artifact_id, label, category, Path(annotation_outputs[key]).resolve()))
+    he_outputs = summary.get("he_foundation_outputs", {})
+    optional_he_artifacts = [
+        ("he.patch_manifest_json", "H&E contour patch manifest", "he_foundation", "patch_manifest_json"),
+        ("he.classification_json", "H&E contour classification JSON", "he_foundation", "classification_json"),
+        ("he.classification_csv", "H&E contour classification CSV", "he_foundation", "classification_csv"),
+        ("he.structure_summary_json", "H&E contour structure summary JSON", "he_foundation", "structure_summary_json"),
+        ("he.structure_summary_csv", "H&E contour structure summary CSV", "he_foundation", "structure_summary_csv"),
+        ("he.multimodal_names_json", "Multimodal structure names JSON", "he_foundation", "structure_multimodal_names_json"),
+        ("he.multimodal_names_csv", "Multimodal structure names CSV", "he_foundation", "structure_multimodal_names_csv"),
+        ("he.metadata_json", "H&E foundation metadata", "he_foundation", "metadata_json"),
+    ]
+    for artifact_id, label, category, key in optional_he_artifacts:
+        if key in he_outputs:
+            candidates.append((artifact_id, label, category, Path(he_outputs[key]).resolve()))
 
     artifacts = [
         _artifact_record(
@@ -106,6 +133,15 @@ def build_artifact_manifest(
             "openai_model": workflow_config.openai_model,
             "openai_reasoning_effort": workflow_config.openai_reasoning_effort,
             "openai_store": workflow_config.openai_store,
+            "cluster_annotation_backend": workflow_config.cluster_annotation_backend,
+            "cluster_annotation_llm_base_url": workflow_config.cluster_annotation_llm_base_url,
+            "cluster_annotation_min_llm_confidence": workflow_config.cluster_annotation_min_llm_confidence,
+            "cluster_annotation_override_margin": workflow_config.cluster_annotation_override_margin,
+            "cluster_annotation_require_marker_overlap": workflow_config.cluster_annotation_require_marker_overlap,
+            "he_contour_foundation_enabled": workflow_config.he_contour_foundation_enabled,
+            "he_foundation_model_id": workflow_config.he_foundation_model_id,
+            "he_foundation_prompt_set": workflow_config.he_foundation_prompt_set,
+            "he_visual_override_enabled": workflow_config.he_visual_override_enabled,
         },
         "dataset": {
             "modality": workflow_config.dataset_modality,

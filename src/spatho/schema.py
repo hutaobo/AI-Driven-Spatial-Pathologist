@@ -41,6 +41,23 @@ class WorkflowConfig(BaseModel):
     pathology_ai_answer_language: str = Field(default="en", min_length=2, max_length=32)
     pathology_ai_document_ids: list[str] = Field(default_factory=list, max_length=64)
 
+    cluster_annotation_backend: str = Field(default="auto")
+    cluster_annotation_llm_base_url: str | None = None
+    cluster_annotation_min_llm_confidence: float = Field(default=0.60, ge=0.0, le=1.0)
+    cluster_annotation_override_margin: float = Field(default=0.15, ge=0.0, le=1.0)
+    cluster_annotation_require_marker_overlap: bool = True
+
+    he_contour_foundation_enabled: bool = False
+    he_contour_geojson: Path | None = None
+    he_contour_key: str = Field(default="spatho_he_contours", min_length=1)
+    he_foundation_model_id: str = Field(default="vinid/plip", min_length=1)
+    he_foundation_prompt_set: str = Field(default="breast_contour_v1", min_length=1)
+    he_foundation_top_k: int = Field(default=5, ge=1, le=10)
+    he_foundation_max_patch_side_px: int = Field(default=1024, ge=128, le=4096)
+    he_visual_override_enabled: bool = True
+    he_visual_override_min_llm_confidence: float = Field(default=0.70, ge=0.0, le=1.0)
+    he_visual_override_min_foundation_score: float = Field(default=0.35, ge=0.0, le=1.0)
+
     differential_expression_csv: Path | None = None
     projection_csv: Path | None = None
 
@@ -84,6 +101,15 @@ class WorkflowConfig(BaseModel):
             raise ValueError(f"pathology_review_backend must be one of: {', '.join(sorted(supported))}")
         return normalized
 
+    @field_validator("cluster_annotation_backend")
+    @classmethod
+    def _validate_cluster_annotation_backend(cls, value: str) -> str:
+        supported = {"auto", "heuristic", "openai", "pathology_ai_api"}
+        normalized = str(value).strip()
+        if normalized not in supported:
+            raise ValueError(f"cluster_annotation_backend must be one of: {', '.join(sorted(supported))}")
+        return normalized
+
     @field_validator("dataset_modality")
     @classmethod
     def _validate_dataset_modality(cls, value: str) -> str:
@@ -122,6 +148,7 @@ class WorkflowConfig(BaseModel):
             "output_root",
             "differential_expression_csv",
             "projection_csv",
+            "he_contour_geojson",
         }
         for field_name in path_fields:
             if field_name in payload:
@@ -137,6 +164,12 @@ class WorkflowConfig(BaseModel):
             properties["annotation_taxonomy"]["enum"] = supported
         if "pathology_review_backend" in properties:
             properties["pathology_review_backend"]["enum"] = ["heuristic", "openai", "pathology_ai_api"]
+        if "cluster_annotation_backend" in properties:
+            properties["cluster_annotation_backend"]["enum"] = ["auto", "heuristic", "openai", "pathology_ai_api"]
+        if "he_foundation_model_id" in properties:
+            properties["he_foundation_model_id"]["enum"] = ["vinid/plip"]
+        if "he_foundation_prompt_set" in properties:
+            properties["he_foundation_prompt_set"]["enum"] = ["breast_contour_v1"]
         if "dataset_modality" in properties:
             properties["dataset_modality"]["enum"] = [DATASET_MODALITY_XENIUM_RNA_PROTEIN]
         if "canonical_space" in properties:

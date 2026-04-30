@@ -9,7 +9,11 @@ This document adds a parallel local deployment path for
 - `pathology_review_backend = "openai"` remains valid and unchanged.
 - `pathology_review_backend = "pathology_ai_api"` still points to an HTTP
   service at `pathology_ai_api_base_url`.
-- The public `spatho` workflow JSON schema does not need PDC-specific fields.
+- Cluster cell-type annotation can optionally use the same local service with
+  `cluster_annotation_backend = "pathology_ai_api"` and
+  `cluster_annotation_llm_base_url`.
+- The public `spatho` workflow JSON schema does not need PDC-specific fields;
+  the local annotation knobs are regular portable workflow fields.
 
 ## New local stack
 

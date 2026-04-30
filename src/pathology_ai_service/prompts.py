@@ -44,3 +44,79 @@ def build_review_messages(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
+
+
+def build_cluster_annotation_messages(
+    *,
+    case_name: str,
+    study_context: str,
+    annotation_taxonomy: str,
+    controlled_vocabulary: list[dict[str, Any]],
+    cluster_evidence: dict[str, Any],
+    heuristic_annotation: dict[str, Any],
+) -> list[dict[str, str]]:
+    payload = {
+        "case_name": case_name,
+        "study_context": study_context,
+        "annotation_taxonomy": annotation_taxonomy,
+        "controlled_vocabulary": controlled_vocabulary,
+        "heuristic_starting_point": heuristic_annotation,
+        "cluster_evidence": cluster_evidence,
+    }
+    user_prompt = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+    label_ids = [str(item.get("id")) for item in controlled_vocabulary if item.get("id")]
+    system_prompt = (
+        "You are a spatial transcriptomics cell-type annotation model running inside a private PDC deployment. "
+        "Choose the single best label_id for the cluster from the provided controlled vocabulary only. "
+        "Use the heuristic annotation as a starting point, but correct it when marker evidence supports another label. "
+        "Use only marker genes and cluster evidence supplied in the request. "
+        "Return valid JSON with exactly these keys: "
+        "label_id, confidence, review_priority, supporting_markers, conflicting_markers, "
+        "alternative_label_ids, reasoning_summary, tumor_evidence, recommended_follow_up. "
+        "confidence must be between 0 and 1. review_priority must be low, medium, or high. "
+        f"Allowed label_id values are: {', '.join(label_ids)}."
+    )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
+def build_structure_multimodal_naming_messages(
+    *,
+    case_name: str,
+    study_context: str,
+    annotation_taxonomy: str,
+    structure: dict[str, Any],
+    current_review: dict[str, Any],
+    he_visual_summary: dict[str, Any],
+    multimodal_evidence: dict[str, Any],
+    override_policy: dict[str, Any],
+) -> list[dict[str, str]]:
+    payload = {
+        "case_name": case_name,
+        "study_context": study_context,
+        "annotation_taxonomy": annotation_taxonomy,
+        "structure": structure,
+        "current_review": current_review,
+        "he_visual_summary": he_visual_summary,
+        "multimodal_evidence": multimodal_evidence,
+        "override_policy": override_policy,
+    }
+    user_prompt = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+    system_prompt = (
+        "You are a spatial pathology multimodal naming model running inside a private PDC deployment. "
+        "Name the spatial structure by integrating H&E contour foundation-model evidence with RNA, "
+        "cell-type composition, structure assignment, and pyXenium contour evidence. "
+        "You may set visual_override=true only when the H&E evidence strongly contradicts the current "
+        "name and is biologically more plausible than the molecular-only name. "
+        "Do not invent image findings that are not present in he_visual_summary. "
+        "Return valid JSON with exactly these keys: "
+        "structure_id, pre_visual_name, final_name, visual_override, confidence, review_priority, "
+        "reasoning_summary, visual_evidence, molecular_evidence, conflicts, recommended_checks. "
+        "confidence must be between 0 and 1. review_priority must be low, medium, or high."
+    )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]

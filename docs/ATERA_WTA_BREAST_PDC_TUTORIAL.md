@@ -15,10 +15,10 @@ The dataset copy contains `cell_feature_matrix.h5`, cell and nucleus boundary pa
 The workflow uses the PDC local `pathology-ai` API as the review backend:
 
 ```bash
-curl http://nid002802:8000/health
+curl http://nid002805:8000/health
 ```
 
-This run used Slurm job `20140027` on node `nid002802`; the captured health payload was:
+The completed multimodal run used Slurm job `20163548` on node `nid002805`. The service job later reached its intended 8-hour test limit, but the workflow artifacts below had already been written. The captured `/health` payload during the run was:
 
 ```{literalinclude} _static/tutorials/atera_wta_breast_pdc/pathology_ai_health.json
 :language: json
@@ -35,7 +35,7 @@ git checkout main
 git pull --ff-only origin main
 
 sbatch \
-  --export=ALL,PATHOLOGY_AI_BASE_URL=http://nid002802:8000 \
+  --export=ALL,PATHOLOGY_AI_BASE_URL=http://nid002805:8000 \
   deploy/pathology_ai/atera_wta_breast_pdc.sbatch
 ```
 
@@ -46,7 +46,7 @@ python scripts/pdc_atera_breast_workflow.py \
   --dataset-root /cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs \
   --run-root /cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429 \
   --sfplot-root /cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/deps/sfplot \
-  --pathology-ai-base-url http://nid002802:8000
+  --pathology-ai-base-url http://nid002805:8000
 ```
 
 ## Generated Inputs
@@ -67,16 +67,26 @@ The differential-expression table is a cluster-pseudobulk log2 fold-change appro
 
 ## AI-Driven Spatial Pathologist Run
 
-The workflow config uses the local backend and keeps OpenAI disabled for this run:
+The current workflow config uses the local backend and keeps OpenAI disabled:
 
 ```json
 {
   "annotation_taxonomy": "breast",
   "pathology_review_backend": "pathology_ai_api",
-  "pathology_ai_api_base_url": "http://nid002802:8000",
+  "pathology_ai_api_base_url": "http://nid002805:8000",
+  "cluster_annotation_backend": "pathology_ai_api",
+  "cluster_annotation_llm_base_url": "http://nid002805:8000",
+  "he_contour_foundation_enabled": true,
+  "he_foundation_model_id": "vinid/plip",
+  "he_foundation_prompt_set": "breast_contour_v1",
+  "he_visual_override_enabled": true,
   "openai_enabled": false
 }
 ```
+
+With `cluster_annotation_backend="pathology_ai_api"`, reruns write `cluster_celltype_annotation.csv` as a conservative consensus: marker-based heuristic labels are reviewed by the local PDC LLM, accepted only when the local model returns a valid controlled-vocabulary label with enough confidence and marker support. The paid OpenAI API is not used.
+
+With `he_contour_foundation_enabled=true`, the workflow follows the pyXenium RNA + contour + H&E pattern: it imports `xenium_explorer_annotations.generated.geojson`, extracts aligned masked H&E contour patches from `spatialdata.zarr/images/he`, classifies those patches locally through PLIP (`vinid/plip`), and asks the local PDC LLM to fuse visual evidence with RNA/cell-type structure evidence for final structure names. Accepted visual overrides are recorded explicitly rather than silently replacing the molecular-only labels.
 
 The readiness check is:
 
@@ -99,6 +109,48 @@ Selected overlays:
 ![H&E structure overlay](_static/tutorials/atera_wta_breast_pdc/spatho/he_structure_isoline_overlay.png)
 
 ![Spatial structure overlay](_static/tutorials/atera_wta_breast_pdc/spatho/spatial_structure_isoline_overlay.png)
+
+## Local LLM + H&E Foundation Results
+
+The real PDC run classified `2606` aligned H&E contour patches with the local PLIP pathology foundation model (`vinid/plip`) and wrote `2606` contour-level predictions. Those patch-level predictions were aggregated into `7` structure-level visual summaries. The local LLM then fused the PLIP visual evidence with RNA/cell-type/structure evidence for `4` downstream structure names.
+
+The key point is that PLIP is used as local visual evidence, not as an automatic label replacement. The local LLM checks whether the visual foundation-model signal agrees with, contradicts, or complements the molecular interpretation. In this run `accepted_visual_overrides=0`, which is the intended conservative behavior: no H&E-only signal was strong enough, and consistent enough with RNA/cell-type evidence, to replace the molecularly supported IDC or stroma labels.
+
+```{literalinclude} _static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_foundation_metadata.json
+:language: json
+```
+
+Structure-level PLIP aggregation:
+
+```{literalinclude} _static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_to_structure_summary.csv
+:language: text
+```
+
+Local LLM multimodal naming results:
+
+```{literalinclude} _static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/structure_multimodal_names.csv
+:language: text
+```
+
+Interpretation highlights:
+
+- `S1` kept `invasive ductal carcinoma [S1]`: PLIP flagged artifact/low-quality tissue as the top label, but also found invasive tumor epithelium and DCIS-like contours. The local LLM treated the artifact signal as tissue-quality context and retained the RNA-supported invasive carcinoma interpretation.
+- `S2` kept `reactive breast stroma`: PLIP's top visual label was macrophage-rich inflammation, while RNA/cell-type evidence was fibroblast, endothelial, and myofibroblast dominant. The LLM treated the visual inflammation signal as conflicting or secondary context rather than replacing the stromal label.
+- `S3` kept `invasive ductal carcinoma [S3]`: PLIP strongly highlighted macrophage-rich inflammation, but RNA evidence was dominated by neoplastic luminal epithelial and invasive carcinoma cells. The LLM interpreted the visual signal as tumor-associated inflammation within IDC.
+- `S4` kept `reactive breast stroma [S4]`: PLIP found macrophage/inflammation, vascular, fibrocollagenous, artifact, and necrosis signals, but the LLM confidence for a visual override stayed below threshold and molecular evidence favored a myoepithelial/stromal interpretation.
+
+The result is a complementary multimodal review: the foundation model contributes morphology and tissue-quality signals, while RNA/cell-type evidence preserves the primary biological identity. The local LLM acts as the adjudicator and records why visual evidence is accepted, rejected, or used as context.
+
+Committed lightweight result tables:
+
+- [full PLIP contour classification CSV](_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_classification.csv)
+- [full PLIP contour classification JSON](_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_classification.json)
+- [H&E contour-to-structure summary CSV](_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_to_structure_summary.csv)
+- [H&E contour-to-structure summary JSON](_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_to_structure_summary.json)
+- [local multimodal structure names CSV](_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/structure_multimodal_names.csv)
+- [local multimodal structure names JSON](_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/structure_multimodal_names.json)
+- [updated structure reviews CSV](_static/tutorials/atera_wta_breast_pdc/spatho/pathology_review/structure_reviews.csv)
+- [updated case summary JSON](_static/tutorials/atera_wta_breast_pdc/spatho/pathology_review/case_summary.json)
 
 ## pyXenium Core Results
 

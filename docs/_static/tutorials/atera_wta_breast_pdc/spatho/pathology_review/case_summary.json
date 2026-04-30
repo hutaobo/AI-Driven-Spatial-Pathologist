@@ -1,0 +1,18 @@
+{
+  "headline": "atera_wta_breast_pdc_20260429 contains 4 spatial pathology structures across 170045 cells.",
+  "overall_impression": "The dominant structure pattern is invasive ductal carcinoma [S1], reactive breast stroma [S2], invasive ductal carcinoma [S3]. Automated review suggests 1 high-priority structures for manual confirmation.",
+  "key_findings": [
+    "H&E contour foundation model reviewed structure names; no visual override met acceptance thresholds.",
+    "H&E contour foundation model reviewed structure names; no visual override met acceptance thresholds.",
+    "S1: S1 is most consistent with invasive ductal carcinoma [S1] (invasive). The region contains 93670 cells (55.1% of the case), with dominant support from Lymphocytes (T/B mixed),...",
+    "S2: S2 is most consistent with reactive breast stroma [S2] (stroma). The region contains 63285 cells (37.2% of the case), with dominant support from Fibroblasts / Stromal Cells,...",
+    "S3: S3 is most consistent with invasive ductal carcinoma [S3] (invasive). The region contains 11258 cells (6.6% of the case), with dominant support from ER-positive Luminal Tumor..."
+  ],
+  "review_priorities": [
+    "S4: reactive breast stroma [S4]"
+  ],
+  "discovery_candidates": [
+    "S4: reactive breast stroma [S4]"
+  ],
+  "engine": "heuristic"
+}

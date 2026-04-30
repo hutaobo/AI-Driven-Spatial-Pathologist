@@ -378,11 +378,14 @@ Important notes:
 Behavior:
 
 - uses the local `pathology-ai` service for structure-level and case-level pathology interpretation
-- cluster review remains heuristic
+- cluster cell-type annotation can also use local LLM refinement when `cluster_annotation_backend = "pathology_ai_api"`
+- without that explicit annotation backend, cluster review remains the existing heuristic/OpenAI path
 - merges textbook-grounded answers and citations into the structure and case results
 
 Current implementation path:
 
+- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\local_annotation.py`
+- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\pathology_ai_service\server.py`
 - `D:\GitHub\HistoSeg\src\histoseg\spatial_pathologist\pathology_ai_api.py`
 - `D:\GitHub\HistoSeg\src\histoseg\spatial_pathologist\runner.py`
 
@@ -390,6 +393,7 @@ Current assumptions:
 
 - service base URL defaults to `http://127.0.0.1:8000`
 - service exposes `/health`
+- cluster annotation requests use `/annotations/cluster`
 - review requests are phrased as pathology questions over a structure or whole-case evidence bundle
 
 This backend is the newest review path and should be considered an active development area.

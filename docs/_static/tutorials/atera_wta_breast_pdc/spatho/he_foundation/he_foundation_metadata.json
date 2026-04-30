@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "contour_geojson": "/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs/xenium_explorer_annotations.generated.geojson",
+  "contour_key": "atera_wta_breast_he_contours",
+  "model_id": "vinid/plip",
+  "prompt_set": "breast_contour_v1",
+  "top_k": 5,
+  "max_patch_side_px": 1024,
+  "patch_count": 2606,
+  "classification_count": 2606,
+  "classification_warnings": [],
+  "visual_override_enabled": true,
+  "visual_override_min_llm_confidence": 0.7,
+  "visual_override_min_foundation_score": 0.35,
+  "multimodal_naming_rerun_base_url": "http://127.0.0.1:8010",
+  "multimodal_naming_rerun_reason": "normalize local LLM evidence lists"
+}

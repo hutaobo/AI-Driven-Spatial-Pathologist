@@ -1,0 +1,387 @@
+[
+  {
+    "structure_id": 1,
+    "structure_name": "11q13 Invasive Tumor Cells",
+    "n_contours": 136,
+    "n_classified": 136,
+    "example_contours": [
+      "S1 11q13 Invasive Tumor Cells #1.1",
+      "S1 11q13 Invasive Tumor Cells #2.1",
+      "S1 11q13 Invasive Tumor Cells #3.1",
+      "S1 11q13 Invasive Tumor Cells #4.1",
+      "S1 11q13 Invasive Tumor Cells #5.1",
+      "S1 11q13 Invasive Tumor Cells #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 82,
+        "mean_score": 0.34652924849424604,
+        "max_score": 0.8685594797134399
+      },
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 131,
+        "mean_score": 0.32548482953535235,
+        "max_score": 0.9525430798530579
+      },
+      {
+        "label_id": "dcis_or_ductal_tumor",
+        "label": "Ductal carcinoma in situ or ductal tumor",
+        "contour_count": 54,
+        "mean_score": 0.1819703367245556,
+        "max_score": 0.5444559454917908
+      },
+      {
+        "label_id": "invasive_tumor_epithelium",
+        "label": "Invasive tumor epithelium",
+        "contour_count": 57,
+        "mean_score": 0.17000476189219116,
+        "max_score": 0.5119240283966064
+      },
+      {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "contour_count": 72,
+        "mean_score": 0.15550945124899349,
+        "max_score": 0.45895981788635254
+      }
+    ],
+    "top_label_id": "artifact_low_quality",
+    "top_label": "Artifact or low-quality tissue",
+    "top_mean_score": 0.34652924849424604,
+    "top_max_score": 0.8685594797134399
+  },
+  {
+    "structure_id": 2,
+    "structure_name": "Basal-like Structured DCIS Cells",
+    "n_contours": 548,
+    "n_classified": 548,
+    "example_contours": [
+      "S2 Basal-like Structured DCIS Cells #1.1",
+      "S2 Basal-like Structured DCIS Cells #2.1",
+      "S2 Basal-like Structured DCIS Cells #3.1",
+      "S2 Basal-like Structured DCIS Cells #4.1",
+      "S2 Basal-like Structured DCIS Cells #5.1",
+      "S2 Basal-like Structured DCIS Cells #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 516,
+        "mean_score": 0.32113183564109393,
+        "max_score": 0.9507338404655457
+      },
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 452,
+        "mean_score": 0.2935638413476074,
+        "max_score": 0.8591423034667969
+      },
+      {
+        "label_id": "invasive_tumor_epithelium",
+        "label": "Invasive tumor epithelium",
+        "contour_count": 129,
+        "mean_score": 0.14171397872269154,
+        "max_score": 0.49712949991226196
+      },
+      {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "contour_count": 336,
+        "mean_score": 0.14060028432729832,
+        "max_score": 0.46402403712272644
+      },
+      {
+        "label_id": "vascular_region",
+        "label": "Vascular or endothelial region",
+        "contour_count": 391,
+        "mean_score": 0.12796525352293878,
+        "max_score": 0.6157298684120178
+      }
+    ],
+    "top_label_id": "macrophage_inflammation",
+    "top_label": "Macrophage-rich inflammation",
+    "top_mean_score": 0.32113183564109393,
+    "top_max_score": 0.9507338404655457
+  },
+  {
+    "structure_id": 3,
+    "structure_name": "Macrophages",
+    "n_contours": 695,
+    "n_classified": 695,
+    "example_contours": [
+      "S3 Macrophages #1.1",
+      "S3 Macrophages #2.1",
+      "S3 Macrophages #3.1",
+      "S3 Macrophages #4.1",
+      "S3 Macrophages #5.1",
+      "S3 Macrophages #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 639,
+        "mean_score": 0.31556032766793535,
+        "max_score": 0.9596852660179138
+      },
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 561,
+        "mean_score": 0.2320593531673472,
+        "max_score": 0.857221782207489
+      },
+      {
+        "label_id": "vascular_region",
+        "label": "Vascular or endothelial region",
+        "contour_count": 539,
+        "mean_score": 0.1988691238035035,
+        "max_score": 0.7634395360946655
+      },
+      {
+        "label_id": "fibrocollagenous_stroma",
+        "label": "Fibrocollagenous or desmoplastic stroma",
+        "contour_count": 429,
+        "mean_score": 0.17781993087233502,
+        "max_score": 0.9401921629905701
+      },
+      {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "contour_count": 406,
+        "mean_score": 0.14190508644991173,
+        "max_score": 0.7174577713012695
+      }
+    ],
+    "top_label_id": "macrophage_inflammation",
+    "top_label": "Macrophage-rich inflammation",
+    "top_mean_score": 0.31556032766793535,
+    "top_max_score": 0.9596852660179138
+  },
+  {
+    "structure_id": 4,
+    "structure_name": "Plasma Cells",
+    "n_contours": 353,
+    "n_classified": 353,
+    "example_contours": [
+      "S4 Plasma Cells #1.1",
+      "S4 Plasma Cells #2.1",
+      "S4 Plasma Cells #3.1",
+      "S4 Plasma Cells #4.1",
+      "S4 Plasma Cells #5.1",
+      "S4 Plasma Cells #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 341,
+        "mean_score": 0.4486155729915652,
+        "max_score": 0.9617540240287781
+      },
+      {
+        "label_id": "vascular_region",
+        "label": "Vascular or endothelial region",
+        "contour_count": 333,
+        "mean_score": 0.2068247582655758,
+        "max_score": 0.8306549191474915
+      },
+      {
+        "label_id": "fibrocollagenous_stroma",
+        "label": "Fibrocollagenous or desmoplastic stroma",
+        "contour_count": 158,
+        "mean_score": 0.1407409678802743,
+        "max_score": 0.7920061945915222
+      },
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 275,
+        "mean_score": 0.13010974021374502,
+        "max_score": 0.7871575951576233
+      },
+      {
+        "label_id": "necrosis_debris",
+        "label": "Necrosis or debris",
+        "contour_count": 324,
+        "mean_score": 0.10199108183740374,
+        "max_score": 0.5879630446434021
+      }
+    ],
+    "top_label_id": "macrophage_inflammation",
+    "top_label": "Macrophage-rich inflammation",
+    "top_mean_score": 0.4486155729915652,
+    "top_max_score": 0.9617540240287781
+  },
+  {
+    "structure_id": 5,
+    "structure_name": "Endothelial Cells",
+    "n_contours": 735,
+    "n_classified": 735,
+    "example_contours": [
+      "S5 Endothelial Cells #1.1",
+      "S5 Endothelial Cells #2.1",
+      "S5 Endothelial Cells #3.1",
+      "S5 Endothelial Cells #4.1",
+      "S5 Endothelial Cells #5.1",
+      "S5 Endothelial Cells #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 669,
+        "mean_score": 0.286686747278517,
+        "max_score": 0.9435091614723206
+      },
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 529,
+        "mean_score": 0.2491795973295948,
+        "max_score": 0.7932630181312561
+      },
+      {
+        "label_id": "fibrocollagenous_stroma",
+        "label": "Fibrocollagenous or desmoplastic stroma",
+        "contour_count": 491,
+        "mean_score": 0.21493188439168476,
+        "max_score": 0.9354937672615051
+      },
+      {
+        "label_id": "vascular_region",
+        "label": "Vascular or endothelial region",
+        "contour_count": 579,
+        "mean_score": 0.1881815644659887,
+        "max_score": 0.7514576315879822
+      },
+      {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "contour_count": 488,
+        "mean_score": 0.1370952495938686,
+        "max_score": 0.4735677242279053
+      }
+    ],
+    "top_label_id": "macrophage_inflammation",
+    "top_label": "Macrophage-rich inflammation",
+    "top_mean_score": 0.286686747278517,
+    "top_max_score": 0.9435091614723206
+  },
+  {
+    "structure_id": 6,
+    "structure_name": "Apocrine Cells",
+    "n_contours": 18,
+    "n_classified": 18,
+    "example_contours": [
+      "S6 Apocrine Cells #1.1",
+      "S6 Apocrine Cells #2.1",
+      "S6 Apocrine Cells #3.1",
+      "S6 Apocrine Cells #4.1",
+      "S6 Apocrine Cells #5.1",
+      "S6 Apocrine Cells #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 12,
+        "mean_score": 0.32160715758800507,
+        "max_score": 0.6824164390563965
+      },
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 15,
+        "mean_score": 0.31625122874975203,
+        "max_score": 0.6166321635246277
+      },
+      {
+        "label_id": "dcis_or_ductal_tumor",
+        "label": "Ductal carcinoma in situ or ductal tumor",
+        "contour_count": 7,
+        "mean_score": 0.2506054501448359,
+        "max_score": 0.5322713255882263
+      },
+      {
+        "label_id": "benign_luminal_epithelium",
+        "label": "Benign or luminal glandular epithelium",
+        "contour_count": 5,
+        "mean_score": 0.1607707504183054,
+        "max_score": 0.28538069128990173
+      },
+      {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "contour_count": 15,
+        "mean_score": 0.12592884314556915,
+        "max_score": 0.40133136510849
+      }
+    ],
+    "top_label_id": "artifact_low_quality",
+    "top_label": "Artifact or low-quality tissue",
+    "top_mean_score": 0.32160715758800507,
+    "top_max_score": 0.6824164390563965
+  },
+  {
+    "structure_id": 7,
+    "structure_name": "Luminal-like Amorphous DCIS Cells",
+    "n_contours": 121,
+    "n_classified": 121,
+    "example_contours": [
+      "S7 Luminal-like Amorphous DCIS Cells #1.1",
+      "S7 Luminal-like Amorphous DCIS Cells #2.1",
+      "S7 Luminal-like Amorphous DCIS Cells #3.1",
+      "S7 Luminal-like Amorphous DCIS Cells #4.1",
+      "S7 Luminal-like Amorphous DCIS Cells #5.1",
+      "S7 Luminal-like Amorphous DCIS Cells #6.1"
+    ],
+    "top_visual_labels": [
+      {
+        "label_id": "artifact_low_quality",
+        "label": "Artifact or low-quality tissue",
+        "contour_count": 81,
+        "mean_score": 0.3517597055085647,
+        "max_score": 0.7643370032310486
+      },
+      {
+        "label_id": "macrophage_inflammation",
+        "label": "Macrophage-rich inflammation",
+        "contour_count": 117,
+        "mean_score": 0.31505462204098195,
+        "max_score": 0.8795245885848999
+      },
+      {
+        "label_id": "adipose_or_empty",
+        "label": "Adipose or low-cellularity tissue",
+        "contour_count": 75,
+        "mean_score": 0.1661757384178539,
+        "max_score": 0.4038122296333313
+      },
+      {
+        "label_id": "vascular_region",
+        "label": "Vascular or endothelial region",
+        "contour_count": 70,
+        "mean_score": 0.11344945079513959,
+        "max_score": 0.6047515273094177
+      },
+      {
+        "label_id": "invasive_tumor_epithelium",
+        "label": "Invasive tumor epithelium",
+        "contour_count": 35,
+        "mean_score": 0.11299589797854423,
+        "max_score": 0.3345315158367157
+      }
+    ],
+    "top_label_id": "artifact_low_quality",
+    "top_label": "Artifact or low-quality tissue",
+    "top_mean_score": 0.3517597055085647,
+    "top_max_score": 0.7643370032310486
+  }
+]

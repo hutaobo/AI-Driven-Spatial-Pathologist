@@ -110,9 +110,13 @@ Use the local backend when pathology review should call a self-hosted service in
 ```json
 {
   "pathology_review_backend": "pathology_ai_api",
-  "pathology_ai_api_base_url": "http://localhost:8000"
+  "pathology_ai_api_base_url": "http://localhost:8000",
+  "cluster_annotation_backend": "pathology_ai_api",
+  "cluster_annotation_llm_base_url": "http://localhost:8000"
 }
 ```
+
+`cluster_annotation_backend="pathology_ai_api"` is optional. When enabled, Spatial Pathologist first builds the marker-based heuristic cluster labels, then asks the local LLM to review every cluster and writes a conservative consensus `cluster_celltype_annotation.csv`. OpenAI-backed annotation remains available through the existing OpenAI path.
 
 The local stack consists of:
 

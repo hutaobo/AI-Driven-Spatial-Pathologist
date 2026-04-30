@@ -13,6 +13,8 @@ from histoseg.spatial_pathologist.full_auto import (
     run_full_auto_spatial_pathologist,
 )
 
+from .he_foundation import apply_he_contour_foundation, resolve_contour_geojson
+from .local_annotation import run_workflow_with_local_cluster_annotation
 from .manifest import write_artifact_manifest
 from .organ_packs import get_organ_pack, list_organ_packs
 from .schema import export_workflow_schema, validate_workflow_config
@@ -23,16 +25,27 @@ from .xenium import DEFAULT_XENIUM_PIXEL_SIZE_UM, write_xenium_rna_protein_align
 def run_workflow(config_path: str | Path, *, heuristic_only: bool = False) -> dict[str, str]:
     config_model = validate_workflow_config(config_path)
     if heuristic_only:
-        config_model = config_model.model_copy(update={"openai_enabled": False})
-    cfg = load_full_auto_spatial_pathologist_config(Path(config_path).resolve())
-    if heuristic_only:
-        cfg = type(cfg)(
-            **{
-                **cfg.__dict__,
+        config_model = config_model.model_copy(
+            update={
                 "openai_enabled": False,
+                "cluster_annotation_backend": "heuristic",
+                "pathology_review_backend": "heuristic",
             }
         )
-    result = run_full_auto_spatial_pathologist(cfg)
+    if config_model.cluster_annotation_backend == "pathology_ai_api":
+        result = run_workflow_with_local_cluster_annotation(config_model)
+    else:
+        cfg = load_full_auto_spatial_pathologist_config(Path(config_path).resolve())
+        if heuristic_only or config_model.cluster_annotation_backend == "heuristic":
+            cfg = type(cfg)(
+                **{
+                    **cfg.__dict__,
+                    "openai_enabled": False,
+                }
+            )
+        result = run_full_auto_spatial_pathologist(cfg)
+    if config_model.he_contour_foundation_enabled:
+        result = apply_he_contour_foundation(config_model, result)
     manifest_path = write_artifact_manifest(
         workflow_config=config_model,
         workflow_summary_path=result["workflow_summary_json"],
@@ -41,6 +54,25 @@ def run_workflow(config_path: str | Path, *, heuristic_only: bool = False) -> di
         **result,
         "artifact_manifest_json": str(manifest_path),
     }
+
+
+def _pathology_ai_health_report(base_url: str) -> dict[str, Any]:
+    req = request.Request(
+        url=base_url.rstrip("/") + "/health",
+        headers={"Accept": "application/json"},
+        method="GET",
+    )
+    with request.urlopen(req, timeout=5) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise json.JSONDecodeError("Expected JSON object", doc=str(payload), pos=0)
+    return payload
+
+
+def _health_ready(payload: dict[str, Any]) -> bool:
+    if "ready" in payload:
+        return payload.get("ready") is True
+    return bool(payload.get("ok"))
 
 
 def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, Any]:
@@ -85,6 +117,21 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "pathology_ai_top_k": cfg.pathology_ai_top_k,
                 "pathology_ai_answer_language": cfg.pathology_ai_answer_language,
                 "pathology_ai_document_ids": cfg.pathology_ai_document_ids,
+                "cluster_annotation_backend": cfg.cluster_annotation_backend,
+                "cluster_annotation_llm_base_url": cfg.cluster_annotation_llm_base_url,
+                "cluster_annotation_min_llm_confidence": cfg.cluster_annotation_min_llm_confidence,
+                "cluster_annotation_override_margin": cfg.cluster_annotation_override_margin,
+                "cluster_annotation_require_marker_overlap": cfg.cluster_annotation_require_marker_overlap,
+                "he_contour_foundation_enabled": cfg.he_contour_foundation_enabled,
+                "he_contour_geojson": str(cfg.he_contour_geojson) if cfg.he_contour_geojson else None,
+                "he_contour_key": cfg.he_contour_key,
+                "he_foundation_model_id": cfg.he_foundation_model_id,
+                "he_foundation_prompt_set": cfg.he_foundation_prompt_set,
+                "he_foundation_top_k": cfg.he_foundation_top_k,
+                "he_foundation_max_patch_side_px": cfg.he_foundation_max_patch_side_px,
+                "he_visual_override_enabled": cfg.he_visual_override_enabled,
+                "he_visual_override_min_llm_confidence": cfg.he_visual_override_min_llm_confidence,
+                "he_visual_override_min_foundation_score": cfg.he_visual_override_min_foundation_score,
                 "schema_valid": True,
                 "organ_pack": pack.to_dict(),
                 "base_pipeline_config": str(cfg.base_pipeline_config),
@@ -105,15 +152,40 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
         )
         if cfg.pathology_review_backend == "pathology_ai_api":
             try:
-                req = request.Request(
-                    url=str(cfg.pathology_ai_api_base_url).rstrip("/") + "/health",
-                    headers={"Accept": "application/json"},
-                    method="GET",
-                )
-                with request.urlopen(req, timeout=5) as response:
-                    report["pathology_ai_api_health"] = json.loads(response.read().decode("utf-8"))
+                health = _pathology_ai_health_report(str(cfg.pathology_ai_api_base_url))
+                report["pathology_ai_api_health"] = health
+                if not _health_ready(health):
+                    issues.append("pathology-ai API health check did not report ready=true.")
             except (error.URLError, json.JSONDecodeError, TimeoutError) as exc:
                 issues.append(f"pathology-ai API health check failed: {exc}")
+        if cfg.cluster_annotation_backend == "pathology_ai_api":
+            annotation_base_url = cfg.cluster_annotation_llm_base_url or cfg.pathology_ai_api_base_url
+            try:
+                health = _pathology_ai_health_report(str(annotation_base_url))
+                report["cluster_annotation_api_health"] = health
+                if not _health_ready(health):
+                    issues.append("Local cluster annotation API health check did not report ready=true.")
+            except (error.URLError, json.JSONDecodeError, TimeoutError) as exc:
+                issues.append(f"Local cluster annotation API health check failed: {exc}")
+        if cfg.he_contour_foundation_enabled:
+            try:
+                base_payload = json.loads(cfg.base_pipeline_config.read_text(encoding="utf-8"))
+                base_dir = cfg.base_pipeline_config.parent
+                base_cfg = {
+                    key: (base_dir / value).resolve() if key.endswith("_dir") or key.endswith("_root") or key.endswith("_csv") or key.endswith("_tif") or key.endswith("_json") else value
+                    for key, value in base_payload.items()
+                }
+                contour_geojson = resolve_contour_geojson(cfg, base_cfg)
+                report["he_contour_geojson_resolved"] = str(contour_geojson)
+            except Exception as exc:
+                issues.append(f"H&E contour GeoJSON check failed: {exc}")
+            try:
+                health = _pathology_ai_health_report(str(cfg.pathology_ai_api_base_url))
+                report["he_foundation_api_health"] = health
+                if not _health_ready(health):
+                    issues.append("pathology-ai API health check for H&E foundation mode did not report ready=true.")
+            except (error.URLError, json.JSONDecodeError, TimeoutError) as exc:
+                issues.append(f"pathology-ai API health check for H&E foundation mode failed: {exc}")
     report["issues"] = issues
     report["ready_to_run"] = not issues
     return report

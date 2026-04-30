@@ -10,6 +10,21 @@
   "pathology_ai_top_k": 6,
   "pathology_ai_answer_language": "en",
   "pathology_ai_document_ids": [],
+  "cluster_annotation_backend": "pathology_ai_api",
+  "cluster_annotation_llm_base_url": "http://127.0.0.1:8000",
+  "cluster_annotation_min_llm_confidence": 0.6,
+  "cluster_annotation_override_margin": 0.15,
+  "cluster_annotation_require_marker_overlap": true,
+  "he_contour_foundation_enabled": true,
+  "he_contour_geojson": "/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs/xenium_explorer_annotations.generated.geojson",
+  "he_contour_key": "atera_wta_breast_he_contours",
+  "he_foundation_model_id": "vinid/plip",
+  "he_foundation_prompt_set": "breast_contour_v1",
+  "he_foundation_top_k": 5,
+  "he_foundation_max_patch_side_px": 1024,
+  "he_visual_override_enabled": true,
+  "he_visual_override_min_llm_confidence": 0.7,
+  "he_visual_override_min_foundation_score": 0.35,
   "schema_valid": true,
   "organ_pack": {
     "id": "breast",
@@ -61,6 +76,85 @@
   "openai_enabled": false,
   "openai_model": "gpt-5.4",
   "pathology_ai_api_health": {
+    "service": "pathology-ai",
+    "ready": true,
+    "settings": {
+      "host": "0.0.0.0",
+      "port": 8000,
+      "llm_base_url": "http://127.0.0.1:8001/v1",
+      "llm_model": "openai/gpt-oss-120b",
+      "embed_base_url": "http://127.0.0.1:8002",
+      "embed_model": "BAAI/bge-m3",
+      "rerank_base_url": "http://127.0.0.1:8003",
+      "rerank_model": "BAAI/bge-reranker-v2-m3",
+      "vector_db": "qdrant",
+      "qdrant_base_url": "http://127.0.0.1:6333",
+      "qdrant_collection": "pathology_reference",
+      "default_top_k": 6,
+      "strict_json": true,
+      "max_chunk_chars": 1200,
+      "chunk_overlap_chars": 120
+    },
+    "components": {
+      "llm": {
+        "ok": true,
+        "models": [
+          "openai/gpt-oss-120b"
+        ]
+      },
+      "embedder": {
+        "ok": true
+      },
+      "reranker": {
+        "ok": true
+      },
+      "vector_store": {
+        "ok": true,
+        "collections": []
+      }
+    }
+  },
+  "cluster_annotation_api_health": {
+    "service": "pathology-ai",
+    "ready": true,
+    "settings": {
+      "host": "0.0.0.0",
+      "port": 8000,
+      "llm_base_url": "http://127.0.0.1:8001/v1",
+      "llm_model": "openai/gpt-oss-120b",
+      "embed_base_url": "http://127.0.0.1:8002",
+      "embed_model": "BAAI/bge-m3",
+      "rerank_base_url": "http://127.0.0.1:8003",
+      "rerank_model": "BAAI/bge-reranker-v2-m3",
+      "vector_db": "qdrant",
+      "qdrant_base_url": "http://127.0.0.1:6333",
+      "qdrant_collection": "pathology_reference",
+      "default_top_k": 6,
+      "strict_json": true,
+      "max_chunk_chars": 1200,
+      "chunk_overlap_chars": 120
+    },
+    "components": {
+      "llm": {
+        "ok": true,
+        "models": [
+          "openai/gpt-oss-120b"
+        ]
+      },
+      "embedder": {
+        "ok": true
+      },
+      "reranker": {
+        "ok": true
+      },
+      "vector_store": {
+        "ok": true,
+        "collections": []
+      }
+    }
+  },
+  "he_contour_geojson_resolved": "/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs/xenium_explorer_annotations.generated.geojson",
+  "he_foundation_api_health": {
     "service": "pathology-ai",
     "ready": true,
     "settings": {

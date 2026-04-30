@@ -40,7 +40,7 @@ source "${VENV_DIR}/bin/activate"
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install --upgrade \
   numpy scipy pandas pyarrow h5py zarr numcodecs tifffile imagecodecs \
-  scikit-image scikit-learn matplotlib seaborn statsmodels scanpy shapely \
+  pillow scikit-image scikit-learn matplotlib seaborn statsmodels scanpy shapely \
   fsspec requests pyyaml aiohttp click
 python -m pip install --editable "${PYXENIUM_DIR}"
 python -m pip install --editable "${REPO_DIR}"

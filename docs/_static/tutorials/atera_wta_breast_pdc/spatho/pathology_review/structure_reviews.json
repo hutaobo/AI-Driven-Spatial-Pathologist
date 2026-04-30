@@ -1,0 +1,567 @@
+[
+  {
+    "structure_id": 1,
+    "title": "S1 invasive ductal carcinoma [S1]",
+    "assigned_label": "invasive ductal carcinoma [S1]",
+    "behavior": "invasive",
+    "confidence": 0.902,
+    "review_priority": "low",
+    "discovery_flag": false,
+    "summary": "The H&E foundation model flags a large proportion of the region as \"Artifact or low-quality tissue\" (82 contours, max score 0.87) and also identifies macrophage‑rich inflammation, ductal carcinoma in situ/ductal tumor, and invasive tumor epithelium. While the artifact label dominates, the presence of invasive tumor epithelium (57 contours) and DCIS‑like patterns (54 contours) indicates genuine neoplastic tissue amidst inflammation and some tissue degradation. Molecular evidence from the Xenium WTA data strongly supports an invasive breast carcinoma diagnosis: the top multimodal candidate is \"invasive ductal carcinoma\" with a total score of 0.805, anchored by neoplastic luminal epithelial cells (14.1%) and secretory luminal tumor cells (7.2%). The composition is dominated by lymphocytes (≈64%) and a measurable invasive carcinoma cell fraction (5.3%). Because the molecular signature is consistent with IDC and the visual tumor signals, the visual evidence does not outweigh the molecular diagnosis, so no visual override is applied.\n\nPrevious molecular-only summary: S1 is most consistent with invasive ductal carcinoma [S1] (invasive). The region contains 93670 cells (55.1% of the case), with dominant support from Lymphocytes (T/B mixed), Lymphocytes (T/B mixed), Secretory Luminal Tumor Cells.",
+    "top_celltype_summary": "t cell (35.9%), b cell (22.9%), neoplastic luminal epithelial cell (14.1%), secretory luminal epithelial cell (7.2%), plasma cell (6.5%)",
+    "top_clusters": [
+      {
+        "cluster_id": 1,
+        "label": "Lymphocytes (T/B mixed)",
+        "cell_count": 19537,
+        "fraction_of_structure": 0.20857264866019004
+      },
+      {
+        "cluster_id": 2,
+        "label": "Lymphocytes (T/B mixed)",
+        "cell_count": 16594,
+        "fraction_of_structure": 0.17715383794171025
+      },
+      {
+        "cluster_id": 7,
+        "label": "Secretory Luminal Tumor Cells",
+        "cell_count": 7970,
+        "fraction_of_structure": 0.08508594000213515
+      }
+    ],
+    "differential": [
+      "reactive breast stroma",
+      "basal-like invasive carcinoma",
+      "ductal carcinoma in situ"
+    ],
+    "key_evidence": [
+      "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 82, \"max_score\": 0.8686, \"mean_score\": 0.3465}",
+      "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 131, \"max_score\": 0.9525, \"mean_score\": 0.3255}",
+      "{\"label\": \"Ductal carcinoma in situ or ductal tumor\", \"label_id\": \"dcis_or_ductal_tumor\", \"contour_count\": 54, \"max_score\": 0.5445, \"mean_score\": 0.182}",
+      "{\"label\": \"Invasive tumor epithelium\", \"label_id\": \"invasive_tumor_epithelium\", \"contour_count\": 57, \"max_score\": 0.5119, \"mean_score\": 0.17}",
+      "{\"label\": \"Adipose or low-cellularity tissue\", \"label_id\": \"adipose_or_empty\", \"contour_count\": 72, \"max_score\": 0.459, \"mean_score\": 0.1555}",
+      "{\"candidate_label\": \"invasive ductal carcinoma\", \"disease_label\": \"invasive ductal carcinoma of no special type\", \"behavior\": \"invasive\", \"score_breakdown\": {\"total_score\": 0.8054, \"anchor_coverage\": 1.0, \"origin_prior\": 0.7965, \"sim_comp\": 0.5479, \"sim_tfidf\": 0.6999, \"must_have_coverage\": 0.0532}, \"cell_type_fractions\": {\"neoplastic luminal epithelial cell\": 0.1412, \"secretory luminal epithelial cell\": 0.0716, \"invasive carcinoma cell\": 0.0532, \"t cell\": 0.3592, \"b cell\": 0.2286, \"macrophage\": 0.0496, \"plasma cell\": 0.0653, \"myoepithelial cell\": 0.0089, \"proliferating epithelial cell\": 0.0223}}",
+      "Rule-based score total: 0.805",
+      "Winner margin: 1.124",
+      "Top harmonized cell types: t cell (35.9%), b cell (22.9%), neoplastic luminal epithelial cell (14.1%), secretory luminal epithelial cell (7.2%), plasma cell (6.5%)",
+      "Polygon count: 80"
+    ],
+    "recommended_checks": [
+      "Review the H&E slide for tissue preservation artifacts; consider re‑section or deeper section if quality is poor.",
+      "Corroborate the IDC diagnosis with immunohistochemistry (e.g., ER, PR, HER2, Ki‑67) especially given high inflammatory background.",
+      "If possible, obtain a higher‑resolution pyXenium or spatial transcriptomics spot to confirm the spatial relationship of tumor cells versus inflammatory infiltrate."
+    ],
+    "engine": "heuristic",
+    "he_foundation_visual_summary": {
+      "structure_id": 1,
+      "structure_name": "11q13 Invasive Tumor Cells",
+      "n_contours": 136,
+      "n_classified": 136,
+      "example_contours": [
+        "S1 11q13 Invasive Tumor Cells #1.1",
+        "S1 11q13 Invasive Tumor Cells #2.1",
+        "S1 11q13 Invasive Tumor Cells #3.1",
+        "S1 11q13 Invasive Tumor Cells #4.1",
+        "S1 11q13 Invasive Tumor Cells #5.1",
+        "S1 11q13 Invasive Tumor Cells #6.1"
+      ],
+      "top_visual_labels": [
+        {
+          "label_id": "artifact_low_quality",
+          "label": "Artifact or low-quality tissue",
+          "contour_count": 82,
+          "mean_score": 0.34652924849424604,
+          "max_score": 0.8685594797134399
+        },
+        {
+          "label_id": "macrophage_inflammation",
+          "label": "Macrophage-rich inflammation",
+          "contour_count": 131,
+          "mean_score": 0.32548482953535235,
+          "max_score": 0.9525430798530579
+        },
+        {
+          "label_id": "dcis_or_ductal_tumor",
+          "label": "Ductal carcinoma in situ or ductal tumor",
+          "contour_count": 54,
+          "mean_score": 0.1819703367245556,
+          "max_score": 0.5444559454917908
+        },
+        {
+          "label_id": "invasive_tumor_epithelium",
+          "label": "Invasive tumor epithelium",
+          "contour_count": 57,
+          "mean_score": 0.17000476189219116,
+          "max_score": 0.5119240283966064
+        },
+        {
+          "label_id": "adipose_or_empty",
+          "label": "Adipose or low-cellularity tissue",
+          "contour_count": 72,
+          "mean_score": 0.15550945124899349,
+          "max_score": 0.45895981788635254
+        }
+      ],
+      "top_label_id": "artifact_low_quality",
+      "top_label": "Artifact or low-quality tissue",
+      "top_mean_score": 0.34652924849424604,
+      "top_max_score": 0.8685594797134399
+    },
+    "he_multimodal_naming": {
+      "structure_id": 1,
+      "pre_visual_name": "S1 invasive ductal carcinoma [S1]",
+      "final_name": "invasive ductal carcinoma [S1]",
+      "visual_override": false,
+      "confidence": 0.89,
+      "review_priority": "low",
+      "reasoning_summary": "The H&E foundation model flags a large proportion of the region as \"Artifact or low-quality tissue\" (82 contours, max score 0.87) and also identifies macrophage‑rich inflammation, ductal carcinoma in situ/ductal tumor, and invasive tumor epithelium. While the artifact label dominates, the presence of invasive tumor epithelium (57 contours) and DCIS‑like patterns (54 contours) indicates genuine neoplastic tissue amidst inflammation and some tissue degradation. Molecular evidence from the Xenium WTA data strongly supports an invasive breast carcinoma diagnosis: the top multimodal candidate is \"invasive ductal carcinoma\" with a total score of 0.805, anchored by neoplastic luminal epithelial cells (14.1%) and secretory luminal tumor cells (7.2%). The composition is dominated by lymphocytes (≈64%) and a measurable invasive carcinoma cell fraction (5.3%). Because the molecular signature is consistent with IDC and the visual tumor signals, the visual evidence does not outweigh the molecular diagnosis, so no visual override is applied.",
+      "visual_evidence": [
+        "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 82, \"max_score\": 0.8686, \"mean_score\": 0.3465}",
+        "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 131, \"max_score\": 0.9525, \"mean_score\": 0.3255}",
+        "{\"label\": \"Ductal carcinoma in situ or ductal tumor\", \"label_id\": \"dcis_or_ductal_tumor\", \"contour_count\": 54, \"max_score\": 0.5445, \"mean_score\": 0.182}",
+        "{\"label\": \"Invasive tumor epithelium\", \"label_id\": \"invasive_tumor_epithelium\", \"contour_count\": 57, \"max_score\": 0.5119, \"mean_score\": 0.17}",
+        "{\"label\": \"Adipose or low-cellularity tissue\", \"label_id\": \"adipose_or_empty\", \"contour_count\": 72, \"max_score\": 0.459, \"mean_score\": 0.1555}"
+      ],
+      "molecular_evidence": [
+        "{\"candidate_label\": \"invasive ductal carcinoma\", \"disease_label\": \"invasive ductal carcinoma of no special type\", \"behavior\": \"invasive\", \"score_breakdown\": {\"total_score\": 0.8054, \"anchor_coverage\": 1.0, \"origin_prior\": 0.7965, \"sim_comp\": 0.5479, \"sim_tfidf\": 0.6999, \"must_have_coverage\": 0.0532}, \"cell_type_fractions\": {\"neoplastic luminal epithelial cell\": 0.1412, \"secretory luminal epithelial cell\": 0.0716, \"invasive carcinoma cell\": 0.0532, \"t cell\": 0.3592, \"b cell\": 0.2286, \"macrophage\": 0.0496, \"plasma cell\": 0.0653, \"myoepithelial cell\": 0.0089, \"proliferating epithelial cell\": 0.0223}}"
+      ],
+      "conflicts": [
+        "H&E model labels the majority of contours as artifact/low-quality, which conflicts with the molecular detection of neoplastic epithelial cells.",
+        "Macrophage‑rich inflammation dominates visually, but molecular data still shows a clear invasive carcinoma signature."
+      ],
+      "recommended_checks": [
+        "Review the H&E slide for tissue preservation artifacts; consider re‑section or deeper section if quality is poor.",
+        "Corroborate the IDC diagnosis with immunohistochemistry (e.g., ER, PR, HER2, Ki‑67) especially given high inflammatory background.",
+        "If possible, obtain a higher‑resolution pyXenium or spatial transcriptomics spot to confirm the spatial relationship of tumor cells versus inflammatory infiltrate."
+      ],
+      "accepted_visual_override": false,
+      "foundation_top_score": 0.8685594797134399
+    }
+  },
+  {
+    "structure_id": 2,
+    "title": "S2 reactive breast stroma [S2]",
+    "assigned_label": "reactive breast stroma [S2]",
+    "behavior": "stroma",
+    "confidence": 0.99,
+    "review_priority": "low",
+    "discovery_flag": false,
+    "summary": "The H&E foundation model assigns the region a top visual label of \"Macrophage‑rich inflammation\" with a high foundation score (0.95). However, the molecular (10x Xenium) evidence shows a composition dominated by fibroblasts (≈40%), endothelial cells (≈27%) and myofibroblasts (≈15%), with only ~3% macrophages. The multimodal candidate ranking places \"reactive breast stroma\" far above all other options (total score 5.61 vs 3.31 for vascular stroma). The cell‑type profile and the high anchor‑coverage (1.0) strongly support a stromal, non‑neoplastic interpretation. Because the H&E label conflicts with the molecular profile and the latter is biologically more plausible, no visual override is applied.\n\nPrevious molecular-only summary: S2 is most consistent with reactive breast stroma [S2] (stroma). The region contains 63285 cells (37.2% of the case), with dominant support from Fibroblasts / Stromal Cells, Fibroblasts / Stromal Cells, Endothelial Cells.",
+    "top_celltype_summary": "fibroblast (39.8%), endothelial cell (27.4%), myofibroblast (15.2%), t cell (4.8%), b cell (3.1%)",
+    "top_clusters": [
+      {
+        "cluster_id": 3,
+        "label": "Fibroblasts / Stromal Cells",
+        "cell_count": 14584,
+        "fraction_of_structure": 0.23044955360669986
+      },
+      {
+        "cluster_id": 4,
+        "label": "Fibroblasts / Stromal Cells",
+        "cell_count": 8931,
+        "fraction_of_structure": 0.1411234889784309
+      },
+      {
+        "cluster_id": 5,
+        "label": "Endothelial Cells",
+        "cell_count": 6842,
+        "fraction_of_structure": 0.10811408706644544
+      }
+    ],
+    "differential": [
+      "vascular breast stroma",
+      "normal terminal duct lobular unit",
+      "basal-like invasive carcinoma"
+    ],
+    "key_evidence": [
+      "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 516, \"max_score\": 0.9507338404655457, \"mean_score\": 0.32113183564109393}",
+      "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 452, \"max_score\": 0.8591423034667969, \"mean_score\": 0.2935638413476074}",
+      "{\"label\": \"Invasive tumor epithelium\", \"label_id\": \"invasive_tumor_epithelium\", \"contour_count\": 129, \"max_score\": 0.49712949991226196, \"mean_score\": 0.14171397872269154}",
+      "{\"label\": \"Adipose or low-cellularity tissue\", \"label_id\": \"adipose_or_empty\", \"contour_count\": 336, \"max_score\": 0.46402403712272644, \"mean_score\": 0.14060028432729832}",
+      "{\"label\": \"Vascular or endothelial region\", \"label_id\": \"vascular_region\", \"contour_count\": 391, \"max_score\": 0.6157298684120178, \"mean_score\": 0.12796525352293878}",
+      "harmonized_composition: {\"fibroblast\": 0.3982859835721236, \"endothelial cell\": 0.27389632276477877, \"myofibroblast\": 0.1519829444444991, \"t cell\": 0.0480932034555799, \"b cell\": 0.030604765835369023, \"macrophage\": 0.02877485505827676, \"pericyte\": 0.0247126498977316, \"myoepithelial cell\": 0.02392165620698849, \"plasma cell\": 0.008744218810105437, \"smooth muscle cell\": 0.010983399954547378}",
+      "raw_empirical_composition: {\"Fibroblasts / Stromal Cells\": 0.5231136006822631, \"Endothelial Cells\": 0.2698040431841529, \"Basal / Myoepithelial Cells\": 0.03141899094838447, \"Lymphocytes (T/B mixed)\": 0.08613571608551547, \"Macrophages / Myeloid Cells\": 0.035431163142286747, \"Pericytes / Myofibroblasts\": 0.05409648595739732}",
+      "top_clusters: [{\"cluster_id\": 3, \"label\": \"Fibroblasts / Stromal Cells\", \"fraction_of_structure\": 0.23044955360669986, \"cell_count\": 14584}, {\"cluster_id\": 4, \"label\": \"Fibroblasts / Stromal Cells\", \"fraction_of_structure\": 0.1411234889784309, \"cell_count\": 8931}, {\"cluster_id\": 5, \"label\": \"Endothelial Cells\", \"fraction_of_structure\": 0.10811408706644544, \"cell_count\": 6842}]",
+      "Rule-based score total: 5.613",
+      "Winner margin: 2.307"
+    ],
+    "recommended_checks": [
+      "Review the H&E slide for artifacts or staining issues that could cause mis‑classification as inflammation.",
+      "Confirm macrophage infiltration by immunohistochemistry (e.g., CD68) if inflammation is clinically relevant.",
+      "Validate the spatial correspondence between the H&E contours and the Xenium RNA spots to ensure proper registration."
+    ],
+    "engine": "heuristic",
+    "he_foundation_visual_summary": {
+      "structure_id": 2,
+      "structure_name": "Basal-like Structured DCIS Cells",
+      "n_contours": 548,
+      "n_classified": 548,
+      "example_contours": [
+        "S2 Basal-like Structured DCIS Cells #1.1",
+        "S2 Basal-like Structured DCIS Cells #2.1",
+        "S2 Basal-like Structured DCIS Cells #3.1",
+        "S2 Basal-like Structured DCIS Cells #4.1",
+        "S2 Basal-like Structured DCIS Cells #5.1",
+        "S2 Basal-like Structured DCIS Cells #6.1"
+      ],
+      "top_visual_labels": [
+        {
+          "label_id": "macrophage_inflammation",
+          "label": "Macrophage-rich inflammation",
+          "contour_count": 516,
+          "mean_score": 0.32113183564109393,
+          "max_score": 0.9507338404655457
+        },
+        {
+          "label_id": "artifact_low_quality",
+          "label": "Artifact or low-quality tissue",
+          "contour_count": 452,
+          "mean_score": 0.2935638413476074,
+          "max_score": 0.8591423034667969
+        },
+        {
+          "label_id": "invasive_tumor_epithelium",
+          "label": "Invasive tumor epithelium",
+          "contour_count": 129,
+          "mean_score": 0.14171397872269154,
+          "max_score": 0.49712949991226196
+        },
+        {
+          "label_id": "adipose_or_empty",
+          "label": "Adipose or low-cellularity tissue",
+          "contour_count": 336,
+          "mean_score": 0.14060028432729832,
+          "max_score": 0.46402403712272644
+        },
+        {
+          "label_id": "vascular_region",
+          "label": "Vascular or endothelial region",
+          "contour_count": 391,
+          "mean_score": 0.12796525352293878,
+          "max_score": 0.6157298684120178
+        }
+      ],
+      "top_label_id": "macrophage_inflammation",
+      "top_label": "Macrophage-rich inflammation",
+      "top_mean_score": 0.32113183564109393,
+      "top_max_score": 0.9507338404655457
+    },
+    "he_multimodal_naming": {
+      "structure_id": 2,
+      "pre_visual_name": "S2 reactive breast stroma [S2]",
+      "final_name": "reactive breast stroma",
+      "visual_override": false,
+      "confidence": 0.96,
+      "review_priority": "low",
+      "reasoning_summary": "The H&E foundation model assigns the region a top visual label of \"Macrophage‑rich inflammation\" with a high foundation score (0.95). However, the molecular (10x Xenium) evidence shows a composition dominated by fibroblasts (≈40%), endothelial cells (≈27%) and myofibroblasts (≈15%), with only ~3% macrophages. The multimodal candidate ranking places \"reactive breast stroma\" far above all other options (total score 5.61 vs 3.31 for vascular stroma). The cell‑type profile and the high anchor‑coverage (1.0) strongly support a stromal, non‑neoplastic interpretation. Because the H&E label conflicts with the molecular profile and the latter is biologically more plausible, no visual override is applied.",
+      "visual_evidence": [
+        "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 516, \"max_score\": 0.9507338404655457, \"mean_score\": 0.32113183564109393}",
+        "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 452, \"max_score\": 0.8591423034667969, \"mean_score\": 0.2935638413476074}",
+        "{\"label\": \"Invasive tumor epithelium\", \"label_id\": \"invasive_tumor_epithelium\", \"contour_count\": 129, \"max_score\": 0.49712949991226196, \"mean_score\": 0.14171397872269154}",
+        "{\"label\": \"Adipose or low-cellularity tissue\", \"label_id\": \"adipose_or_empty\", \"contour_count\": 336, \"max_score\": 0.46402403712272644, \"mean_score\": 0.14060028432729832}",
+        "{\"label\": \"Vascular or endothelial region\", \"label_id\": \"vascular_region\", \"contour_count\": 391, \"max_score\": 0.6157298684120178, \"mean_score\": 0.12796525352293878}"
+      ],
+      "molecular_evidence": [
+        "harmonized_composition: {\"fibroblast\": 0.3982859835721236, \"endothelial cell\": 0.27389632276477877, \"myofibroblast\": 0.1519829444444991, \"t cell\": 0.0480932034555799, \"b cell\": 0.030604765835369023, \"macrophage\": 0.02877485505827676, \"pericyte\": 0.0247126498977316, \"myoepithelial cell\": 0.02392165620698849, \"plasma cell\": 0.008744218810105437, \"smooth muscle cell\": 0.010983399954547378}",
+        "raw_empirical_composition: {\"Fibroblasts / Stromal Cells\": 0.5231136006822631, \"Endothelial Cells\": 0.2698040431841529, \"Basal / Myoepithelial Cells\": 0.03141899094838447, \"Lymphocytes (T/B mixed)\": 0.08613571608551547, \"Macrophages / Myeloid Cells\": 0.035431163142286747, \"Pericytes / Myofibroblasts\": 0.05409648595739732}",
+        "top_clusters: [{\"cluster_id\": 3, \"label\": \"Fibroblasts / Stromal Cells\", \"fraction_of_structure\": 0.23044955360669986, \"cell_count\": 14584}, {\"cluster_id\": 4, \"label\": \"Fibroblasts / Stromal Cells\", \"fraction_of_structure\": 0.1411234889784309, \"cell_count\": 8931}, {\"cluster_id\": 5, \"label\": \"Endothelial Cells\", \"fraction_of_structure\": 0.10811408706644544, \"cell_count\": 6842}]"
+      ],
+      "conflicts": [
+        "H&E visual model predicts \"Macrophage‑rich inflammation\" (high confidence) whereas molecular data show fibroblast‑dominant stroma with only ~3% macrophages.",
+        "Presence of many contours labeled as artifact/low‑quality and invasive tumor epithelium may have biased the H&E model."
+      ],
+      "recommended_checks": [
+        "Review the H&E slide for artifacts or staining issues that could cause mis‑classification as inflammation.",
+        "Confirm macrophage infiltration by immunohistochemistry (e.g., CD68) if inflammation is clinically relevant.",
+        "Validate the spatial correspondence between the H&E contours and the Xenium RNA spots to ensure proper registration."
+      ],
+      "accepted_visual_override": false,
+      "foundation_top_score": 0.9507338404655457
+    }
+  },
+  {
+    "structure_id": 3,
+    "title": "S3 invasive ductal carcinoma [S3]",
+    "assigned_label": "invasive ductal carcinoma [S3]",
+    "behavior": "invasive",
+    "confidence": 0.876,
+    "review_priority": "low",
+    "discovery_flag": false,
+    "summary": "The multimodal molecular evidence (harmonized composition: 54.5% neoplastic luminal epithelial, 13.6% invasive carcinoma cells, 22.7% luminal epithelial, 9.1% myoepithelial) and the top candidate score (0.6826) robustly support an invasive ductal carcinoma of no special type. The H&E foundation model flags a dominant \"Macrophage‑rich inflammation\" label (639 contours, max score 0.96), reflecting a heavy infiltrate of tumor‑associated macrophages rather than a primary inflammatory lesion. Given the overwhelming neoplastic cell composition and the behavior label (invasive) from the molecular pipeline, the visual finding is interpreted as tumor‑associated inflammation within IDC, not a contradictory diagnosis. Therefore no visual override is applied.\n\nPrevious molecular-only summary: S3 is most consistent with invasive ductal carcinoma [S3] (invasive). The region contains 11258 cells (6.6% of the case), with dominant support from ER-positive Luminal Tumor Cells, ER-positive Luminal Tumor Cells, Basal / Myoepithelial Cells.",
+    "top_celltype_summary": "neoplastic luminal epithelial cell (54.5%), luminal epithelial cell (22.7%), invasive carcinoma cell (13.6%), myoepithelial cell (9.1%)",
+    "top_clusters": [
+      {
+        "cluster_id": 9,
+        "label": "ER-positive Luminal Tumor Cells",
+        "cell_count": 5331,
+        "fraction_of_structure": 0.4735299342689643
+      },
+      {
+        "cluster_id": 12,
+        "label": "ER-positive Luminal Tumor Cells",
+        "cell_count": 4192,
+        "fraction_of_structure": 0.3723574347130929
+      },
+      {
+        "cluster_id": 27,
+        "label": "Basal / Myoepithelial Cells",
+        "cell_count": 586,
+        "fraction_of_structure": 0.052051874222774915
+      }
+    ],
+    "differential": [
+      "reactive breast stroma",
+      "basal-like invasive carcinoma",
+      "ductal carcinoma in situ"
+    ],
+    "key_evidence": [
+      "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 639, \"max_score\": 0.9596852660179138, \"mean_score\": 0.31556032766793535}",
+      "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 561, \"max_score\": 0.857221782207489, \"mean_score\": 0.2320593531673472}",
+      "{\"label\": \"Vascular or endothelial region\", \"label_id\": \"vascular_region\", \"contour_count\": 539, \"max_score\": 0.7634395360946655, \"mean_score\": 0.1988691238035035}",
+      "{\"label\": \"Fibrocollagenous or desmoplastic stroma\", \"label_id\": \"fibrocollagenous_stroma\", \"contour_count\": 429, \"max_score\": 0.9401921629905701, \"mean_score\": 0.17781993087233502}",
+      "{\"label\": \"Adipose or low-cellularity tissue\", \"label_id\": \"adipose_or_empty\", \"contour_count\": 406, \"max_score\": 0.7174577713012695, \"mean_score\": 0.14190508644991173}",
+      "harmonized_composition: {\"neoplastic luminal epithelial cell\": 0.5452281723542644, \"invasive carcinoma cell\": 0.1363070430885661, \"luminal epithelial cell\": 0.22717840514761015, \"myoepithelial cell\": 0.09128637940955935}",
+      "raw_empirical_composition: {\"ER-positive Luminal Tumor Cells\": 0.8818791037703919, \"Basal / Myoepithelial Cells\": 0.11812089622960807}",
+      "top_candidate: {\"label\": \"invasive ductal carcinoma\", \"disease_label\": \"invasive ductal carcinoma of no special type\", \"behavior\": \"invasive\", \"score\": 0.6826092486986961, \"origin_lineage\": \"Luminal Epithelial Lineage\"}",
+      "Rule-based score total: 0.683",
+      "Winner margin: 3.016"
+    ],
+    "recommended_checks": [
+      "Review the H&E slide for presence of malignant ductal structures amidst the macrophage infiltrate.",
+      "Perform immunohistochemistry (e.g., ER, PR, HER2, Ki‑67) to confirm luminal tumor phenotype.",
+      "Correlate with pyXenium spatial transcriptomics to verify spatial colocalization of tumor cells and macrophage markers (e.g., CD68).",
+      "If uncertainty remains, consider a second‑opinion pathology review focusing on tumor‑associated inflammation versus primary inflammatory lesion."
+    ],
+    "engine": "heuristic",
+    "he_foundation_visual_summary": {
+      "structure_id": 3,
+      "structure_name": "Macrophages",
+      "n_contours": 695,
+      "n_classified": 695,
+      "example_contours": [
+        "S3 Macrophages #1.1",
+        "S3 Macrophages #2.1",
+        "S3 Macrophages #3.1",
+        "S3 Macrophages #4.1",
+        "S3 Macrophages #5.1",
+        "S3 Macrophages #6.1"
+      ],
+      "top_visual_labels": [
+        {
+          "label_id": "macrophage_inflammation",
+          "label": "Macrophage-rich inflammation",
+          "contour_count": 639,
+          "mean_score": 0.31556032766793535,
+          "max_score": 0.9596852660179138
+        },
+        {
+          "label_id": "artifact_low_quality",
+          "label": "Artifact or low-quality tissue",
+          "contour_count": 561,
+          "mean_score": 0.2320593531673472,
+          "max_score": 0.857221782207489
+        },
+        {
+          "label_id": "vascular_region",
+          "label": "Vascular or endothelial region",
+          "contour_count": 539,
+          "mean_score": 0.1988691238035035,
+          "max_score": 0.7634395360946655
+        },
+        {
+          "label_id": "fibrocollagenous_stroma",
+          "label": "Fibrocollagenous or desmoplastic stroma",
+          "contour_count": 429,
+          "mean_score": 0.17781993087233502,
+          "max_score": 0.9401921629905701
+        },
+        {
+          "label_id": "adipose_or_empty",
+          "label": "Adipose or low-cellularity tissue",
+          "contour_count": 406,
+          "mean_score": 0.14190508644991173,
+          "max_score": 0.7174577713012695
+        }
+      ],
+      "top_label_id": "macrophage_inflammation",
+      "top_label": "Macrophage-rich inflammation",
+      "top_mean_score": 0.31556032766793535,
+      "top_max_score": 0.9596852660179138
+    },
+    "he_multimodal_naming": {
+      "structure_id": 3,
+      "pre_visual_name": "S3 invasive ductal carcinoma [S3]",
+      "final_name": "S3 invasive ductal carcinoma [S3]",
+      "visual_override": false,
+      "confidence": 0.876,
+      "review_priority": "low",
+      "reasoning_summary": "The multimodal molecular evidence (harmonized composition: 54.5% neoplastic luminal epithelial, 13.6% invasive carcinoma cells, 22.7% luminal epithelial, 9.1% myoepithelial) and the top candidate score (0.6826) robustly support an invasive ductal carcinoma of no special type. The H&E foundation model flags a dominant \"Macrophage‑rich inflammation\" label (639 contours, max score 0.96), reflecting a heavy infiltrate of tumor‑associated macrophages rather than a primary inflammatory lesion. Given the overwhelming neoplastic cell composition and the behavior label (invasive) from the molecular pipeline, the visual finding is interpreted as tumor‑associated inflammation within IDC, not a contradictory diagnosis. Therefore no visual override is applied.",
+      "visual_evidence": [
+        "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 639, \"max_score\": 0.9596852660179138, \"mean_score\": 0.31556032766793535}",
+        "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 561, \"max_score\": 0.857221782207489, \"mean_score\": 0.2320593531673472}",
+        "{\"label\": \"Vascular or endothelial region\", \"label_id\": \"vascular_region\", \"contour_count\": 539, \"max_score\": 0.7634395360946655, \"mean_score\": 0.1988691238035035}",
+        "{\"label\": \"Fibrocollagenous or desmoplastic stroma\", \"label_id\": \"fibrocollagenous_stroma\", \"contour_count\": 429, \"max_score\": 0.9401921629905701, \"mean_score\": 0.17781993087233502}",
+        "{\"label\": \"Adipose or low-cellularity tissue\", \"label_id\": \"adipose_or_empty\", \"contour_count\": 406, \"max_score\": 0.7174577713012695, \"mean_score\": 0.14190508644991173}"
+      ],
+      "molecular_evidence": [
+        "harmonized_composition: {\"neoplastic luminal epithelial cell\": 0.5452281723542644, \"invasive carcinoma cell\": 0.1363070430885661, \"luminal epithelial cell\": 0.22717840514761015, \"myoepithelial cell\": 0.09128637940955935}",
+        "raw_empirical_composition: {\"ER-positive Luminal Tumor Cells\": 0.8818791037703919, \"Basal / Myoepithelial Cells\": 0.11812089622960807}",
+        "top_candidate: {\"label\": \"invasive ductal carcinoma\", \"disease_label\": \"invasive ductal carcinoma of no special type\", \"behavior\": \"invasive\", \"score\": 0.6826092486986961, \"origin_lineage\": \"Luminal Epithelial Lineage\"}"
+      ],
+      "conflicts": [
+        "H&E foundation model's top visual label is 'Macrophage-rich inflammation', which conflicts with the molecular diagnosis of invasive ductal carcinoma."
+      ],
+      "recommended_checks": [
+        "Review the H&E slide for presence of malignant ductal structures amidst the macrophage infiltrate.",
+        "Perform immunohistochemistry (e.g., ER, PR, HER2, Ki‑67) to confirm luminal tumor phenotype.",
+        "Correlate with pyXenium spatial transcriptomics to verify spatial colocalization of tumor cells and macrophage markers (e.g., CD68).",
+        "If uncertainty remains, consider a second‑opinion pathology review focusing on tumor‑associated inflammation versus primary inflammatory lesion."
+      ],
+      "accepted_visual_override": false,
+      "foundation_top_score": 0.9596852660179138
+    }
+  },
+  {
+    "structure_id": 4,
+    "title": "S4 reactive breast stroma [S4]",
+    "assigned_label": "reactive breast stroma [S4]",
+    "behavior": "stroma",
+    "confidence": 0.19,
+    "review_priority": "high",
+    "discovery_flag": true,
+    "summary": "The H&E foundation model assigns the region primarily to \"Macrophage‑rich inflammation\" (max score 0.96) and also flags vascular, fibrocollagenous, artifact and necrosis labels. However, the multimodal molecular profile is dominated by myoepithelial cells (≈77% myoepithelial, 81% basal/myoepithelial cluster) with a smaller but notable presence of luminal tumor cells. The top multimodal candidate is \"reactive breast stroma\" with the highest total score among all candidates, despite a negative absolute score due to hard‑rule penalties. The inflammatory H&E signal likely reflects a secondary infiltrate or artifact rather than the primary tissue architecture. Because the visual evidence does not meet the override confidence threshold (LLM confidence 0.19 < 0.7) and the molecular data more plausibly explain the cellular composition, we retain the original stroma label without visual override.\n\nPrevious molecular-only summary: S4 is most consistent with reactive breast stroma [S4] (stroma). The region contains 1832 cells (1.1% of the case), with dominant support from Basal / Myoepithelial Cells, ER-positive Luminal Tumor Cells, Secretory Luminal Tumor Cells.",
+    "top_celltype_summary": "myoepithelial cell (77.0%), neoplastic luminal epithelial cell (13.2%), secretory luminal epithelial cell (3.7%), invasive carcinoma cell (3.5%), luminal epithelial cell (2.6%)",
+    "top_clusters": [
+      {
+        "cluster_id": 17,
+        "label": "Basal / Myoepithelial Cells",
+        "cell_count": 671,
+        "fraction_of_structure": 0.3662663755458515
+      },
+      {
+        "cluster_id": 33,
+        "label": "ER-positive Luminal Tumor Cells",
+        "cell_count": 260,
+        "fraction_of_structure": 0.14192139737991266
+      },
+      {
+        "cluster_id": 6,
+        "label": "Secretory Luminal Tumor Cells",
+        "cell_count": 257,
+        "fraction_of_structure": 0.14028384279475983
+      }
+    ],
+    "differential": [
+      "invasive ductal carcinoma",
+      "basal-like invasive carcinoma",
+      "ductal carcinoma in situ"
+    ],
+    "key_evidence": [
+      "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 341, \"max_score\": 0.9617540240287781, \"mean_score\": 0.4486155729915652}",
+      "{\"label\": \"Vascular or endothelial region\", \"label_id\": \"vascular_region\", \"contour_count\": 333, \"max_score\": 0.8306549191474915, \"mean_score\": 0.2068247582655758}",
+      "{\"label\": \"Fibrocollagenous or desmoplastic stroma\", \"label_id\": \"fibrocollagenous_stroma\", \"contour_count\": 158, \"max_score\": 0.7920061945915222, \"mean_score\": 0.1407409678802743}",
+      "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 275, \"max_score\": 0.7871575951576233, \"mean_score\": 0.13010974021374502}",
+      "{\"label\": \"Necrosis or debris\", \"label_id\": \"necrosis_debris\", \"contour_count\": 324, \"max_score\": 0.5879630446434021, \"mean_score\": 0.10199108183740374}",
+      "harmonized_composition: {\"myoepithelial cell\": 0.7698, \"neoplastic luminal epithelial cell\": 0.1319, \"invasive carcinoma cell\": 0.0345, \"secretory luminal epithelial cell\": 0.0374, \"luminal epithelial cell\": 0.0264}",
+      "top_clusters: [{\"cluster_id\": 17, \"label\": \"Basal / Myoepithelial Cells\", \"cell_count\": 671, \"fraction_of_structure\": 0.3663}, {\"cluster_id\": 33, \"label\": \"ER-positive Luminal Tumor Cells\", \"cell_count\": 260, \"fraction_of_structure\": 0.1419}, {\"cluster_id\": 6, \"label\": \"Secretory Luminal Tumor Cells\", \"cell_count\": 257, \"fraction_of_structure\": 0.1403}]",
+      "Rule-based score total: -0.865",
+      "Winner margin: 0.519",
+      "Top harmonized cell types: myoepithelial cell (77.0%), neoplastic luminal epithelial cell (13.2%), secretory luminal epithelial cell (3.7%), invasive carcinoma cell (3.5%), luminal epithelial cell (2.6%)"
+    ],
+    "recommended_checks": [
+      "Overlay the H&E segmentation with the RNA‑derived cell‑type map to verify spatial correspondence of the inflammatory signal.",
+      "Inspect the region for areas of tissue artifact or necrosis that could be driving the high inflammation scores.",
+      "Confirm the proportion of myoepithelial versus inflammatory cells by reviewing the pyXenium spot‑level expression of macrophage markers (e.g., CD68, CSF1R).",
+      "Consider re‑segmenting the area if a distinct inflammatory focus is identified separate from the stromal component.",
+      "Review the differential list and overlay before accepting the top label."
+    ],
+    "engine": "heuristic",
+    "he_foundation_visual_summary": {
+      "structure_id": 4,
+      "structure_name": "Plasma Cells",
+      "n_contours": 353,
+      "n_classified": 353,
+      "example_contours": [
+        "S4 Plasma Cells #1.1",
+        "S4 Plasma Cells #2.1",
+        "S4 Plasma Cells #3.1",
+        "S4 Plasma Cells #4.1",
+        "S4 Plasma Cells #5.1",
+        "S4 Plasma Cells #6.1"
+      ],
+      "top_visual_labels": [
+        {
+          "label_id": "macrophage_inflammation",
+          "label": "Macrophage-rich inflammation",
+          "contour_count": 341,
+          "mean_score": 0.4486155729915652,
+          "max_score": 0.9617540240287781
+        },
+        {
+          "label_id": "vascular_region",
+          "label": "Vascular or endothelial region",
+          "contour_count": 333,
+          "mean_score": 0.2068247582655758,
+          "max_score": 0.8306549191474915
+        },
+        {
+          "label_id": "fibrocollagenous_stroma",
+          "label": "Fibrocollagenous or desmoplastic stroma",
+          "contour_count": 158,
+          "mean_score": 0.1407409678802743,
+          "max_score": 0.7920061945915222
+        },
+        {
+          "label_id": "artifact_low_quality",
+          "label": "Artifact or low-quality tissue",
+          "contour_count": 275,
+          "mean_score": 0.13010974021374502,
+          "max_score": 0.7871575951576233
+        },
+        {
+          "label_id": "necrosis_debris",
+          "label": "Necrosis or debris",
+          "contour_count": 324,
+          "mean_score": 0.10199108183740374,
+          "max_score": 0.5879630446434021
+        }
+      ],
+      "top_label_id": "macrophage_inflammation",
+      "top_label": "Macrophage-rich inflammation",
+      "top_mean_score": 0.4486155729915652,
+      "top_max_score": 0.9617540240287781
+    },
+    "he_multimodal_naming": {
+      "structure_id": 4,
+      "pre_visual_name": "S4 reactive breast stroma [S4]",
+      "final_name": "S4 reactive breast stroma [S4]",
+      "visual_override": false,
+      "confidence": 0.32,
+      "review_priority": "high",
+      "reasoning_summary": "The H&E foundation model assigns the region primarily to \"Macrophage‑rich inflammation\" (max score 0.96) and also flags vascular, fibrocollagenous, artifact and necrosis labels. However, the multimodal molecular profile is dominated by myoepithelial cells (≈77% myoepithelial, 81% basal/myoepithelial cluster) with a smaller but notable presence of luminal tumor cells. The top multimodal candidate is \"reactive breast stroma\" with the highest total score among all candidates, despite a negative absolute score due to hard‑rule penalties. The inflammatory H&E signal likely reflects a secondary infiltrate or artifact rather than the primary tissue architecture. Because the visual evidence does not meet the override confidence threshold (LLM confidence 0.19 < 0.7) and the molecular data more plausibly explain the cellular composition, we retain the original stroma label without visual override.",
+      "visual_evidence": [
+        "{\"label\": \"Macrophage-rich inflammation\", \"label_id\": \"macrophage_inflammation\", \"contour_count\": 341, \"max_score\": 0.9617540240287781, \"mean_score\": 0.4486155729915652}",
+        "{\"label\": \"Vascular or endothelial region\", \"label_id\": \"vascular_region\", \"contour_count\": 333, \"max_score\": 0.8306549191474915, \"mean_score\": 0.2068247582655758}",
+        "{\"label\": \"Fibrocollagenous or desmoplastic stroma\", \"label_id\": \"fibrocollagenous_stroma\", \"contour_count\": 158, \"max_score\": 0.7920061945915222, \"mean_score\": 0.1407409678802743}",
+        "{\"label\": \"Artifact or low-quality tissue\", \"label_id\": \"artifact_low_quality\", \"contour_count\": 275, \"max_score\": 0.7871575951576233, \"mean_score\": 0.13010974021374502}",
+        "{\"label\": \"Necrosis or debris\", \"label_id\": \"necrosis_debris\", \"contour_count\": 324, \"max_score\": 0.5879630446434021, \"mean_score\": 0.10199108183740374}"
+      ],
+      "molecular_evidence": [
+        "harmonized_composition: {\"myoepithelial cell\": 0.7698, \"neoplastic luminal epithelial cell\": 0.1319, \"invasive carcinoma cell\": 0.0345, \"secretory luminal epithelial cell\": 0.0374, \"luminal epithelial cell\": 0.0264}",
+        "top_clusters: [{\"cluster_id\": 17, \"label\": \"Basal / Myoepithelial Cells\", \"cell_count\": 671, \"fraction_of_structure\": 0.3663}, {\"cluster_id\": 33, \"label\": \"ER-positive Luminal Tumor Cells\", \"cell_count\": 260, \"fraction_of_structure\": 0.1419}, {\"cluster_id\": 6, \"label\": \"Secretory Luminal Tumor Cells\", \"cell_count\": 257, \"fraction_of_structure\": 0.1403}]"
+      ],
+      "conflicts": [
+        "H&E model emphasizes macrophage‑rich inflammation, whereas molecular data show a myoepithelial‑dominant composition typical of reactive stroma.",
+        "Presence of artifact/necrosis labels in H&E suggests possible tissue processing issues that may bias the visual model."
+      ],
+      "recommended_checks": [
+        "Overlay the H&E segmentation with the RNA‑derived cell‑type map to verify spatial correspondence of the inflammatory signal.",
+        "Inspect the region for areas of tissue artifact or necrosis that could be driving the high inflammation scores.",
+        "Confirm the proportion of myoepithelial versus inflammatory cells by reviewing the pyXenium spot‑level expression of macrophage markers (e.g., CD68, CSF1R).",
+        "Consider re‑segmenting the area if a distinct inflammatory focus is identified separate from the stromal component."
+      ],
+      "accepted_visual_override": false,
+      "foundation_top_score": 0.9617540240287781
+    }
+  }
+]

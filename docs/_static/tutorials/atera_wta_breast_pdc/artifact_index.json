@@ -1,30 +1,267 @@
 {
   "run_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429",
-  "files": {
-    "workflow_summary_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/workflow_summary.json",
-    "artifact_manifest_json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/artifact_manifest.json",
-    "pathology_report_html": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/index.html",
-    "pipeline/validation/he_structure_isoline_overlay.png": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/he_structure_isoline_overlay.png",
-    "pipeline/validation/spatial_structure_isoline_overlay.png": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/spatial_structure_isoline_overlay.png",
-    "pipeline/validation/structure_isoline_metrics.json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/structure_isoline_metrics.json",
-    "pipeline/structure_assignment/structure_assignments.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/structure_assignments.csv",
-    "topology/ligand_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/ligand_to_cell.csv",
-    "topology/lr_component_diagnostics.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/lr_component_diagnostics.csv",
-    "topology/lr_sender_receiver_scores.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/lr_sender_receiver_scores.csv",
-    "topology/pathway_activity_structuremap.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_activity_structuremap.csv",
-    "topology/pathway_activity_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_activity_to_cell.csv",
-    "topology/pathway_mode_comparison.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_mode_comparison.csv",
-    "topology/pathway_structuremap.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_structuremap.csv",
-    "topology/pathway_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_to_cell.csv",
-    "topology/receptor_to_cell.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/receptor_to_cell.csv",
-    "topology/report.md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/report.md",
-    "topology/summary.json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/summary.json",
-    "mechanostress/axis_strength_by_radius.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/axis_strength_by_radius.csv",
-    "mechanostress/distance_expression_coupling.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/distance_expression_coupling.csv",
-    "mechanostress/orientation_summary.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/orientation_summary.csv",
-    "mechanostress/polarity_summary.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/polarity_summary.csv",
-    "mechanostress/report.md": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/report.md",
-    "mechanostress/summary.json": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/summary.json",
-    "mechanostress/tumor_growth_summary.csv": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/tumor_growth_summary.csv"
+  "runtime_output_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho",
+  "tutorial_asset_root": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets",
+  "slurm": {
+    "job_id": "20163548",
+    "node": "nid002805",
+    "partition": "gpu",
+    "account": "naiss2026-4-680-gpu",
+    "time_limit": "08:00:00",
+    "final_slurm_state": "TIMEOUT after the intended 8 hour test window; workflow artifacts had already been written."
+  },
+  "service": {
+    "url_during_run": "http://nid002805:8000",
+    "health_asset": "pathology_ai_health.json",
+    "ready": true,
+    "llm_model": "openai/gpt-oss-120b",
+    "embed_model": "BAAI/bge-m3",
+    "rerank_model": "BAAI/bge-reranker-v2-m3",
+    "vector_db": "qdrant"
+  },
+  "he_foundation_results": {
+    "model_id": "vinid/plip",
+    "prompt_set": "breast_contour_v1",
+    "patch_count": 2606,
+    "classification_count": 2606,
+    "structure_visual_summaries": 7,
+    "structure_multimodal_names": 4,
+    "accepted_visual_overrides": 0
+  },
+  "committed_assets": {
+    "pathology_ai_health.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pathology_ai_health.json",
+      "pdc_source": "captured from http://nid002805:8000/health during Slurm job 20163548",
+      "description": "Local pathology-ai API health payload with LLM, embedder, reranker, and Qdrant readiness.",
+      "size_bytes": 917
+    },
+    "generated_inputs_metadata.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/generated_inputs_metadata.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/generated_inputs_metadata.json",
+      "description": "Generated SPatho-compatible inputs and H&E alignment metadata.",
+      "size_bytes": 1526
+    },
+    "he_alignment_metadata.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/he_alignment_metadata.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/he_alignment_metadata.json",
+      "description": "Registered H&E extraction and alignment metadata.",
+      "size_bytes": 759
+    },
+    "spatho_doctor.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho_doctor.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/logs/spatho_doctor.json",
+      "description": "SPatho doctor readiness output from the PDC workflow.",
+      "size_bytes": 7564
+    },
+    "spatho_run_result.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho_run_result.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/logs/spatho_run_result.json",
+      "description": "SPatho run result file paths from the PDC workflow.",
+      "size_bytes": 1773
+    },
+    "run_manifest.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/run_manifest.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/run_manifest.json",
+      "description": "PDC dataset, workflow, and H&E preparation manifest.",
+      "size_bytes": 1709
+    },
+    "spatho/workflow_summary.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/workflow_summary.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/workflow_summary.json",
+      "description": "AI-Driven Spatial Pathologist workflow summary.",
+      "size_bytes": 10214
+    },
+    "spatho/artifact_manifest.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/artifact_manifest.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/artifact_manifest.json",
+      "description": "Full artifact manifest from the PDC SPatho output directory.",
+      "size_bytes": 23204
+    },
+    "spatho/he_foundation/he_contour_classification.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_classification.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/he_contour_classification.csv",
+      "description": "Full PLIP contour-level classification table for 2606 H&E patches.",
+      "size_bytes": 4131071
+    },
+    "spatho/he_foundation/he_contour_classification.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_classification.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/he_contour_classification.json",
+      "description": "JSON companion to the full PLIP contour classification output.",
+      "size_bytes": 4841041
+    },
+    "spatho/he_foundation/he_contour_to_structure_summary.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_to_structure_summary.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/he_contour_to_structure_summary.csv",
+      "description": "PLIP visual-label aggregation by SPatho structure.",
+      "size_bytes": 7478
+    },
+    "spatho/he_foundation/he_contour_to_structure_summary.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_contour_to_structure_summary.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/he_contour_to_structure_summary.json",
+      "description": "JSON companion to the PLIP structure-level visual summary.",
+      "size_bytes": 12088
+    },
+    "spatho/he_foundation/structure_multimodal_names.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/structure_multimodal_names.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/structure_multimodal_names.csv",
+      "description": "Local LLM structure naming results after fusing PLIP visual evidence with RNA/cell-type evidence.",
+      "size_bytes": 4132
+    },
+    "spatho/he_foundation/structure_multimodal_names.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/structure_multimodal_names.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/structure_multimodal_names.json",
+      "description": "JSON companion to local multimodal structure naming.",
+      "size_bytes": 4953
+    },
+    "spatho/he_foundation/he_foundation_metadata.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_foundation/he_foundation_metadata.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/he_foundation/he_foundation_metadata.json",
+      "description": "H&E foundation-model configuration, counts, and visual override thresholds.",
+      "size_bytes": 688
+    },
+    "spatho/pathology_review/structure_reviews.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/pathology_review/structure_reviews.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/structure_reviews.csv",
+      "description": "Updated structure-level pathology review table with H&E foundation evidence.",
+      "size_bytes": 36622
+    },
+    "spatho/pathology_review/structure_reviews.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/pathology_review/structure_reviews.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/structure_reviews.json",
+      "description": "JSON companion to updated structure pathology reviews.",
+      "size_bytes": 41642
+    },
+    "spatho/pathology_review/case_summary.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/pathology_review/case_summary.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/runtime/segmentation_methods/projects/atera_wta_breast_pdc_20260429/outputs/spatho/pathology_review/case_summary.json",
+      "description": "Case-level pathology summary after local multimodal review.",
+      "size_bytes": 1313
+    },
+    "spatho/he_structure_isoline_overlay.png": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/he_structure_isoline_overlay.png",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/he_structure_isoline_overlay.png",
+      "description": "Selected registered H&E structure overlay for RTD display.",
+      "size_bytes": 7054738
+    },
+    "spatho/spatial_structure_isoline_overlay.png": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/spatho/spatial_structure_isoline_overlay.png",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/spatho/spatial_structure_isoline_overlay.png",
+      "description": "Selected spatial structure overlay for RTD display.",
+      "size_bytes": 2130960
+    },
+    "pyxenium_topology/ligand_to_cell.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/ligand_to_cell.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/ligand_to_cell.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 2277
+    },
+    "pyxenium_topology/lr_component_diagnostics.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/lr_component_diagnostics.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/lr_component_diagnostics.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 489472
+    },
+    "pyxenium_topology/lr_sender_receiver_scores.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/lr_sender_receiver_scores.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/lr_sender_receiver_scores.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 489472
+    },
+    "pyxenium_topology/pathway_activity_structuremap.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/pathway_activity_structuremap.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_activity_structuremap.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 661
+    },
+    "pyxenium_topology/pathway_activity_to_cell.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/pathway_activity_to_cell.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_activity_to_cell.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 2740
+    },
+    "pyxenium_topology/pathway_mode_comparison.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/pathway_mode_comparison.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_mode_comparison.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 882
+    },
+    "pyxenium_topology/pathway_structuremap.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/pathway_structuremap.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_structuremap.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 576
+    },
+    "pyxenium_topology/pathway_to_cell.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/pathway_to_cell.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/pathway_to_cell.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 2718
+    },
+    "pyxenium_topology/receptor_to_cell.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/receptor_to_cell.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/receptor_to_cell.csv",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 2243
+    },
+    "pyxenium_topology/report.md": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/report.md",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/report.md",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 5104
+    },
+    "pyxenium_topology/summary.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_topology/summary.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_topology/summary.json",
+      "description": "pyXenium topology artifact",
+      "size_bytes": 17544
+    },
+    "pyxenium_mechanostress/axis_strength_by_radius.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/axis_strength_by_radius.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/axis_strength_by_radius.csv",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 17260
+    },
+    "pyxenium_mechanostress/distance_expression_coupling.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/distance_expression_coupling.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/distance_expression_coupling.csv",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 499
+    },
+    "pyxenium_mechanostress/orientation_summary.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/orientation_summary.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/orientation_summary.csv",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 3434
+    },
+    "pyxenium_mechanostress/polarity_summary.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/polarity_summary.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/polarity_summary.csv",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 195
+    },
+    "pyxenium_mechanostress/report.md": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/report.md",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/report.md",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 285
+    },
+    "pyxenium_mechanostress/summary.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/summary.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/summary.json",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 3039
+    },
+    "pyxenium_mechanostress/tumor_growth_summary.csv": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_mechanostress/tumor_growth_summary.csv",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_mechanostress/tumor_growth_summary.csv",
+      "description": "pyXenium mechanostress artifact",
+      "size_bytes": 247
+    },
+    "pyxenium_summary.json": {
+      "repo_path": "docs/_static/tutorials/atera_wta_breast_pdc/pyxenium_summary.json",
+      "pdc_source": "/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/tutorial_assets/pyxenium_summary.json",
+      "description": "Machine-readable summary of pyXenium topology and mechanostress outputs.",
+      "size_bytes": 1353
+    }
   }
 }

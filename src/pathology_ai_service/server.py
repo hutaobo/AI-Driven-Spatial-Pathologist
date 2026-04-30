@@ -10,7 +10,14 @@ from pydantic import ValidationError
 
 from .config import ServiceSettings
 from .core import PathologyAIService, ServiceError, build_service
-from .models import DocumentInput, DocumentUpsertRequest, ReviewRequest
+from .models import (
+    ClusterAnnotationRequest,
+    DocumentInput,
+    DocumentUpsertRequest,
+    HEContourClassifyRequest,
+    ReviewRequest,
+    StructureMultimodalNamingRequest,
+)
 
 
 def _read_json_body(handler: BaseHTTPRequestHandler) -> dict[str, Any]:
@@ -74,6 +81,21 @@ def _handler_factory(service: PathologyAIService) -> type[BaseHTTPRequestHandler
                         body = {"documents": [DocumentInput.model_validate(body).model_dump()]}
                     payload = DocumentUpsertRequest.model_validate(body)
                     result = service.upsert_documents(payload)
+                    self._write_json(status=HTTPStatus.OK, payload=result.model_dump())
+                    return
+                if normalized in {"/annotations/cluster", "/v1/annotations/cluster"}:
+                    payload = ClusterAnnotationRequest.model_validate(_read_json_body(self))
+                    result = service.annotate_cluster(payload)
+                    self._write_json(status=HTTPStatus.OK, payload=result.model_dump())
+                    return
+                if normalized in {"/he/contours/classify", "/v1/he/contours/classify"}:
+                    payload = HEContourClassifyRequest.model_validate(_read_json_body(self))
+                    result = service.classify_he_contours(payload)
+                    self._write_json(status=HTTPStatus.OK, payload=result.model_dump())
+                    return
+                if normalized in {"/annotations/structure-multimodal", "/v1/annotations/structure-multimodal"}:
+                    payload = StructureMultimodalNamingRequest.model_validate(_read_json_body(self))
+                    result = service.name_structure_multimodal(payload)
                     self._write_json(status=HTTPStatus.OK, payload=result.model_dump())
                     return
                 if normalized in {"/review", "/v1/review"}:

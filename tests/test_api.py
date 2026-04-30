@@ -62,6 +62,37 @@ def test_workflow_doctor_report_handles_schema_errors(tmp_path) -> None:
     assert any("validation failed" in issue.lower() for issue in report["issues"])
 
 
+def test_workflow_doctor_checks_local_annotation_api_health(tmp_path) -> None:
+    base_config = tmp_path / "base_pipeline.json"
+    diffexp = tmp_path / "differential_expression.csv"
+    projection = tmp_path / "projection.csv"
+    for path in [base_config, diffexp, projection]:
+        path.write_text("demo", encoding="utf-8")
+    config_path = tmp_path / "workflow.json"
+    payload = {
+        "case_name": "breast_case",
+        "study_context": "Breast context",
+        "base_pipeline_config": str(base_config),
+        "output_root": str(tmp_path / "outputs"),
+        "annotation_taxonomy": "breast",
+        "pathology_review_backend": "heuristic",
+        "pathology_ai_api_base_url": "http://127.0.0.1:9",
+        "cluster_annotation_backend": "pathology_ai_api",
+        "cluster_annotation_llm_base_url": "http://127.0.0.1:9",
+        "differential_expression_csv": str(diffexp),
+        "projection_csv": str(projection),
+        "openai_enabled": False,
+    }
+    config_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = workflow_doctor_report(config_path)
+
+    assert report["schema_valid"] is True
+    assert report["cluster_annotation_backend"] == "pathology_ai_api"
+    assert report["ready_to_run"] is False
+    assert any("cluster annotation api health check failed" in issue.lower() for issue in report["issues"])
+
+
 def test_init_workflow_writes_expected_template(tmp_path) -> None:
     dataset_root = tmp_path / "outs"
     base_cfg = tmp_path / "project" / "configs" / "case.json"
@@ -86,6 +117,15 @@ def test_init_workflow_writes_expected_template(tmp_path) -> None:
     assert payload["export_space"] == "xenium_explorer_pixel"
     assert payload["segmentation_source"] == "ranger_default"
     assert payload["openai_model"] == "gpt-5.4"
+    assert payload["cluster_annotation_backend"] == "auto"
+    assert payload["cluster_annotation_llm_base_url"] is None
+    assert payload["cluster_annotation_min_llm_confidence"] == 0.60
+    assert payload["cluster_annotation_override_margin"] == 0.15
+    assert payload["cluster_annotation_require_marker_overlap"] is True
+    assert payload["he_contour_foundation_enabled"] is False
+    assert payload["he_foundation_model_id"] == "vinid/plip"
+    assert payload["he_foundation_prompt_set"] == "breast_contour_v1"
+    assert payload["he_visual_override_enabled"] is True
     assert Path(payload["differential_expression_csv"]).parts[-4:] == (
         "analysis",
         "diffexp",
@@ -110,6 +150,9 @@ def test_write_schema_exports_json_schema(tmp_path) -> None:
     assert "annotation_taxonomy" in schema["properties"]
     assert "lung" in schema["properties"]["annotation_taxonomy"]["enum"]
     assert "breast" in schema["properties"]["annotation_taxonomy"]["enum"]
+    assert schema["properties"]["cluster_annotation_backend"]["enum"] == ["auto", "heuristic", "openai", "pathology_ai_api"]
+    assert schema["properties"]["he_foundation_model_id"]["enum"] == ["vinid/plip"]
+    assert schema["properties"]["he_foundation_prompt_set"]["enum"] == ["breast_contour_v1"]
     assert schema["properties"]["dataset_modality"]["enum"] == ["xenium_rna_protein"]
     assert schema["properties"]["canonical_space"]["enum"] == ["physical_um"]
     assert schema["properties"]["export_space"]["enum"] == ["xenium_explorer_pixel"]
@@ -201,6 +244,8 @@ def test_build_artifact_manifest_tracks_required_outputs(tmp_path) -> None:
     assert manifest["dataset"]["canonical_space"] == "physical_um"
     assert manifest["dataset"]["export_space"] == "xenium_explorer_pixel"
     assert manifest["dataset"]["segmentation_source"] == "ranger_default"
+    assert manifest["provider"]["cluster_annotation_backend"] == "auto"
+    assert manifest["provider"]["he_contour_foundation_enabled"] is False
     assert manifest["artifact_counts"]["missing_required"] == 0
     assert manifest["artifact_counts"]["existing"] >= 10
     artifact_ids = {artifact["id"] for artifact in manifest["artifacts"]}
