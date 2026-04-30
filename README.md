@@ -16,7 +16,7 @@
 
 The platform framing is:
 
-> stGPT learns the morpho-molecular tissue representation; spatho turns it into auditable spatial pathology evidence.
+> stGPT learns reusable contour/region morpho-molecular representations; spatho plans, validates, and turns them into auditable spatial pathology evidence.
 
 > Legacy standalone surface: the canonical product-layer implementation is being integrated into
 > [`ASTRO`](https://github.com/hutaobo/ASTRO) under

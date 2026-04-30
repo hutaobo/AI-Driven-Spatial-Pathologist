@@ -442,7 +442,70 @@ Current limitation:
 - manifest versioning is still minimal
 - report schemas and workflow compatibility rules are not yet formally versioned end-to-end
 
-## 10. Testing and CI
+## 10. stGPT Agentic Evidence Workbench
+
+The stGPT integration should be developed as an agentic evidence workbench, not as a direct raw-embedding interpreter inside `spatho`.
+
+Unified platform statement:
+
+```text
+stGPT learns reusable contour/region morpho-molecular representations; spatho plans, validates, and turns them into auditable spatial pathology evidence.
+```
+
+### Workbench responsibility
+
+`spatho` owns the orchestration and review surface:
+
+- planner: decide which evidence routes are valid for a case, such as H&E contour evidence, RNA foundation evidence, pathway evidence, pyXenium topology, or stGPT artifacts
+- executor: call deterministic tools and optional model backends, then collect their output artifacts
+- critic: run readiness checks, QC guardrails, coverage checks, and warning-to-report language
+- reporter: convert compact evidence bundles into manifest entries and human-readable report sections
+- human handoff: mark low-confidence, conflicting, novel, or QC-flagged outputs for expert review
+
+`spatho` should not make biological claims from raw embedding vectors. It should consume stGPT-exported evidence artifacts and summaries, then attach provenance, QC status, and review state to every downstream claim.
+
+### Current stGPT backend contract
+
+The current workflow config supports two stGPT evidence modes:
+
+- `stgpt_backend="precomputed_artifacts"`: the default read-only mode. `spatho` validates and consumes an existing artifact directory without importing `stgpt`.
+- `stgpt_backend="local_stgpt"`: the local runtime mode. `spatho` calls `stgpt.runtime.export_spatho_artifacts(config, checkpoint, output_dir, batch_size=32, device="auto")` when `stgpt_model_path` and `stgpt_config_path` are configured.
+
+The first stable handshake between the repositories is `export_spatho_artifacts`. Its output should be treated as a signed evidence package rather than a free-form model dump.
+
+Preferred stGPT artifacts for the next upgrade:
+
+- `region_embeddings.parquet`
+- `region_cell_membership.parquet`
+- `region_molecular_summary.parquet`
+- `region_image_manifest.json`
+- `region_qc_report.json`
+- `evidence_manifest.json`
+
+Compatibility artifacts should remain supported:
+
+- `cell_embeddings.parquet`
+- `structure_embedding_summary.csv`
+- `qc_report.json`
+
+### Evidence chain rule
+
+No biological conclusion should be emitted without a traceable evidence chain. Every stGPT-derived statement in a `spatho` report should link to:
+
+- input artifact paths and evidence IDs
+- checkpoint and config references
+- QC verdicts and warnings
+- tool-call provenance or runtime metadata
+- imputation/reconstruction flags when present
+- human review status when escalation is required
+
+The intended loop is:
+
+```text
+Plan -> Tool Calls -> QC/Critic -> Evidence Graph -> Report -> Human Review -> Model Improvement
+```
+
+## 11. Testing and CI
 
 Current tests:
 
@@ -470,7 +533,7 @@ Current CI:
 - package/test workflow under `.github/workflows`
 - PyPI publish workflow under `.github/workflows/publish-pypi.yml`
 
-## 11. Packaging and Release State
+## 12. Packaging and Release State
 
 Packaging config:
 
@@ -489,7 +552,7 @@ Current production reality:
 - the package is still alpha
 - runtime behavior still depends heavily on `histoseg` and existing project configuration patterns
 
-## 12. Current Known Technical Debt
+## 13. Current Known Technical Debt
 
 These are the most important current debt items.
 
@@ -523,7 +586,7 @@ The workflow contract already expresses different review backends, but provider 
 
 There is a schema, but not yet a clearly documented migration/versioning policy for workflow files.
 
-## 13. Recommended Next Development Priorities
+## 14. Recommended Next Development Priorities
 
 These are the most leverage-positive next steps.
 
@@ -566,14 +629,23 @@ Do next:
 - add report schema/version metadata
 - distinguish required vs optional artifacts more formally
 
-### Priority 6: separate community and commercial layers cleanly
+### Priority 6: formalize stGPT evidence graph integration
+
+Do next:
+
+- make stGPT evidence bundles explicit in the manifest contract
+- preserve region-first artifacts while keeping cell-level compatibility outputs
+- add evidence IDs, QC status, checkpoint references, and human-review state to stGPT-derived report entries
+- keep `precomputed_artifacts` and `local_stgpt` as the only supported stGPT backend modes until the runtime API is stable
+
+### Priority 7: separate community and commercial layers cleanly
 
 Do next:
 
 - keep the local CLI and organ packs public
 - move organization, billing, hosted inference, and deployment surfaces into a separate service layer
 
-## 14. Suggested Contributor Workflow
+## 15. Suggested Contributor Workflow
 
 When changing `spatho`, future contributors should follow this order:
 
@@ -588,7 +660,7 @@ Useful heuristic:
 - if the change is about public workflow UX, packaging, config, organ packs, manifests, or docs, it probably belongs in `spatho`
 - if the change is about segmentation, evidence extraction, report generation internals, or provider execution details, it may still belong in `histoseg` today
 
-## 15. Practical Commands
+## 16. Practical Commands
 
 Local editable install:
 
@@ -621,7 +693,7 @@ Export schema:
 spatho config-schema --output D:\GitHub\AI-Driven-Spatial-Pathologist\schemas\workflow.schema.json
 ```
 
-## 16. Short Summary
+## 17. Short Summary
 
 The current `spatho` project is already a real public package, but it is still a product-layer wrapper over `histoseg`.
 That is the central fact future development needs to respect.

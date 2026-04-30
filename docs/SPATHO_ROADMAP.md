@@ -67,7 +67,7 @@ Before broad public release:
 
 The next AI upgrade should add an optional spatial transcriptomics foundation-model layer rather than replacing the existing workflow. The narrative is:
 
-> stGPT learns the morpho-molecular tissue representation; spatho turns it into auditable spatial pathology evidence.
+> stGPT learns reusable contour/region morpho-molecular representations; spatho plans, validates, and turns them into auditable spatial pathology evidence.
 
 The product should be described as a closed loop:
 
