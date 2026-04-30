@@ -9,8 +9,25 @@ from .api import (
     write_schema,
     write_xenium_alignment_fixtures,
 )
+from .evidence import (
+    CorrectionBundle,
+    CriticReport,
+    EvidenceBundle,
+    ExecutionPlan,
+    ToolCallMeta,
+    compute_input_hash,
+    export_evidence_schema,
+    should_trigger_finetuning,
+)
+from .schema import HumanReviewPolicy
 from .reports import build_evidence_report_section
-from .workbench import run_evidence_workbench
+from .workbench import (
+    build_workbench_summary,
+    execute_plan,
+    plan_evidence_run,
+    run_critic,
+    run_evidence_workbench,
+)
 
 __all__ = [
     "build_manifest",
@@ -20,7 +37,23 @@ __all__ = [
     "list_available_organ_packs",
     "write_schema",
     "write_xenium_alignment_fixtures",
+    # Evidence schema
+    "EvidenceBundle",
+    "ToolCallMeta",
+    "CorrectionBundle",
+    "ExecutionPlan",
+    "CriticReport",
+    "HumanReviewPolicy",
+    "compute_input_hash",
+    "export_evidence_schema",
+    "should_trigger_finetuning",
+    # Workbench pipeline
+    "plan_evidence_run",
+    "execute_plan",
+    "run_critic",
+    "build_workbench_summary",
     "run_evidence_workbench",
+    # Reports
     "build_evidence_report_section",
 ]
 

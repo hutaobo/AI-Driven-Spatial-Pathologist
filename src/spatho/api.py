@@ -22,6 +22,7 @@ from .schema import export_workflow_schema, validate_workflow_config
 from .stgpt import apply_stgpt_evidence, inspect_stgpt_evidence, prepare_stgpt_evidence, stgpt_evidence_requested
 from .templates import write_workflow_template
 from .xenium import DEFAULT_XENIUM_PIXEL_SIZE_UM, write_xenium_rna_protein_alignment_bundle
+from .evidence import EVIDENCE_SCHEMA_VERSION, export_evidence_schema
 
 
 def run_workflow(config_path: str | Path, *, heuristic_only: bool = False) -> dict[str, str]:
@@ -83,6 +84,65 @@ def _health_ready(payload: dict[str, Any]) -> bool:
     if "ready" in payload:
         return payload.get("ready") is True
     return bool(payload.get("ok"))
+
+
+def _check_evidence_schema_compat(workbench_dir: Path) -> list[str]:
+    """Check that existing workbench artifact schema versions are compatible.
+
+    Returns a list of human-readable incompatibility messages (empty when all
+    is well).  This is surfaced by ``spatho doctor`` so operators learn about
+    format drift before re-running a workflow.
+    """
+    issues: list[str] = []
+    if not workbench_dir.exists():
+        return issues
+
+    # Check execution plan
+    plan_path = workbench_dir / "execution_plan.json"
+    if plan_path.exists():
+        try:
+            payload = json.loads(plan_path.read_text(encoding="utf-8"))
+            file_ver = payload.get("schema_version", "unknown")
+            if file_ver != EVIDENCE_SCHEMA_VERSION:
+                issues.append(
+                    f"execution_plan.json schema_version '{file_ver}' does not match "
+                    f"current version '{EVIDENCE_SCHEMA_VERSION}'. Re-run the planner."
+                )
+        except json.JSONDecodeError:
+            issues.append("execution_plan.json is not valid JSON.")
+
+    # Check critic report
+    critic_path = workbench_dir / "critic_report.json"
+    if critic_path.exists():
+        try:
+            payload = json.loads(critic_path.read_text(encoding="utf-8"))
+            file_ver = payload.get("schema_version", "unknown")
+            if file_ver != EVIDENCE_SCHEMA_VERSION:
+                issues.append(
+                    f"critic_report.json schema_version '{file_ver}' does not match "
+                    f"current version '{EVIDENCE_SCHEMA_VERSION}'. Re-run the critic."
+                )
+        except json.JSONDecodeError:
+            issues.append("critic_report.json is not valid JSON.")
+
+    # Check individual bundle files
+    bundles_dir = workbench_dir / "bundles"
+    if bundles_dir.exists():
+        for bundle_path in sorted(bundles_dir.glob("*.json")):
+            if bundle_path.name.endswith(".meta.json"):
+                continue
+            try:
+                payload = json.loads(bundle_path.read_text(encoding="utf-8"))
+                file_ver = payload.get("schema_version", "unknown")
+                if file_ver != EVIDENCE_SCHEMA_VERSION:
+                    issues.append(
+                        f"Bundle '{bundle_path.name}' schema_version '{file_ver}' does not match "
+                        f"current version '{EVIDENCE_SCHEMA_VERSION}'."
+                    )
+            except json.JSONDecodeError:
+                issues.append(f"Bundle '{bundle_path.name}' is not valid JSON.")
+
+    return issues
 
 
 def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, Any]:
@@ -205,6 +265,15 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "paths": {key: str(value) for key, value in stgpt_report["paths"].items()},
             }
             issues.extend(stgpt_report["errors"])
+
+        # Schema version compatibility check for existing workbench artifacts
+        report["evidence_schema_version"] = EVIDENCE_SCHEMA_VERSION
+        report["human_review_policy"] = cfg.human_review_policy.model_dump()
+        workbench_dir = cfg.output_root / "workbench"
+        schema_compat_issues = _check_evidence_schema_compat(workbench_dir)
+        if schema_compat_issues:
+            report["evidence_schema_compat_issues"] = schema_compat_issues
+            issues.extend(schema_compat_issues)
         if cfg.pathology_review_backend == "pathology_ai_api":
             try:
                 health = _pathology_ai_health_report(str(cfg.pathology_ai_api_base_url))
@@ -276,7 +345,9 @@ def init_workflow(
 
 def write_schema(output_path: str | Path) -> dict[str, str]:
     path = export_workflow_schema(output_path)
-    return {"workflow_schema": str(path)}
+    evidence_schema_path = Path(output_path).with_suffix("").parent / "evidence_bundle.schema.json"
+    export_evidence_schema(evidence_schema_path)
+    return {"workflow_schema": str(path), "evidence_schema": str(evidence_schema_path)}
 
 
 def build_manifest(
