@@ -57,4 +57,4 @@ __all__ = [
     "build_evidence_report_section",
 ]
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
