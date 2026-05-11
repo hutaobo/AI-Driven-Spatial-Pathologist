@@ -132,6 +132,8 @@ def test_apply_stgpt_evidence_writes_auditable_outputs(tmp_path: Path) -> None:
     report_html = (cfg.output_root / "pathology_review" / "index.html").read_text(encoding="utf-8")
     assert "stGPT Evidence" in report_html
     assert "Cautionary evidence" in report_html
+    assert "Evidence ID" in report_html
+    assert "Human review" in report_html
     assert "model-derived" in report_html
     manifest = build_artifact_manifest(workflow_config=cfg, workflow_summary_path=summary_path)
     artifact_ids = {artifact["id"] for artifact in manifest["artifacts"]}
@@ -152,4 +154,24 @@ def test_stgpt_fatal_qc_blocks_when_required(tmp_path: Path) -> None:
 
 def test_public_workbench_and_report_imports() -> None:
     assert run_evidence_workbench is not None
-    assert "stGPT Evidence" in build_evidence_report_section(summary_rows=[])
+    section = build_evidence_report_section(summary_rows=[])
+    assert "stGPT Evidence" in section
+    assert "No structure-level stGPT evidence" in section
+
+
+def test_pyxenium_mtm_schema_path_resolution(tmp_path: Path) -> None:
+    artifact_dir = tmp_path / "mtm"
+    summary_path = artifact_dir / "morphomolecular_summary.csv"
+    qc_path = artifact_dir / "qc_report.json"
+    workflow = _workflow_config(
+        tmp_path,
+        pyxenium_mtm_enabled=True,
+        pyxenium_mtm_artifact_dir="mtm",
+        pyxenium_mtm_summary_path="mtm/morphomolecular_summary.csv",
+        pyxenium_mtm_qc_report_path="mtm/qc_report.json",
+    )
+    cfg = validate_workflow_config(workflow)
+    assert cfg.pyxenium_mtm_enabled is True
+    assert cfg.pyxenium_mtm_artifact_dir == artifact_dir.resolve()
+    assert cfg.pyxenium_mtm_summary_path == summary_path.resolve()
+    assert cfg.pyxenium_mtm_qc_report_path == qc_path.resolve()

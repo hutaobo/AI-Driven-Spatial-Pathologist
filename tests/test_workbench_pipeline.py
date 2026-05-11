@@ -4,16 +4,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from spatho.evidence import (
     EVIDENCE_SCHEMA_VERSION,
     EvidenceBundle,
     ExecutionPlan,
 )
-from spatho.schema import HumanReviewPolicy, validate_workflow_config
+from spatho.schema import validate_workflow_config
 from spatho.workbench import (
     build_workbench_summary,
+    execute_plan,
     plan_evidence_run,
     run_critic,
 )
@@ -81,6 +80,48 @@ def test_planner_excludes_stgpt_nodes_when_disabled(tmp_path: Path) -> None:
     plan = plan_evidence_run(cfg, output_root=tmp_path / "out")
     node_ids = [n.node_id for n in plan.nodes]
     assert "stgpt_embed_regions" not in node_ids
+
+
+def test_planner_includes_pyxenium_mtm_node_when_enabled(tmp_path: Path) -> None:
+    summary = tmp_path / "mtm" / "morphomolecular_summary.csv"
+    summary.parent.mkdir()
+    summary.write_text("structure_label,score\nstroma,0.8\n", encoding="utf-8")
+    cfg = validate_workflow_config(
+        _basic_config(
+            tmp_path,
+            pyxenium_mtm_enabled=True,
+            pyxenium_mtm_summary_path=str(summary),
+        )
+    )
+    plan = plan_evidence_run(cfg, output_root=tmp_path / "out")
+    node_ids = [node.node_id for node in plan.nodes]
+    assert "pyxenium_mtm_evidence" in node_ids
+
+
+def test_executor_reads_pyxenium_mtm_artifacts(tmp_path: Path) -> None:
+    artifact_dir = tmp_path / "mtm"
+    artifact_dir.mkdir()
+    summary = artifact_dir / "morphomolecular_summary.csv"
+    qc = artifact_dir / "qc_report.json"
+    summary.write_text("structure_label,score\nstroma,0.8\n", encoding="utf-8")
+    qc.write_text(json.dumps({"status": "pass", "warnings": []}), encoding="utf-8")
+    cfg = validate_workflow_config(
+        _basic_config(
+            tmp_path,
+            pyxenium_mtm_enabled=True,
+            pyxenium_mtm_artifact_dir=str(artifact_dir),
+            pyxenium_mtm_summary_path=str(summary),
+            pyxenium_mtm_qc_report_path=str(qc),
+        )
+    )
+    plan = plan_evidence_run(cfg, output_root=tmp_path / "out")
+
+    bundles = execute_plan(plan, cfg, output_root=tmp_path / "out", heuristic_only=True)
+    mtm = next(bundle for bundle in bundles if bundle.source == "pyXenium.mtm")
+
+    assert mtm.qc_status == "ok"
+    assert str(summary.resolve()) in mtm.supporting_artifacts
+    assert mtm.artifact_hashes
 
 
 def test_planner_stgpt_compare_depends_on_embed(tmp_path: Path) -> None:
@@ -153,6 +194,13 @@ def test_critic_detects_stgpt_coverage_gap(tmp_path: Path) -> None:
     assert "stgpt" in report.coverage_gaps
 
 
+def test_critic_detects_pyxenium_mtm_coverage_gap(tmp_path: Path) -> None:
+    cfg = validate_workflow_config(_basic_config(tmp_path, pyxenium_mtm_enabled=True))
+    bundles = _make_bundles("ok")
+    report = run_critic(bundles, cfg, output_root=tmp_path / "out")
+    assert "pyXenium.mtm" in report.coverage_gaps
+
+
 def test_critic_uses_human_review_policy_min_qc_ok(tmp_path: Path) -> None:
     """With min_qc_status='ok', even 'warning' bundles are flagged."""
     cfg = validate_workflow_config(
@@ -181,7 +229,7 @@ def test_critic_uses_human_review_policy_required_channels(tmp_path: Path) -> No
 
 def test_critic_report_schema_version(tmp_path: Path) -> None:
     cfg = validate_workflow_config(_basic_config(tmp_path))
-    report = run_critic([], cfg, output_root=tmp_path / "out")
+    run_critic([], cfg, output_root=tmp_path / "out")
     payload = json.loads((tmp_path / "out" / "workbench" / "critic_report.json").read_text())
     assert payload["schema_version"] == EVIDENCE_SCHEMA_VERSION
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Agentic evidence workbench: Planner → Executor → Critic → Reporter.
 
 The four layers communicate through explicit data structures
@@ -22,6 +20,10 @@ flagged for human review before the Reporter may include them in the final
 HTML report.
 """
 
+from __future__ import annotations
+
+import hashlib
+import json
 import time
 import uuid
 from pathlib import Path
@@ -109,6 +111,19 @@ def plan_evidence_run(cfg: WorkflowConfig, *, output_root: Path | None = None) -
                 node_id="he_contour_foundation",
                 tool_name="spatho.he_foundation.apply_he_contour_foundation",
                 depends_on=["run_workflow"],
+            )
+        )
+
+    if cfg.pyxenium_mtm_enabled:
+        nodes.append(
+            ToolNode(
+                node_id="pyxenium_mtm_evidence",
+                tool_name="pyXenium.evidence.read_morphomolecular_summary",
+                depends_on=["run_workflow"],
+                params={
+                    "artifact_dir": str(cfg.pyxenium_mtm_artifact_dir) if cfg.pyxenium_mtm_artifact_dir else None,
+                    "summary_path": str(cfg.pyxenium_mtm_summary_path) if cfg.pyxenium_mtm_summary_path else None,
+                },
             )
         )
 
@@ -232,6 +247,8 @@ def _execute_node(
         bundle = _node_foundation(node, cfg, cache_key=cache_key)
     elif node.node_id == "he_contour_foundation":
         bundle = _node_he_contour(node, cfg, cache_key=cache_key)
+    elif node.node_id == "pyxenium_mtm_evidence":
+        bundle = _node_pyxenium_mtm(node, cfg, cache_key=cache_key)
     else:
         return None
 
@@ -349,6 +366,108 @@ def _node_he_contour(
     )
 
 
+def _hash_file(path: Path) -> str:
+    if not path.exists() or not path.is_file():
+        return ""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _resolve_pyxenium_mtm_artifacts(cfg: WorkflowConfig) -> list[Path]:
+    artifacts: list[Path] = []
+    if cfg.pyxenium_mtm_summary_path is not None:
+        artifacts.append(cfg.pyxenium_mtm_summary_path.resolve())
+    if cfg.pyxenium_mtm_qc_report_path is not None:
+        artifacts.append(cfg.pyxenium_mtm_qc_report_path.resolve())
+    if cfg.pyxenium_mtm_artifact_dir is not None and cfg.pyxenium_mtm_artifact_dir.exists():
+        names = (
+            "*summary*.csv",
+            "*summary*.json",
+            "*score*.csv",
+            "*association*.csv",
+            "*residual*.csv",
+            "*hero*.csv",
+            "*tile*manifest*.csv",
+            "*qc*.json",
+        )
+        for pattern in names:
+            artifacts.extend(sorted(cfg.pyxenium_mtm_artifact_dir.glob(pattern)))
+    unique: list[Path] = []
+    seen: set[Path] = set()
+    for path in artifacts:
+        resolved = path.resolve()
+        if resolved not in seen:
+            seen.add(resolved)
+            unique.append(resolved)
+    return unique
+
+
+def _load_pyxenium_mtm_qc(cfg: WorkflowConfig) -> tuple[str, list[str]]:
+    path = cfg.pyxenium_mtm_qc_report_path
+    if path is None and cfg.pyxenium_mtm_artifact_dir is not None:
+        candidate = cfg.pyxenium_mtm_artifact_dir / "qc_report.json"
+        path = candidate if candidate.exists() else None
+    if path is None or not path.exists():
+        return "warning", ["pyXenium mTM QC report is missing; evidence is cautionary."]
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return "fail", ["pyXenium mTM QC report is not valid JSON."]
+    if payload.get("fatal_errors") or payload.get("status") == "fail":
+        return "fail", ["pyXenium mTM QC reported fatal errors."]
+    warnings = [str(item) for item in payload.get("warnings", []) if str(item).strip()]
+    return ("warning" if warnings else "ok"), warnings
+
+
+def _node_pyxenium_mtm(
+    node: ToolNode,
+    cfg: WorkflowConfig,
+    *,
+    cache_key: str,
+) -> EvidenceBundle:
+    artifacts = _resolve_pyxenium_mtm_artifacts(cfg)
+    existing = [path for path in artifacts if path.exists()]
+    if not existing:
+        return EvidenceBundle(
+            evidence_id=f"pyxenium.mtm.{cfg.case_name}",
+            unit="case",
+            unit_id=cfg.case_name,
+            source="pyXenium.mtm",
+            evidence_type="morphomolecular_summary",
+            model_derived=True,
+            qc_status="fail",
+            summary="pyXenium morphomolecular evidence was enabled but no summary artifacts were found.",
+            tool_name=node.tool_name,
+            input_hash=cache_key,
+            requires_human_review=True,
+            human_review_state="pending",
+        )
+    qc_status, warnings = _load_pyxenium_mtm_qc(cfg)
+    return EvidenceBundle(
+        evidence_id=f"pyxenium.mtm.{cfg.case_name}",
+        unit="case",
+        unit_id=cfg.case_name,
+        source="pyXenium.mtm",
+        evidence_type="morphomolecular_summary",
+        model_derived=True,
+        qc_status=qc_status,  # type: ignore[arg-type]
+        summary=(
+            "; ".join(warnings)
+            or "pyXenium LazySlide/PLIP/mTM morphomolecular evidence artifacts are available."
+        ),
+        supporting_artifacts=[str(path) for path in existing],
+        artifact_ids=[f"pyxenium.mtm.{path.name}" for path in existing],
+        artifact_hashes={str(path): _hash_file(path) for path in existing},
+        tool_name=node.tool_name,
+        input_hash=cache_key,
+        requires_human_review=qc_status != "ok",
+        human_review_state="pending",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Critic
 # ---------------------------------------------------------------------------
@@ -424,6 +543,8 @@ def run_critic(
         gaps.append("foundation")
     if cfg.he_contour_foundation_enabled and "spatho.he_foundation" not in present_sources:
         gaps.append("he_contour_foundation")
+    if cfg.pyxenium_mtm_enabled and "pyXenium.mtm" not in present_sources:
+        gaps.append("pyXenium.mtm")
     for channel in required_channels:
         if channel not in present_sources:
             gaps.append(channel)

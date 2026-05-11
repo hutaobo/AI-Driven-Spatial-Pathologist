@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Typed evidence schema for the spatho agentic evidence toolchain.
 
 All evidence flowing through the Planner / Executor / Critic / Reporter
@@ -8,20 +6,23 @@ source (stGPT, pyXenium, PLIP, pathway) produces the same schema and can
 be validated, cached, and replayed deterministically.
 """
 
+from __future__ import annotations
+
+import hashlib
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
-import hashlib
-import json
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-EVIDENCE_SCHEMA_VERSION = "0.2.0"
+EVIDENCE_SCHEMA_VERSION = "0.2.1"
 
 QcStatus = Literal["ok", "warning", "fail", "unknown"]
 EvidenceUnit = Literal["cell", "region", "structure", "case"]
 ConflictResolution = Literal["auto_skip", "block", "flag_only"]
+HumanReviewState = Literal["pending", "approved", "rejected", "not_required"]
 
 
 # ---------------------------------------------------------------------------
@@ -61,10 +62,19 @@ class EvidenceBundle(BaseModel):
         default_factory=list,
         description="File paths or artifact IDs that back this evidence.",
     )
+    artifact_ids: list[str] = Field(
+        default_factory=list,
+        description="Artifact manifest IDs that back this evidence, when known.",
+    )
+    artifact_hashes: dict[str, str] = Field(
+        default_factory=dict,
+        description="SHA-256 digests for key evidence artifacts, keyed by artifact path or ID.",
+    )
     # Execution provenance
     tool_name: str = Field(default="", description="Specific tool function that produced this bundle.")
     input_hash: str = Field(default="", description="SHA-256 of all inputs (config + data) for cache lookup.")
     model_version: str = Field(default="", description="Checkpoint / model version string.")
+    checkpoint_hash: str = Field(default="", description="SHA-256 digest of the checkpoint/model package, if known.")
     elapsed_seconds: float | None = Field(default=None, description="Wall-clock time of the tool call.")
     timestamp: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
@@ -72,6 +82,7 @@ class EvidenceBundle(BaseModel):
     )
     # Optional conflict / adjudication fields written by the Critic
     requires_human_review: bool = Field(default=False)
+    human_review_state: HumanReviewState = Field(default="pending")
     conflict_note: str = Field(default="", description="Description of cross-modal conflict, if any.")
 
     # ------------------------------------------------------------------
@@ -306,6 +317,7 @@ __all__ = [
     "QcStatus",
     "EvidenceUnit",
     "ConflictResolution",
+    "HumanReviewState",
     "CorrectionType",
     "EvidenceBundle",
     "ToolCallMeta",

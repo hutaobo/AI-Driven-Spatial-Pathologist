@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 import csv
+import hashlib
 import json
 
 from .reports import build_evidence_report_section
@@ -96,7 +97,7 @@ def apply_stgpt_evidence(cfg: WorkflowConfig, workflow_result: dict[str, str]) -
     if inspection["errors"]:
         raise ValueError("stGPT evidence guardrail failed: " + " ".join(inspection["errors"]))
 
-    summary_rows = _build_stgpt_summary_rows(paths, inspection)
+    summary_rows = _build_stgpt_summary_rows(paths, inspection, cfg)
     summary_csv = foundation_dir / "stgpt_evidence_summary.csv"
     summary_json = foundation_dir / "stgpt_evidence_summary.json"
     _write_csv(summary_csv, summary_rows)
@@ -239,32 +240,78 @@ def _qc_coverage(payload: dict[str, Any]) -> float | None:
     return None
 
 
-def _build_stgpt_summary_rows(paths: dict[str, Path], inspection: dict[str, Any]) -> list[dict[str, Any]]:
+def _sha256(path: Path | None) -> str:
+    if path is None or not path.exists() or not path.is_file():
+        return ""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _stgpt_artifact_ids() -> list[str]:
+    return [
+        "foundation.stgpt_structure_embedding_summary_csv",
+        "foundation.stgpt_qc_report_json",
+        "foundation.stgpt_evidence_summary_csv",
+    ]
+
+
+def _build_stgpt_summary_rows(
+    paths: dict[str, Path],
+    inspection: dict[str, Any],
+    cfg: WorkflowConfig,
+) -> list[dict[str, Any]]:
     structure_path = paths["structure_summary"]
     rows = _read_csv_rows(structure_path) if structure_path.suffix.lower() == ".csv" else []
+    qc_status = "warning" if inspection["warnings"] else "ok"
+    checkpoint_sha256 = _sha256(cfg.stgpt_model_path)
+    artifact_ids = _stgpt_artifact_ids()
+    artifact_paths = [str(paths["structure_summary"]), str(paths["qc_report"])]
     if rows:
         summary = []
         for row in rows:
             label = row.get("structure_label") or row.get("structure_id") or row.get("structure") or "unknown"
             summary.append(
                 {
+                    "evidence_id": f"stgpt.structure.{label}",
                     "evidence_type": "stgpt_structure_embedding",
                     "structure_label": label,
                     "n_cells": row.get("n_cells", ""),
-                    "qc_status": "warning" if inspection["warnings"] else "ok",
+                    "qc_status": qc_status,
                     "qc_flag": "model-derived",
-                    "interpretation": "stGPT embedding centroid is available for human-reviewed structure evidence.",
+                    "human_review_state": "pending",
+                    "model_derived": True,
+                    "measured_expression": False,
+                    "artifact_ids": artifact_ids,
+                    "artifact_paths": artifact_paths,
+                    "checkpoint_path": str(cfg.stgpt_model_path) if cfg.stgpt_model_path else "",
+                    "checkpoint_sha256": checkpoint_sha256,
+                    "claim_guardrail": "Model-derived evidence; do not report as measured expression or diagnosis.",
+                    "interpretation": (
+                        "stGPT embedding centroid is available for human-reviewed structure evidence."
+                    ),
                     "source": str(structure_path),
                 }
             )
         return summary
     return [
         {
+            "evidence_id": f"stgpt.case.{cfg.case_name}",
             "evidence_type": "stgpt_case_embedding",
             "structure_label": "case",
             "n_cells": "",
-            "qc_status": "warning" if inspection["warnings"] else "ok",
+            "qc_status": qc_status,
             "qc_flag": "model-derived",
+            "human_review_state": "pending",
+            "model_derived": True,
+            "measured_expression": False,
+            "artifact_ids": artifact_ids,
+            "artifact_paths": artifact_paths,
+            "checkpoint_path": str(cfg.stgpt_model_path) if cfg.stgpt_model_path else "",
+            "checkpoint_sha256": checkpoint_sha256,
+            "claim_guardrail": "Model-derived evidence; do not report as measured expression or diagnosis.",
             "interpretation": "stGPT embeddings are available; structure summary could not be parsed as CSV.",
             "source": str(structure_path),
         }

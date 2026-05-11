@@ -18,7 +18,7 @@ from spatho.evidence import (
     export_evidence_schema,
     should_trigger_finetuning,
 )
-from spatho.schema import HumanReviewPolicy, WorkflowConfig
+from spatho.schema import HumanReviewPolicy
 
 
 # ---------------------------------------------------------------------------
@@ -39,6 +39,9 @@ def test_evidence_bundle_defaults() -> None:
     assert bundle.measured is False
     assert bundle.qc_status == "unknown"
     assert bundle.requires_human_review is False
+    assert bundle.human_review_state == "pending"
+    assert bundle.artifact_ids == []
+    assert bundle.checkpoint_hash == ""
 
 
 def test_evidence_bundle_round_trip(tmp_path: Path) -> None:

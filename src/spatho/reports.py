@@ -20,16 +20,22 @@ def build_evidence_report_section(
     )
     rows_html = []
     for row in summary_rows:
+        artifact_ids = row.get("artifact_ids", "")
+        if isinstance(artifact_ids, list):
+            artifact_ids = "; ".join(str(item) for item in artifact_ids)
         rows_html.append(
             "<tr>"
+            f"<td>{escape(str(row.get('evidence_id', '')))}</td>"
             f"<td>{escape(str(row.get('structure_label', row.get('evidence_type', 'case'))))}</td>"
             f"<td>{escape(str(row.get('n_cells', row.get('value', ''))))}</td>"
             f"<td>{escape(str(row.get('qc_flag', row.get('qc_status', 'model-derived'))))}</td>"
+            f"<td>{escape(str(row.get('human_review_state', 'pending')))}</td>"
+            f"<td>{escape(str(artifact_ids))}</td>"
             f"<td>{escape(str(row.get('interpretation', 'stGPT morpho-molecular evidence')))}</td>"
             "</tr>"
         )
     if not rows_html:
-        rows_html.append("<tr><td colspan=\"4\">No structure-level stGPT evidence was available.</td></tr>")
+        rows_html.append("<tr><td colspan=\"7\">No structure-level stGPT evidence was available.</td></tr>")
     link_items = []
     for label, key in (
         ("Cell embeddings", "stgpt_cell_embeddings_parquet"),
@@ -49,7 +55,8 @@ def build_evidence_report_section(
         "It must not be reported as measured expression or diagnosis without human review.</p>\n"
         f"{warning_html}\n"
         f"{link_html}\n"
-        "<table><thead><tr><th>Structure</th><th>Cells</th><th>QC</th><th>Interpretation</th></tr></thead><tbody>"
+        "<table><thead><tr><th>Evidence ID</th><th>Structure</th><th>Cells</th><th>QC</th>"
+        "<th>Human review</th><th>Artifact IDs</th><th>Interpretation</th></tr></thead><tbody>"
         + "".join(rows_html)
         + "</tbody></table>\n"
         "</section>\n"

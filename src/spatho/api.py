@@ -223,6 +223,16 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "stgpt_config_path": str(cfg.stgpt_config_path) if cfg.stgpt_config_path else None,
                 "stgpt_min_cell_coverage": cfg.stgpt_min_cell_coverage,
                 "stgpt_require_qc_pass": cfg.stgpt_require_qc_pass,
+                "pyxenium_mtm_enabled": cfg.pyxenium_mtm_enabled,
+                "pyxenium_mtm_artifact_dir": (
+                    str(cfg.pyxenium_mtm_artifact_dir) if cfg.pyxenium_mtm_artifact_dir else None
+                ),
+                "pyxenium_mtm_summary_path": (
+                    str(cfg.pyxenium_mtm_summary_path) if cfg.pyxenium_mtm_summary_path else None
+                ),
+                "pyxenium_mtm_qc_report_path": (
+                    str(cfg.pyxenium_mtm_qc_report_path) if cfg.pyxenium_mtm_qc_report_path else None
+                ),
                 "schema_valid": True,
                 "organ_pack": pack.to_dict(),
                 "base_pipeline_config": str(cfg.base_pipeline_config),
@@ -265,6 +275,19 @@ def workflow_doctor_report(config_path: str | Path | None = None) -> dict[str, A
                 "paths": {key: str(value) for key, value in stgpt_report["paths"].items()},
             }
             issues.extend(stgpt_report["errors"])
+        if cfg.pyxenium_mtm_enabled:
+            has_summary = bool(cfg.pyxenium_mtm_summary_path and cfg.pyxenium_mtm_summary_path.exists())
+            has_artifact_dir = bool(cfg.pyxenium_mtm_artifact_dir and cfg.pyxenium_mtm_artifact_dir.exists())
+            report["pyxenium_mtm_evidence"] = {
+                "enabled": True,
+                "artifact_dir_exists": has_artifact_dir,
+                "summary_path_exists": has_summary,
+            }
+            if not has_summary and not has_artifact_dir:
+                issues.append(
+                    "pyXenium mTM evidence is enabled but neither pyxenium_mtm_summary_path "
+                    "nor pyxenium_mtm_artifact_dir exists."
+                )
 
         # Schema version compatibility check for existing workbench artifacts
         report["evidence_schema_version"] = EVIDENCE_SCHEMA_VERSION

@@ -98,3 +98,18 @@ See [stGPT Upgrade Plan](STGPT_UPGRADE_PLAN.md) for the detailed implementation 
 - `spatho`: public product and user experience layer
 - `histoseg`: geometry and segmentation engine
 - example web apps: optional deployment surfaces, not the core product
+## Agentic Spatial Pathologist v0.1
+
+The v0.1 platform target is a Xenium-native auditable evidence loop:
+
+> stGPT learns Xenium-native morpho-molecular representations; spatho turns them into auditable spatial pathology evidence.
+
+The fixed demo question is: "Which H&E-defined structures in this Xenium case show reproducible morpho-molecular programs, and do those findings pass QC?"
+
+The workbench contract is intentionally conservative:
+
+- stGPT evidence is model-derived support, not measured expression or diagnosis.
+- QC fatal errors block biological conclusions.
+- QC warning-only evidence is labelled cautionary.
+- Every report claim should carry an evidence ID, artifact path or ID, model/checkpoint provenance, QC status, and human-review state.
+- pyXenium LazySlide/PLIP/mTM summaries are optional evidence sources consumed by spatho; the LR benchmark scaffold remains separate backlog.

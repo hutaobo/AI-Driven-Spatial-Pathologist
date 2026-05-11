@@ -110,6 +110,10 @@ class WorkflowConfig(BaseModel):
     stgpt_config_path: Path | None = None
     stgpt_min_cell_coverage: float = Field(default=0.95, ge=0.0, le=1.0)
     stgpt_require_qc_pass: bool = True
+    pyxenium_mtm_enabled: bool = False
+    pyxenium_mtm_artifact_dir: Path | None = None
+    pyxenium_mtm_summary_path: Path | None = None
+    pyxenium_mtm_qc_report_path: Path | None = None
 
     human_review_policy: HumanReviewPolicy = Field(default_factory=HumanReviewPolicy)
 
@@ -240,6 +244,9 @@ class WorkflowConfig(BaseModel):
             "stgpt_qc_report_path",
             "stgpt_model_path",
             "stgpt_config_path",
+            "pyxenium_mtm_artifact_dir",
+            "pyxenium_mtm_summary_path",
+            "pyxenium_mtm_qc_report_path",
         }
         for field_name in path_fields:
             if field_name in payload:

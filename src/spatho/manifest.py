@@ -70,6 +70,9 @@ def build_artifact_manifest(
         ("pipeline.overlay_summary_csv", "Explorer annotation summary", "pipeline", output_root / "pipeline" / "validation" / "xenium_explorer_annotations_summary.csv"),
         ("pipeline.xenium_alignment_note_md", "Xenium RNA+protein alignment note", "pipeline", output_root / "pipeline" / "validation" / "xenium_rna_protein_alignment_note.md"),
         ("pipeline.xenium_alignment_fixture_manifest_json", "Xenium RNA+protein fixture manifest", "pipeline", output_root / "pipeline" / "validation" / "xenium_rna_protein_fixture_manifest.json"),
+        ("workbench.execution_plan_json", "Agentic workbench execution plan", "workbench", output_root / "workbench" / "execution_plan.json"),
+        ("workbench.critic_report_json", "Agentic workbench critic report", "workbench", output_root / "workbench" / "critic_report.json"),
+        ("workbench.summary_json", "Agentic workbench evidence summary", "workbench", output_root / "workbench" / "workbench_summary.json"),
     ]
     optional_annotation_artifacts = [
         ("annotation.heuristic_annotations_json", "Heuristic cluster annotations JSON", "annotation", "heuristic_annotations_json"),
@@ -179,6 +182,7 @@ def build_artifact_manifest(
             "stgpt_enabled": workflow_config.stgpt_enabled,
             "stgpt_backend": workflow_config.stgpt_backend,
             "stgpt_require_qc_pass": workflow_config.stgpt_require_qc_pass,
+            "pyxenium_mtm_enabled": workflow_config.pyxenium_mtm_enabled,
         },
         "dataset": {
             "modality": workflow_config.dataset_modality,

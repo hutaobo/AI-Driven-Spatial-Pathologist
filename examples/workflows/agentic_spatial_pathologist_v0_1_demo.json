@@ -1,0 +1,28 @@
+{
+  "case_name": "xenium_native_agentic_spatial_pathologist_v0_1_demo",
+  "study_context": "Demo question: Which H&E-defined structures in this Xenium case show reproducible morpho-molecular programs, and do those findings pass QC?",
+  "base_pipeline_config": "../artifacts/base_pipeline_config.json",
+  "output_root": "../artifacts/agentic_spatial_pathologist_v0_1",
+  "annotation_taxonomy": "breast",
+  "openai_enabled": false,
+  "cluster_annotation_backend": "heuristic",
+  "pathology_review_backend": "heuristic",
+  "stgpt_enabled": true,
+  "stgpt_backend": "precomputed_artifacts",
+  "stgpt_artifact_dir": "../artifacts/stgpt_evidence",
+  "stgpt_min_cell_coverage": 0.95,
+  "stgpt_require_qc_pass": true,
+  "pyxenium_mtm_enabled": true,
+  "pyxenium_mtm_artifact_dir": "../artifacts/pyxenium_mtm",
+  "pyxenium_mtm_summary_path": "../artifacts/pyxenium_mtm/morphomolecular_summary.csv",
+  "pyxenium_mtm_qc_report_path": "../artifacts/pyxenium_mtm/qc_report.json",
+  "human_review_policy": {
+    "min_qc_status": "warning",
+    "required_evidence_channels": [
+      "stgpt",
+      "pyXenium.mtm"
+    ],
+    "conflict_resolution": "flag_only",
+    "finetuning_threshold": 50
+  }
+}
