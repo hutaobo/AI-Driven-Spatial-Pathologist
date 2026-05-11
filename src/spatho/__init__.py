@@ -9,6 +9,7 @@ from .api import (
     write_schema,
     write_xenium_alignment_fixtures,
 )
+from .agentic import DEMO_QUESTION, build_agentic_spatial_pathologist_demo
 from .evidence import (
     CorrectionBundle,
     CriticReport,
@@ -37,6 +38,8 @@ __all__ = [
     "list_available_organ_packs",
     "write_schema",
     "write_xenium_alignment_fixtures",
+    "DEMO_QUESTION",
+    "build_agentic_spatial_pathologist_demo",
     # Evidence schema
     "EvidenceBundle",
     "ToolCallMeta",

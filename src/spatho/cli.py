@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 
+from .agentic import build_agentic_spatial_pathologist_demo
 from .api import (
     build_manifest,
     init_workflow,
@@ -94,6 +95,17 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=["ranger_protein_assisted", "ranger_default", "third_party_import"],
         help="Segmentation provenance to record in the bundle.",
     )
+    demo_parser = subparsers.add_parser(
+        "agentic-demo",
+        help="Build an artifact-first Agentic Spatial Pathologist v0.1 report from stGPT evidence.",
+    )
+    demo_parser.add_argument("--stgpt-evidence-dir", required=True, help="Directory containing stGPT spatho_export artifacts.")
+    demo_parser.add_argument("--output-dir", required=True, help="Where to write the demo report bundle.")
+    demo_parser.add_argument("--case-name", required=True, help="Case identifier used in report outputs.")
+    demo_parser.add_argument("--metrics", help="Optional stGPT evaluation_metrics.json path.")
+    demo_parser.add_argument("--checkpoint-card", help="Optional stGPT model/checkpoint card JSON path.")
+    demo_parser.add_argument("--pyxenium-summary", help="Optional pyXenium morphomolecular summary artifact.")
+    demo_parser.add_argument("--max-records", type=int, default=100, help="Maximum evidence-chain records to sample.")
     return parser
 
 
@@ -145,6 +157,19 @@ def main() -> None:
             metadata_pixel_size_um=getattr(args, "metadata_pixel_size_um", None),
             fallback_pixel_size_um=getattr(args, "fallback_pixel_size_um", None),
             segmentation_source=args.segmentation_source,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return
+
+    if args.command == "agentic-demo":
+        result = build_agentic_spatial_pathologist_demo(
+            stgpt_evidence_dir=args.stgpt_evidence_dir,
+            output_dir=args.output_dir,
+            case_name=args.case_name,
+            metrics_path=getattr(args, "metrics", None),
+            checkpoint_card_path=getattr(args, "checkpoint_card", None),
+            pyxenium_summary_path=getattr(args, "pyxenium_summary", None),
+            max_records=int(args.max_records),
         )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
