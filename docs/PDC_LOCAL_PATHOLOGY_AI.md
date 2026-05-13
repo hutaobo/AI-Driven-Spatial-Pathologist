@@ -74,7 +74,7 @@ login node so it builds x86_64 ROCm sandboxes:
 
 ```bash
 ssh dardel.pdc.kth.se
-cd /cfs/klemming/home/h/hutaobo/AI-Driven-Spatial-Pathologist
+cd /cfs/klemming/home/h/hutaobo/Agentic-Spatial-Pathologist
 bash deploy/pathology_ai/pdc_prepare_gh200.sh
 ```
 

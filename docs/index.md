@@ -1,10 +1,10 @@
-# AI-Driven Spatial Pathologist
+# Agentic Spatial Pathologist
 
 ::::{div} spatho-hero
-AI-driven spatial pathology workflows for Xenium-scale spatial transcriptomics.
+Agentic workflows for spatial pathology.
 ::::
 
-AI-Driven Spatial Pathologist is an evidence-generating workbench for building, running, and reviewing pathology-aware Xenium analyses. The public Python package and CLI remain named `spatho`.
+Agentic Spatial Pathologist is an evidence-generating workbench for building, running, and reviewing pathology-aware Xenium analyses. The public Python package and CLI remain named `spatho`.
 
 The platform narrative is: stGPT learns reusable contour/region morpho-molecular representations; spatho plans, validates, and turns them into auditable spatial pathology evidence.
 

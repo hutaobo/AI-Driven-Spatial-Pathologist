@@ -1,6 +1,6 @@
-# AI-Driven Spatial Pathologist Public Product Roadmap
+# Agentic Spatial Pathologist Public Product Roadmap
 
-This repo is the public-facing product layer for the AI-driven spatial pathologist workflow.
+This repo is the public-facing product layer for the agentic spatial pathologist workflow.
 
 ## Phase 1: Wrapper Product
 

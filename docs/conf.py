@@ -6,7 +6,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
-project = "AI-Driven Spatial Pathologist"
+project = "Agentic Spatial Pathologist"
 author = "Taobo Hu"
 copyright = "2026, Taobo Hu"
 
@@ -35,11 +35,11 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_book_theme"
-html_title = "AI-Driven Spatial Pathologist"
+html_title = "Agentic Spatial Pathologist"
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
 html_theme_options = {
-    "repository_url": "https://github.com/hutaobo/AI-Driven-Spatial-Pathologist",
+    "repository_url": "https://github.com/hutaobo/Agentic-Spatial-Pathologist",
     "use_repository_button": True,
     "use_issues_button": True,
     "path_to_docs": "docs",

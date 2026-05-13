@@ -1,4 +1,4 @@
-# AI-Driven Spatial Pathologist Commercialization Plan
+# Agentic Spatial Pathologist Commercialization Plan
 
 This document outlines a practical way to commercialize `spatho` while keeping a strong academic and non-commercial entry point.
 

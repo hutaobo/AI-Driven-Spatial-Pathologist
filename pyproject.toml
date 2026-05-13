@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "spatho"
 dynamic = ["version"]
-description = "Public-facing AI-driven spatial pathologist wrapper package for Xenium workflows."
+description = "Agentic workflows for spatial pathology."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "LicenseRef-PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE"]
 authors = [{ name = "Taobo Hu", email = "taobo.hu@scilifelab.se" }]
-keywords = ["spatial-transcriptomics", "xenium", "pathology", "bioinformatics", "ai"]
+keywords = ["spatial-transcriptomics", "xenium", "pathology", "bioinformatics", "ai", "agentic"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -36,10 +36,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hutaobo/AI-Driven-Spatial-Pathologist"
-Documentation = "https://github.com/hutaobo/AI-Driven-Spatial-Pathologist"
-Repository = "https://github.com/hutaobo/AI-Driven-Spatial-Pathologist"
-Issues = "https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/issues"
+Homepage = "https://github.com/hutaobo/Agentic-Spatial-Pathologist"
+Documentation = "https://github.com/hutaobo/Agentic-Spatial-Pathologist"
+Repository = "https://github.com/hutaobo/Agentic-Spatial-Pathologist"
+Issues = "https://github.com/hutaobo/Agentic-Spatial-Pathologist/issues"
 
 [project.scripts]
 spatho = "spatho.cli:main"

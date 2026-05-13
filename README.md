@@ -1,18 +1,20 @@
-# SPatho
+# Agentic Spatial Pathologist
 
 [![PyPI version](https://img.shields.io/pypi/v/spatho.svg)](https://pypi.org/project/spatho/)
 [![Python versions](https://img.shields.io/pypi/pyversions/spatho.svg)](https://pypi.org/project/spatho/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/spatho.svg)](https://pypi.org/project/spatho/)
 [![License](https://img.shields.io/pypi/l/spatho.svg)](LICENSE)
-[![Python Package](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/python-package.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/python-package.yml)
-[![Publish to PyPI](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/publish-pypi.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/publish-pypi.yml)
-[![Docker image](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml/badge.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml)
-[![Documentation Status](https://app.readthedocs.org/projects/ai-driven-spatial-pathologist/badge/?version=latest)](https://ai-driven-spatial-pathologist.readthedocs.io/en/latest/)
-[![GitHub release](https://img.shields.io/github/v/release/hutaobo/AI-Driven-Spatial-Pathologist?include_prereleases)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/releases)
-[![Last commit](https://img.shields.io/github/last-commit/hutaobo/AI-Driven-Spatial-Pathologist.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/commits/main)
-[![Issues](https://img.shields.io/github/issues/hutaobo/AI-Driven-Spatial-Pathologist.svg)](https://github.com/hutaobo/AI-Driven-Spatial-Pathologist/issues)
+[![Python Package](https://github.com/hutaobo/Agentic-Spatial-Pathologist/actions/workflows/python-package.yml/badge.svg)](https://github.com/hutaobo/Agentic-Spatial-Pathologist/actions/workflows/python-package.yml)
+[![Publish to PyPI](https://github.com/hutaobo/Agentic-Spatial-Pathologist/actions/workflows/publish-pypi.yml/badge.svg)](https://github.com/hutaobo/Agentic-Spatial-Pathologist/actions/workflows/publish-pypi.yml)
+[![Docker image](https://github.com/hutaobo/Agentic-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml/badge.svg)](https://github.com/hutaobo/Agentic-Spatial-Pathologist/actions/workflows/docker-image-ghcr.yml)
+[![Documentation Status](https://app.readthedocs.org/projects/agentic-spatial-pathologist/badge/?version=latest)](https://agentic-spatial-pathologist.readthedocs.io/en/latest/)
+[![GitHub release](https://img.shields.io/github/v/release/hutaobo/Agentic-Spatial-Pathologist?include_prereleases)](https://github.com/hutaobo/Agentic-Spatial-Pathologist/releases)
+[![Last commit](https://img.shields.io/github/last-commit/hutaobo/Agentic-Spatial-Pathologist.svg)](https://github.com/hutaobo/Agentic-Spatial-Pathologist/commits/main)
+[![Issues](https://img.shields.io/github/issues/hutaobo/Agentic-Spatial-Pathologist.svg)](https://github.com/hutaobo/Agentic-Spatial-Pathologist/issues)
 
-`spatho` is a Python package and CLI for AI-driven spatial pathology workflows around Xenium-scale spatial transcriptomics. It wraps the lower-level `histoseg` engine with workflow configuration, organ packs, artifact manifests, H&E overlays, structure review, and report generation.
+Agentic workflows for spatial pathology.
+
+`spatho` is the Python package and CLI for Agentic Spatial Pathologist. It wraps the lower-level `histoseg` engine with workflow configuration, organ packs, artifact manifests, H&E overlays, structure review, and report generation.
 
 The platform framing is:
 
@@ -63,8 +65,8 @@ python -m pip install -U spatho
 For local development:
 
 ```bash
-git clone https://github.com/hutaobo/AI-Driven-Spatial-Pathologist.git
-cd AI-Driven-Spatial-Pathologist
+git clone https://github.com/hutaobo/Agentic-Spatial-Pathologist.git
+cd Agentic-Spatial-Pathologist
 python -m pip install -U pip
 python -m pip install -e .[dev]
 ```

@@ -1,6 +1,6 @@
 # Foundation Evidence Layer
 
-AI-Driven Spatial Pathologist now includes an optional foundation evidence layer. It adds auditable stGPT/scGPT/SpatialFusion-inspired evidence to the existing workflow without replacing the OpenAI backend, the local `pathology-ai` backend, heuristic annotation, or the PLIP H&E contour workflow.
+Agentic Spatial Pathologist now includes an optional foundation evidence layer. It adds auditable stGPT/scGPT/SpatialFusion-inspired evidence to the existing workflow without replacing the OpenAI backend, the local `pathology-ai` backend, heuristic annotation, or the PLIP H&E contour workflow.
 
 The v1 design is intentionally conservative: it consumes frozen or precomputed features, summarizes them at cluster and structure level, and lets the local or OpenAI reviewer adjudicate conflicts. It does not train a new SpatialFusion-style joint embedding model.
 

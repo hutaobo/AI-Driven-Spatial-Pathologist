@@ -18,7 +18,7 @@ from .api import (
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="spatho",
-        description="Public-facing CLI for the AI-driven spatial pathologist workflow.",
+        description="Public-facing CLI for the agentic spatial pathologist workflow.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

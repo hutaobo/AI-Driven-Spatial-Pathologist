@@ -26,8 +26,8 @@ python -m pip install -U spatho
 For development from a source checkout:
 
 ```bash
-git clone https://github.com/hutaobo/AI-Driven-Spatial-Pathologist.git
-cd AI-Driven-Spatial-Pathologist
+git clone https://github.com/hutaobo/Agentic-Spatial-Pathologist.git
+cd Agentic-Spatial-Pathologist
 python -m pip install -U pip
 python -m pip install -e .[dev]
 ```

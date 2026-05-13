@@ -1,12 +1,12 @@
 # Atera WTA Breast Cancer on PDC
 
-This tutorial records a reproducible PDC run of AI-Driven Spatial Pathologist on the 10x Xenium Atera WTA Preview FFPE Breast Cancer dataset, using the local `pathology-ai` backend and pyXenium core workflows.
+This tutorial records a reproducible PDC run of Agentic Spatial Pathologist on the 10x Xenium Atera WTA Preview FFPE Breast Cancer dataset, using the local `pathology-ai` backend and pyXenium core workflows.
 
 ## Dataset
 
 - PDC dataset: `/cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs`
 - Local Windows mirror: `Y:\long\10X_datasets\Xenium\Atera\WTA_Preview_FFPE_Breast_Cancer_outs`
-- PDC output root: `/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429`
+- PDC output root: `/cfs/klemming/projects/supr/naiss2025-22-606/results/agentic-spatial-pathologist/atera_wta_breast_pdc_20260429`
 
 The dataset copy contains `cell_feature_matrix.h5`, cell and nucleus boundary parquet files, `cells.parquet`, `experiment.xenium`, `metrics_summary.csv`, `WTA_Preview_FFPE_Breast_Cancer_cell_groups.csv`, and a registered H&E image pyramid under `spatialdata.zarr/images/he`.
 
@@ -29,7 +29,7 @@ The completed multimodal run used Slurm job `20163548` on node `nid002805`. The 
 From the PDC login node:
 
 ```bash
-cd /cfs/klemming/home/h/hutaobo/AI-Driven-Spatial-Pathologist
+cd /cfs/klemming/home/h/hutaobo/Agentic-Spatial-Pathologist
 git fetch origin
 git checkout main
 git pull --ff-only origin main
@@ -44,8 +44,8 @@ The Slurm wrapper creates a venv under the output root, installs `spatho`, `pyXe
 ```bash
 python scripts/pdc_atera_breast_workflow.py \
   --dataset-root /cfs/klemming/projects/supr/naiss2025-22-606/data/WTA_Preview_FFPE_Breast_Cancer_outs \
-  --run-root /cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429 \
-  --sfplot-root /cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429/deps/sfplot \
+  --run-root /cfs/klemming/projects/supr/naiss2025-22-606/results/agentic-spatial-pathologist/atera_wta_breast_pdc_20260429 \
+  --sfplot-root /cfs/klemming/projects/supr/naiss2025-22-606/results/agentic-spatial-pathologist/atera_wta_breast_pdc_20260429/deps/sfplot \
   --pathology-ai-base-url http://nid002805:8000
 ```
 
@@ -65,7 +65,7 @@ The differential-expression table is a cluster-pseudobulk log2 fold-change appro
 :language: json
 ```
 
-## AI-Driven Spatial Pathologist Run
+## Agentic Spatial Pathologist Run
 
 The current workflow config uses the local backend and keeps OpenAI disabled:
 
@@ -219,7 +219,7 @@ Lightweight tutorial assets are committed under:
 
 Large outputs remain on PDC under:
 
-`/cfs/klemming/projects/supr/naiss2025-22-606/results/ai-driven-spatial-pathologist/atera_wta_breast_pdc_20260429`
+`/cfs/klemming/projects/supr/naiss2025-22-606/results/agentic-spatial-pathologist/atera_wta_breast_pdc_20260429`
 
 ```{literalinclude} _static/tutorials/atera_wta_breast_pdc/artifact_index.json
 :language: json

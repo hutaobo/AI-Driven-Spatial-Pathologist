@@ -1,4 +1,4 @@
-# AI-Driven Spatial Pathologist Development Guide
+# Agentic Spatial Pathologist Development Guide
 
 This document is the detailed handoff for `spatho` as it exists today.
 It is written for future development work: new contributors should be able to read this file and understand what the project currently owns, what is still delegated to `histoseg`, how the major interfaces fit together, and where the next sensible development seams are.
@@ -7,7 +7,7 @@ Current snapshot:
 
 - package: `spatho`
 - current public version: `0.1.0`
-- role: public-facing product layer for the AI-driven spatial pathologist workflow
+- role: public-facing product layer for the agentic spatial pathologist workflow
 - current engine dependency: `histoseg>=0.1.9.1`
 - current primary input assumption: Xenium-style output directories plus a base pipeline config
 
@@ -35,7 +35,7 @@ Understanding those boundaries is the most important prerequisite for future wor
 
 Repo:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist`
+- `D:\GitHub\Agentic-Spatial-Pathologist`
 
 Owns:
 
@@ -128,7 +128,7 @@ That is acceptable for `v0.1.x`, but the long-term direction is to invert that r
 
 Entry point:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\cli.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\cli.py`
 
 Commands currently exposed:
 
@@ -149,7 +149,7 @@ Current CLI philosophy:
 
 Primary surface:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\api.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\api.py`
 
 Exported functions:
 
@@ -170,7 +170,7 @@ Current behavior:
 
 Legacy app:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\main.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\main.py`
 
 This should be treated as a deployment surface, not the product definition.
 The core public interface should continue to be the package in `src/spatho`.
@@ -181,11 +181,11 @@ The core public interface should continue to be the package in `src/spatho`.
 
 Schema source:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\schema.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\schema.py`
 
 Formal exported schema:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\schemas\workflow.schema.json`
+- `D:\GitHub\Agentic-Spatial-Pathologist\schemas\workflow.schema.json`
 
 The `WorkflowConfig` model currently defines:
 
@@ -213,7 +213,7 @@ Important design choices:
 
 Template builder:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\templates.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\templates.py`
 
 Current template behavior:
 
@@ -229,7 +229,7 @@ This is intentionally opinionated and currently optimized for internal/project u
 
 Registry:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\organ_packs\registry.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\organ_packs\registry.py`
 
 Current bundled packs:
 
@@ -238,8 +238,8 @@ Current bundled packs:
 
 Backing data:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\organ_packs\data\lung.json`
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\organ_packs\data\breast.json`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\organ_packs\data\lung.json`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\organ_packs\data\breast.json`
 
 Each organ pack currently carries:
 
@@ -269,7 +269,7 @@ Important current limitation:
 
 `spatho run` and `run_workflow()` both end up here:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\api.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\api.py`
 
 ### Execution delegation
 
@@ -384,8 +384,8 @@ Behavior:
 
 Current implementation path:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\local_annotation.py`
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\pathology_ai_service\server.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\local_annotation.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\pathology_ai_service\server.py`
 - `D:\GitHub\HistoSeg\src\histoseg\spatial_pathologist\pathology_ai_api.py`
 - `D:\GitHub\HistoSeg\src\histoseg\spatial_pathologist\runner.py`
 
@@ -402,7 +402,7 @@ This backend is the newest review path and should be considered an active develo
 
 Artifact manifest implementation:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\src\spatho\manifest.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\src\spatho\manifest.py`
 
 Primary output:
 
@@ -509,7 +509,7 @@ Plan -> Tool Calls -> QC/Critic -> Evidence Graph -> Report -> Human Review -> M
 
 Current tests:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\tests\test_api.py`
+- `D:\GitHub\Agentic-Spatial-Pathologist\tests\test_api.py`
 
 What is currently covered:
 
@@ -537,7 +537,7 @@ Current CI:
 
 Packaging config:
 
-- `D:\GitHub\AI-Driven-Spatial-Pathologist\pyproject.toml`
+- `D:\GitHub\Agentic-Spatial-Pathologist\pyproject.toml`
 
 Important current facts:
 
@@ -666,13 +666,13 @@ Local editable install:
 
 ```bash
 pip install -e D:\GitHub\HistoSeg
-pip install -e D:\GitHub\AI-Driven-Spatial-Pathologist
+pip install -e D:\GitHub\Agentic-Spatial-Pathologist
 ```
 
 Run tests:
 
 ```bash
-python -m pytest D:\GitHub\AI-Driven-Spatial-Pathologist\tests
+python -m pytest D:\GitHub\Agentic-Spatial-Pathologist\tests
 ```
 
 Check workflow readiness:
@@ -690,7 +690,7 @@ spatho run --config D:\GitHub\HistoSeg\workflows\breast_s1_top_graphclust_full_a
 Export schema:
 
 ```bash
-spatho config-schema --output D:\GitHub\AI-Driven-Spatial-Pathologist\schemas\workflow.schema.json
+spatho config-schema --output D:\GitHub\Agentic-Spatial-Pathologist\schemas\workflow.schema.json
 ```
 
 ## 17. Short Summary

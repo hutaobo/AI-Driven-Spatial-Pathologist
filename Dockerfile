@@ -11,9 +11,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     APP_DATA_DIR=/home/username/app/project-vol \
     GRADIO_TEMP_DIR=/tmp/gradio
 
-LABEL org.opencontainers.image.title="AI Driven Spatial Pathologist" \
-      org.opencontainers.image.description="SciLifeLab Serve deployment wrapper for HistoSeg" \
-      org.opencontainers.image.source="https://github.com/hutaobo/AI-Driven-Spatial-Pathologist"
+LABEL org.opencontainers.image.title="Agentic Spatial Pathologist" \
+      org.opencontainers.image.description="Agentic workflows for spatial pathology" \
+      org.opencontainers.image.source="https://github.com/hutaobo/Agentic-Spatial-Pathologist"
 
 WORKDIR /home/username/app
 

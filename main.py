@@ -77,7 +77,7 @@ except Exception as exc:  # pragma: no cover - startup fallback only
     HISTOSEG_IMPORT_ERROR = str(exc)
 
 
-APP_NAME = "AI Driven Spatial Pathologist"
+APP_NAME = "Agentic Spatial Pathologist"
 APP_DESCRIPTION = (
     "A dendrogram-guided Xenium analysis workspace that turns related clusters into interpretable "
     "spatial structures before running the final HistoSeg contour analysis."
@@ -2609,7 +2609,7 @@ with gr.Blocks(
         """
         <div class="hero-shell">
           <div class="hero-kicker">SciLifeLab Serve app | Xenium spatial pathology</div>
-          <h1>AI Driven Spatial Pathologist</h1>
+          <h1>Agentic Spatial Pathologist</h1>
           <p>
             Turn Xenium cluster maps into interpretable spatial structures before drawing the final contour map.
             This app first builds a cophenetic dendrogram from the uploaded cluster assignments, then lets you pick one or more structure branches, and finally sends the merged cluster IDs into HistoSeg for contour generation.

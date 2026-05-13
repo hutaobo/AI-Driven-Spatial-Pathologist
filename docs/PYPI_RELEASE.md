@@ -25,7 +25,7 @@ Official references:
 4. Use these GitHub settings:
 
 - Repository owner: `hutaobo`
-- Repository name: `AI-Driven-Spatial-Pathologist`
+- Repository name: `Agentic-Spatial-Pathologist`
 - Workflow file: `publish-pypi.yml`
 - Environment name: `pypi`
 
