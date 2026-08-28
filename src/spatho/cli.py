@@ -106,6 +106,38 @@ def _build_parser() -> argparse.ArgumentParser:
     demo_parser.add_argument("--checkpoint-card", help="Optional stGPT model/checkpoint card JSON path.")
     demo_parser.add_argument("--pyxenium-summary", help="Optional pyXenium morphomolecular summary artifact.")
     demo_parser.add_argument("--max-records", type=int, default=100, help="Maximum evidence-chain records to sample.")
+
+    bench_parser = subparsers.add_parser(
+        "he-benchmark",
+        help="Benchmark pixel-level H&E tumor-region models on public sets and private slides.",
+    )
+    bench_sub = bench_parser.add_subparsers(dest="he_benchmark_command", required=True)
+
+    bench_sub.add_parser("catalog", help="Print the models and datasets that belong in the comparison.")
+
+    bench_init = bench_sub.add_parser("init", help="Create a benchmark directory, protocol, and dataset folders.")
+    bench_init.add_argument("--output-dir", required=True, help="Where to write the benchmark workspace.")
+    bench_init.add_argument("--with-synthetic-fixture", action="store_true", help="Add a tiny synthetic private case for a smoke run.")
+    bench_init.add_argument("--private-images", help="Optional directory of private H&E tiles to ingest now.")
+    bench_init.add_argument("--private-masks", help="Optional directory of private tumor masks paired by filename stem.")
+
+    bench_ingest = bench_sub.add_parser("ingest", help="Register a public or private image/mask (or GeoJSON) dataset.")
+    bench_ingest.add_argument("--dataset-id", required=True, help="Dataset id, e.g. private_he or public_camelyon16.")
+    bench_ingest.add_argument("--output-dir", required=True, help="Dataset output directory that will contain cases.jsonl.")
+    bench_ingest.add_argument("--images", help="Directory of H&E tiles.")
+    bench_ingest.add_argument("--masks", help="Directory of binary tumor masks with the same stems.")
+    bench_ingest.add_argument("--image", help="Single WSI/tile path used with --geojson.")
+    bench_ingest.add_argument("--geojson", help="Tumor-region GeoJSON to rasterize onto --image.")
+    bench_ingest.add_argument("--kind", choices=["private", "public"], default="private")
+    bench_ingest.add_argument("--organ")
+    bench_ingest.add_argument("--pixel-size-um", type=float)
+
+    bench_doctor = bench_sub.add_parser("doctor", help="Check protocol paths and which models can actually run.")
+    bench_doctor.add_argument("--protocol", required=True, help="Path to protocol.json.")
+
+    bench_run = bench_sub.add_parser("run", help="Score available models and write a private/public leaderboard.")
+    bench_run.add_argument("--protocol", required=True, help="Path to protocol.json.")
+    bench_run.add_argument("--output-dir", help="Where to write leaderboard artifacts.")
     return parser
 
 
@@ -173,6 +205,45 @@ def main() -> None:
         )
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
+
+    if args.command == "he-benchmark":
+        from .he_benchmark import catalog_payload, doctor_benchmark, ingest_dataset, init_benchmark, run_benchmark
+
+        if args.he_benchmark_command == "catalog":
+            print(json.dumps(catalog_payload(), indent=2, ensure_ascii=False))
+            return
+        if args.he_benchmark_command == "init":
+            result = init_benchmark(
+                args.output_dir,
+                with_synthetic_fixture=bool(args.with_synthetic_fixture),
+                private_images_dir=getattr(args, "private_images", None),
+                private_masks_dir=getattr(args, "private_masks", None),
+            )
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return
+        if args.he_benchmark_command == "ingest":
+            result = ingest_dataset(
+                dataset_id=args.dataset_id,
+                output_dir=args.output_dir,
+                images_dir=getattr(args, "images", None),
+                masks_dir=getattr(args, "masks", None),
+                image_path=getattr(args, "image", None),
+                geojson_path=getattr(args, "geojson", None),
+                kind=args.kind,
+                organ=getattr(args, "organ", None),
+                pixel_size_um=getattr(args, "pixel_size_um", None),
+            )
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return
+        if args.he_benchmark_command == "doctor":
+            result = doctor_benchmark(args.protocol)
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return
+        if args.he_benchmark_command == "run":
+            result = run_benchmark(args.protocol, output_dir=getattr(args, "output_dir", None))
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return
+        parser.error(f"Unsupported he-benchmark command: {args.he_benchmark_command}")
 
     parser.error(f"Unsupported command: {args.command}")
 
