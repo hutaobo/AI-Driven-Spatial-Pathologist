@@ -14,6 +14,13 @@ The documentation focuses on practical deployment paths first, from local workst
 :gutter: 2
 :class-container: spatho-card-grid
 
+:::{grid-item-card} H&E Tumor Benchmark
+:link: HE_TUMOR_REGION_BENCHMARK
+:link-type: doc
+
+Compare Dino-NestedUNet, UNI2, SegTME, and the current PLIP baseline on public sets and your own H&E tiles.
+:::
+
 :::{grid-item-card} Tutorial
 :link: ATERA_WTA_BREAST_PDC_TUTORIAL
 :link-type: doc
@@ -78,6 +85,7 @@ Read design notes for Xenium RNA/protein alignment, commercialization, and packa
 :caption: Tutorials
 
 ATERA_WTA_BREAST_PDC_TUTORIAL
+HE_TUMOR_REGION_BENCHMARK
 ```
 
 ```{toctree}

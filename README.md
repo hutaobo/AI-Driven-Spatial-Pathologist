@@ -174,6 +174,17 @@ spatho write-xenium-alignment-fixtures \
 
 This writes a Xenium RNA+protein alignment note, a fixture manifest, and transform cases covering identity, `um -> pixel`, translation, axis order, and composed polygon export.
 
+Benchmark pixel-level H&E tumor-region models on public tiles and your own slides:
+
+```bash
+spatho he-benchmark catalog
+spatho he-benchmark init --output-dir /path/to/he_benchmark --with-synthetic-fixture
+spatho he-benchmark doctor --protocol /path/to/he_benchmark/protocol.json
+spatho he-benchmark run --protocol /path/to/he_benchmark/protocol.json
+```
+
+See [docs/HE_TUMOR_REGION_BENCHMARK.md](docs/HE_TUMOR_REGION_BENCHMARK.md) for the model list, private-slide ingest, and how to attach UNI2 / Dino-NestedUNet masks.
+
 ## Python Usage
 
 ```python

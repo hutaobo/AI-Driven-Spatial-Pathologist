@@ -138,6 +138,7 @@ Commands currently exposed:
 - `spatho list-organ-packs`
 - `spatho config-schema`
 - `spatho build-manifest`
+- `spatho he-benchmark`
 
 Current CLI philosophy:
 
